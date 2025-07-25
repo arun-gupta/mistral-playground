@@ -13,6 +13,8 @@ const Playground = () => {
   const [selectedModel, setSelectedModel] = useState('microsoft/DialoGPT-small')
   const [selectedProvider, setSelectedProvider] = useState('huggingface')
   const [actualModelUsed, setActualModelUsed] = useState('')
+  const [fallbackUsed, setFallbackUsed] = useState(false)
+  const [originalModel, setOriginalModel] = useState('')
   const [mockMode, setMockMode] = useState(false)
   const [mockModeLoading, setMockModeLoading] = useState(false)
   const [modelStatus, setModelStatus] = useState<'idle' | 'downloading' | 'loading' | 'ready' | 'error'>('idle')
@@ -118,6 +120,13 @@ const Playground = () => {
         console.log('✅ Response text:', data.text)
         setResponse(data.text)
         setActualModelUsed(data.model_name || 'Unknown model')
+        setFallbackUsed(data.fallback_used || false)
+        setOriginalModel(data.original_model || '')
+        
+        // Check if fallback was used
+        if (data.fallback_used && data.original_model) {
+          console.log(`⚠️ Fallback used: ${data.original_model} -> ${data.model_name}`)
+        }
         setModelStatus('ready')
         setModelProgress('')
       } else {
@@ -266,13 +275,13 @@ const Playground = () => {
                 <option value="mistralai/Mistral-7B-Instruct-v0.2">Mistral-7B-Instruct-v0.2 (7B, ~14GB RAM)</option>
                 <option value="TheBloke/Mistral-7B-Instruct-v0.1-GGUF">Mistral-7B-GGUF (4-8GB RAM, CPU optimized)</option>
               </select>
-              {actualModelUsed && actualModelUsed !== selectedModel && (
+              {fallbackUsed && originalModel && (
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                   <p className="text-sm text-blue-800">
                     <span className="font-medium">Note:</span> Using fallback model: <code className="bg-blue-100 px-1 rounded">{actualModelUsed}</code>
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
-                    The selected model failed to load, so a compatible fallback was used.
+                    The selected model <code className="bg-blue-100 px-1 rounded">{originalModel}</code> failed to load, so a compatible fallback was used.
                   </p>
                 </div>
               )}

@@ -73,7 +73,9 @@ class ModelService:
                     "system_prompt": request.system_prompt
                 },
                 usage=response.get("usage"),
-                latency=latency_ms / 1000.0  # Convert to seconds
+                latency=latency_ms / 1000.0,  # Convert to seconds
+                fallback_used=response.get("fallback_used", False),
+                original_model=response.get("original_model")
             )
         except Exception as e:
             print(f"❌ Generation failed: {str(e)}")
@@ -93,7 +95,9 @@ class ModelService:
                     "system_prompt": request.system_prompt
                 },
                 usage=None,
-                latency=latency_ms / 1000.0  # Convert to seconds
+                latency=latency_ms / 1000.0,  # Convert to seconds
+                fallback_used=False,
+                original_model=None
             )
     
     async def _generate_vllm(self, request: PromptRequest) -> Dict[str, Any]:
@@ -206,6 +210,7 @@ class ModelService:
             # Fallback to a smaller model
             fallback_model = "microsoft/DialoGPT-small"
             print(f"🔄 Trying fallback model: {fallback_model}")
+            original_model = model_name
             
             try:
                 if fallback_model not in self.transformers_models:
@@ -269,7 +274,9 @@ class ModelService:
             "model_name": model_name,
             "tokens_used": tokens_used,
             "input_tokens": input_tokens,
-            "output_tokens": output_tokens
+            "output_tokens": output_tokens,
+            "fallback_used": "original_model" in locals(),
+            "original_model": locals().get("original_model")
         }
     
     async def _generate_gguf(self, request: PromptRequest) -> Dict[str, Any]:
@@ -296,8 +303,12 @@ class ModelService:
             # Fallback to a smaller model
             fallback_model = "microsoft/DialoGPT-small"
             print(f"🔄 Trying fallback model: {fallback_model}")
+            original_model = request.model_name
             request.model_name = fallback_model
-            return await self._generate_huggingface(request)
+            response = await self._generate_huggingface(request)
+            response["fallback_used"] = True
+            response["original_model"] = original_model
+            return response
         
         model = self.ct_models[model_name]
         
