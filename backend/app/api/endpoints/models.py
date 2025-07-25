@@ -1,0 +1,117 @@
+from fastapi import APIRouter, HTTPException
+from typing import List
+import uuid
+
+from app.models.requests import PromptRequest, ComparisonRequest
+from app.models.responses import ModelResponse, ComparisonResponse, ModelInfo
+from app.services.model_service import model_service
+
+router = APIRouter()
+
+@router.post("/generate", response_model=ModelResponse)
+async def generate_response(request: PromptRequest):
+    """Generate response from a single model"""
+    print(f"🎯 Received generate request:")
+    print(f"   Prompt: {request.prompt}")
+    print(f"   Model: {request.model_name}")
+    print(f"   Provider: {request.provider}")
+    print(f"   Temperature: {request.temperature}")
+    print(f"   Max tokens: {request.max_tokens}")
+    print(f"   Top P: {request.top_p}")
+    print(f"   System prompt: {request.system_prompt}")
+    
+    try:
+        print("🔄 Calling model service...")
+        response = await model_service.generate_response(request)
+        print(f"✅ Model service returned: {response.text[:100]}...")
+        return response
+    except Exception as e:
+        print(f"❌ Error in generate endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/compare", response_model=ComparisonResponse)
+async def compare_models(request: ComparisonRequest):
+    """Compare responses from multiple models"""
+    try:
+        responses = await model_service.compare_models(
+            request.prompt,
+            request.models,
+            request.parameters
+        )
+        
+        return ComparisonResponse(
+            prompt=request.prompt,
+            responses=responses,
+            comparison_id=str(uuid.uuid4())
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/available", response_model=List[str])
+async def get_available_models():
+    """Get list of available models"""
+    try:
+        return model_service.get_available_models()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/test", response_model=dict)
+async def test_endpoint():
+    """Test endpoint to verify API is working"""
+    print("🧪 Test endpoint called")
+    return {"message": "API is working!", "status": "ok"}
+
+@router.get("/simple", response_model=dict)
+async def simple_test():
+    """Simple test without model loading"""
+    print("🧪 Simple test endpoint called")
+    return {"message": "Simple test works!", "timestamp": "now"}
+
+@router.post("/mock-generate", response_model=ModelResponse)
+async def mock_generate():
+    """Mock generate endpoint that doesn't use model service"""
+    print("🎭 Mock generate endpoint called")
+    return ModelResponse(
+        text="🎉 SUCCESS! This is a MOCK response. The API flow is working perfectly!",
+        model_name="mock-model",
+        provider="mock",
+        tokens_used=25,
+        input_tokens=5,
+        output_tokens=20,
+        latency_ms=100,
+        finish_reason="stop"
+    )
+
+@router.get("/info", response_model=List[ModelInfo])
+async def get_model_info():
+    """Get detailed information about available models"""
+    models_info = [
+        ModelInfo(
+            name="mistral-7b-instruct",
+            provider="vllm",
+            context_length=8192,
+            parameters="7B",
+            quantization="fp16",
+            license="Apache 2.0",
+            description="Fast, efficient instruction-following model"
+        ),
+        ModelInfo(
+            name="mixtral-8x7b-instruct",
+            provider="vllm",
+            context_length=32768,
+            parameters="8x7B",
+            quantization="fp16",
+            license="Apache 2.0",
+            description="High-performance mixture-of-experts model"
+        ),
+        ModelInfo(
+            name="codestral",
+            provider="vllm",
+            context_length=8192,
+            parameters="7B",
+            quantization="fp16",
+            license="Apache 2.0",
+            description="Specialized for code generation and analysis"
+        )
+    ]
+    return models_info 

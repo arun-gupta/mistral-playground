@@ -1,0 +1,25 @@
+import { Routes, Route } from 'react-router-dom'
+import { Toaster } from './components/ui/toaster'
+import Layout from './components/Layout'
+import Playground from './pages/Playground'
+import RAG from './pages/RAG'
+import Configs from './pages/Configs'
+import Models from './pages/Models'
+
+function App() {
+  return (
+    <div className="min-h-screen bg-background">
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Playground />} />
+          <Route path="/rag" element={<RAG />} />
+          <Route path="/configs" element={<Configs />} />
+          <Route path="/models" element={<Models />} />
+        </Routes>
+      </Layout>
+      <Toaster />
+    </div>
+  )
+}
+
+export default App 

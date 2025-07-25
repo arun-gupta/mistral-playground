@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PROVIDER=vllm
+      - MODEL_NAME=mistral-7b-instruct
+      - DEVICE=cuda
+      - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - CORS_ORIGINS=["http://localhost:3000", "http://frontend:3000"]
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+
+  # Optional: Add Ollama service for alternative model serving
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #   - "11434:11434"
+  #   volumes:
+  #   - ollama_data:/root/.ollama
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #         - driver: nvidia
+  #           count: 1
+  #           capabilities: [gpu]
+
+volumes:
+  ollama_data: 
