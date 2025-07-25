@@ -91,6 +91,7 @@ const Playground = () => {
     setError('')
     setLoading(true)
     setResponse('')
+    // Don't clear actualModelUsed here - let it persist until new response is generated
     
     // Only show loading state if model is not already loaded
     if (!isModelLoaded(selectedModel)) {
@@ -320,32 +321,32 @@ const Playground = () => {
                 <option value="microsoft/DialoGPT-small">
                   {isModelLoaded('microsoft/DialoGPT-small') ? '✅ ' : '⏳ '}
                   DialoGPT Small (CPU-friendly, 117M)
-                  {isModelLoaded('microsoft/DialoGPT-small') && ' - Ready'}
+                  {isModelLoaded('microsoft/DialoGPT-small') && ' - Loaded'}
                 </option>
                 <option value="microsoft/DialoGPT-medium">
                   {isModelLoaded('microsoft/DialoGPT-medium') ? '✅ ' : '⏳ '}
                   DialoGPT Medium (345M)
-                  {isModelLoaded('microsoft/DialoGPT-medium') && ' - Ready'}
+                  {isModelLoaded('microsoft/DialoGPT-medium') && ' - Loaded'}
                 </option>
                 <option value="microsoft/DialoGPT-large">
                   {isModelLoaded('microsoft/DialoGPT-large') ? '✅ ' : '⏳ '}
                   DialoGPT Large (774M)
-                  {isModelLoaded('microsoft/DialoGPT-large') && ' - Ready'}
+                  {isModelLoaded('microsoft/DialoGPT-large') && ' - Loaded'}
                 </option>
                 <option value="mistralai/Mistral-7B-Instruct-v0.1">
                   {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.1') ? '✅ ' : '⏳ '}
                   Mistral-7B-Instruct-v0.1 (7B, ~14GB RAM)
-                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.1') && ' - Ready'}
+                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.1') && ' - Loaded'}
                 </option>
                 <option value="mistralai/Mistral-7B-Instruct-v0.2">
                   {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.2') ? '✅ ' : '⏳ '}
                   Mistral-7B-Instruct-v0.2 (7B, ~14GB RAM)
-                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.2') && ' - Ready'}
+                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.2') && ' - Loaded'}
                 </option>
                 <option value="TheBloke/Mistral-7B-Instruct-v0.1-GGUF">
                   {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') ? '✅ ' : '⏳ '}
                   Mistral-7B-GGUF (4-8GB RAM, CPU optimized)
-                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') && ' - Ready'}
+                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') && ' - Loaded'}
                 </option>
               </select>
               {fallbackUsed && originalModel && (
@@ -367,16 +368,16 @@ const Playground = () => {
                 <div className="text-xs text-gray-600 mt-1 space-y-1">
                   <div className="flex items-center">
                     <span className="mr-2">✅</span>
-                    <span>Ready models (loaded in memory)</span>
+                    <span>Loaded models (in memory)</span>
                   </div>
                   <div className="flex items-center">
                     <span className="mr-2">⏳</span>
-                    <span>Available models (need to be loaded)</span>
+                    <span>Not loaded models (need to be loaded)</span>
                   </div>
                 </div>
                 {modelStatuses.filter(m => m.is_loaded).length > 0 && (
                   <p className="text-xs text-green-600 mt-2">
-                    <span className="font-medium">Ready models:</span> {modelStatuses.filter(m => m.is_loaded).map(m => m.name.split('/').pop()).join(', ')}
+                    <span className="font-medium">Loaded models:</span> {modelStatuses.filter(m => m.is_loaded).map(m => m.name.split('/').pop()).join(', ')}
                   </p>
                 )}
                 
@@ -421,7 +422,7 @@ const Playground = () => {
               {selectedModel.includes('Mistral-7B') && isModelLoaded(selectedModel) && (
                 <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-800">
-                    <span className="font-medium">✅ Large Model Ready:</span> This model is already loaded and ready for fast inference.
+                    <span className="font-medium">✅ Large Model Loaded:</span> This model is already loaded and ready for fast inference.
                   </p>
                   <p className="text-xs text-green-600 mt-1">
                     No download time needed - the model is cached in memory for immediate use.

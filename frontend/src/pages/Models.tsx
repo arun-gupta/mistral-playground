@@ -290,7 +290,7 @@ const Models = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Available</CardTitle>
+            <CardTitle className="text-sm font-medium">Not Downloaded</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-600">
@@ -328,13 +328,13 @@ const Models = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Ready Models</CardTitle>
+            <CardTitle className="text-sm font-medium">Loaded in Memory</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {models.filter(m => m.is_loaded).length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Loaded in memory</p>
+            <p className="text-xs text-muted-foreground mt-1">Ready to use</p>
           </CardContent>
         </Card>
       </div>
@@ -361,7 +361,7 @@ const Models = () => {
                      {model.is_loaded ? (
                        <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
                          <span className="mr-1">✅</span>
-                         Ready
+                         Loaded
                        </Badge>
                      ) : isDownloading ? (
                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
@@ -371,12 +371,12 @@ const Models = () => {
                      ) : model.download_progress === 100 ? (
                        <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">
                          <span className="mr-1">📦</span>
-                         Downloaded
+                         On Disk
                        </Badge>
                      ) : (
                        <Badge variant="outline" className="text-muted-foreground border-gray-300">
                          <span className="mr-1">⏳</span>
-                         Available
+                         Not Downloaded
                        </Badge>
                      )}
                    </div>
@@ -456,7 +456,7 @@ const Models = () => {
                       disabled
                     >
                       <span className="mr-2">📦</span>
-                      Downloaded (Ready to Load)
+                      On Disk (Ready to Load)
                     </Button>
                   ) : (
                     <Button 
@@ -495,7 +495,7 @@ const Models = () => {
                 <div className="flex items-center space-x-2">
                   <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
                     <span className="mr-1">⏳</span>
-                    Available
+                    Not Downloaded
                   </Badge>
                   <span className="text-sm text-muted-foreground">Ready to download</span>
                 </div>
@@ -509,14 +509,14 @@ const Models = () => {
                 <div className="flex items-center space-x-2">
                   <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">
                     <span className="mr-1">📦</span>
-                    Downloaded
+                    On Disk
                   </Badge>
                   <span className="text-sm text-muted-foreground">On disk, ready to load</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
                     <span className="mr-1">✅</span>
-                    Ready
+                    Loaded
                   </Badge>
                   <span className="text-sm text-muted-foreground">Loaded in memory, ready to use</span>
                 </div>
