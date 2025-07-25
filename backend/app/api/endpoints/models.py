@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 import uuid
+import os
 
 from app.models.requests import PromptRequest, ComparisonRequest
 from app.models.responses import ModelResponse, ComparisonResponse, ModelInfo
@@ -38,20 +39,11 @@ async def compare_models(request: ComparisonRequest):
             request.models,
             request.parameters
         )
-        
         return ComparisonResponse(
             prompt=request.prompt,
             responses=responses,
             comparison_id=str(uuid.uuid4())
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/available", response_model=List[str])
-async def get_available_models():
-    """Get list of available models"""
-    try:
-        return model_service.get_available_models()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -66,6 +58,56 @@ async def simple_test():
     """Simple test without model loading"""
     print("🧪 Simple test endpoint called")
     return {"message": "Simple test works!", "timestamp": "now"}
+
+@router.get("/mock-status", response_model=dict)
+async def get_mock_status():
+    """Get the current mock mode status"""
+    from app.core.config import settings
+    return {
+        "mock_mode": settings.MOCK_MODE,
+        "message": "Mock mode is enabled" if settings.MOCK_MODE else "Mock mode is disabled - using real models"
+    }
+
+@router.get("/model-status", response_model=dict)
+async def get_model_status():
+    """Get the current model loading status"""
+    from app.services.model_service import model_service
+    
+    # Get loaded models
+    loaded_models = list(model_service.transformers_models.keys())
+    vllm_models = list(model_service.vllm_models.keys())
+    
+    return {
+        "loaded_models": loaded_models + vllm_models,
+        "total_loaded": len(loaded_models) + len(vllm_models),
+        "transformers_models": loaded_models,
+        "vllm_models": vllm_models,
+        "status": "ready" if (len(loaded_models) + len(vllm_models)) > 0 else "no_models_loaded"
+    }
+
+@router.post("/toggle-mock", response_model=dict)
+async def toggle_mock_mode(request: dict):
+    """Toggle mock mode on/off"""
+    try:
+        new_mode = request.get("mock_mode", False)
+        
+        # Update the environment variable
+        os.environ["MOCK_MODE"] = str(new_mode).lower()
+        
+        # Reload settings to pick up the change
+        from app.core.config import settings
+        settings.MOCK_MODE = new_mode
+        
+        print(f"🎭 Mock mode {'enabled' if new_mode else 'disabled'}")
+        
+        return {
+            "success": True,
+            "mock_mode": new_mode,
+            "message": f"Mock mode {'enabled' if new_mode else 'disabled'} successfully"
+        }
+    except Exception as e:
+        print(f"❌ Error toggling mock mode: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/mock-generate", response_model=ModelResponse)
 async def mock_generate():

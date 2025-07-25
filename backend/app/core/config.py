@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
     
+    # Development/Testing
+    MOCK_MODE: bool = False  # Set to True to use mock responses instead of real models
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

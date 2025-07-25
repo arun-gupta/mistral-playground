@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 
@@ -12,48 +12,84 @@ const Playground = () => {
   const [topP, setTopP] = useState(0.9)
   const [selectedModel, setSelectedModel] = useState('microsoft/DialoGPT-small')
   const [selectedProvider, setSelectedProvider] = useState('huggingface')
+  const [actualModelUsed, setActualModelUsed] = useState('')
+  const [mockMode, setMockMode] = useState(false)
+  const [mockModeLoading, setMockModeLoading] = useState(false)
+  const [modelStatus, setModelStatus] = useState<'idle' | 'downloading' | 'loading' | 'ready' | 'error'>('idle')
+  const [modelProgress, setModelProgress] = useState('')
+  const [modelError, setModelError] = useState('')
+  const [error, setError] = useState('')
 
-  const handleSubmit = async () => {
-    if (!prompt.trim()) return
-    
+  // Check mock mode status on component mount
+  useEffect(() => {
+    const checkMockStatus = async () => {
+      try {
+        const response = await fetch('/api/v1/models/mock-status')
+        if (response.ok) {
+          const data = await response.json()
+          setMockMode(data.mock_mode)
+        }
+      } catch (error) {
+        console.log('Could not check mock status:', error)
+      }
+    }
+    checkMockStatus()
+  }, [])
+
+  const toggleMockMode = async () => {
+    setMockModeLoading(true)
+    try {
+      const newMode = !mockMode
+      const response = await fetch('/api/v1/models/toggle-mock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mock_mode: newMode })
+      })
+      
+      if (response.ok) {
+        setMockMode(newMode)
+        console.log(`Mock mode ${newMode ? 'enabled' : 'disabled'}`)
+      } else {
+        console.error('Failed to toggle mock mode')
+      }
+    } catch (error) {
+      console.error('Error toggling mock mode:', error)
+    } finally {
+      setMockModeLoading(false)
+    }
+  }
+
+  const handleGenerate = async () => {
+    if (!prompt.trim()) {
+      setError('Please enter a prompt')
+      return
+    }
+
+    setError('')
     setLoading(true)
-    console.log('🚀 Starting generation with:', {
-      prompt,
-      systemPrompt,
-      selectedModel,
-      selectedProvider,
-      temperature,
-      maxTokens,
-      topP
-    })
-    
+    setResponse('')
+    setModelStatus('loading')
+    setModelProgress('Initializing model...')
+
     const requestBody = {
-      prompt: prompt,
-      system_prompt: systemPrompt || undefined,
+      prompt: prompt.trim(),
+      system_prompt: systemPrompt.trim() || undefined,
       model_name: selectedModel,
-      provider: selectedProvider,
+      provider: 'huggingface',
       temperature: temperature,
       max_tokens: maxTokens,
       top_p: topP
     }
-    
-    console.log('📤 Sending request to API:', requestBody)
-    
-    // First, test if we can reach the backend
-    try {
-      console.log('🔍 Testing backend connection...')
-      const testResponse = await fetch('/api/v1/models/test')
-      console.log('✅ Backend test response:', testResponse.status)
-      
-      // Also test the simple endpoint
-      const simpleResponse = await fetch('/api/v1/models/simple')
-      console.log('✅ Simple endpoint response:', simpleResponse.status)
-    } catch (testError) {
-      console.log('❌ Backend test failed:', testError)
-    }
-    
+
+    console.log('🚀 Sending request:', requestBody)
+
     try {
       console.log('⏱️ Starting fetch request...')
+      setModelProgress('Checking if model is loaded (first time may take several minutes)...')
+      setModelStatus('loading')
+      
       const controller = new AbortController()
       const timeoutId = setTimeout(() => {
         console.log('⏰ Request timeout after 30 seconds')
@@ -76,22 +112,32 @@ const Playground = () => {
       
       if (response.ok) {
         console.log('📥 Reading response body...')
+        setModelProgress('Processing response...')
         const data = await response.json()
         console.log('✅ Success response:', data)
         console.log('✅ Response text:', data.text)
         setResponse(data.text)
+        setActualModelUsed(data.model_name || 'Unknown model')
+        setModelStatus('ready')
+        setModelProgress('')
       } else {
         console.log('📥 Reading error response body...')
         const errorData = await response.json().catch(() => ({}))
         console.log('❌ Error response:', errorData)
         setResponse(`Error: ${errorData.detail || 'Could not generate response'}`)
+        setModelStatus('error')
+        setModelError(errorData.detail || 'Could not generate response')
       }
-    } catch (error: any) {
+    } catch (error: any) { // Fixed TypeScript error here
       console.log('💥 Network error:', error)
       if (error.name === 'AbortError') {
         setResponse('Error: Request timed out after 30 seconds')
+        setModelStatus('error')
+        setModelError('Request timed out after 30 seconds')
       } else {
         setResponse(`Error: Network error - ${error}`)
+        setModelStatus('error')
+        setModelError(`Network error - ${error}`)
       }
     } finally {
       console.log('🏁 Request completed, setting loading to false')
@@ -99,13 +145,100 @@ const Playground = () => {
     }
   }
 
+  const getModelStatusDisplay = () => {
+    switch (modelStatus) {
+      case 'downloading':
+        return (
+          <div className="p-3 bg-blue-100 border border-blue-400 rounded-md">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              <span className="text-blue-800 font-medium">Downloading Model</span>
+            </div>
+            <p className="text-blue-700 text-sm mt-1">{modelProgress}</p>
+          </div>
+        )
+      case 'loading':
+        return (
+          <div className="p-3 bg-yellow-100 border border-yellow-400 rounded-md">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600 mr-2"></div>
+              <span className="text-yellow-800 font-medium">Loading Model</span>
+            </div>
+            <p className="text-yellow-700 text-sm mt-1">{modelProgress}</p>
+          </div>
+        )
+      case 'ready':
+        return (
+          <div className="p-3 bg-green-100 border border-green-400 rounded-md">
+            <div className="flex items-center">
+              <span className="text-green-800 font-medium">✅ Model Ready</span>
+            </div>
+            <p className="text-green-700 text-sm mt-1">
+              Model loaded successfully and ready for inference
+              {actualModelUsed && (
+                <span className="block mt-1">
+                  <span className="font-medium">Model used:</span> <code className="bg-green-200 px-1 rounded text-xs">{actualModelUsed}</code>
+                </span>
+              )}
+            </p>
+            <p className="text-green-600 text-xs mt-1">
+              ⚡ Model is cached in memory - subsequent requests will be faster
+            </p>
+          </div>
+        )
+      case 'error':
+        return (
+          <div className="p-3 bg-red-100 border border-red-400 rounded-md">
+            <div className="flex items-center">
+              <span className="text-red-800 font-medium">❌ Model Error</span>
+            </div>
+            <p className="text-red-700 text-sm mt-1">{modelError}</p>
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Mistral Playground</h1>
-        <p className="text-muted-foreground">
-          Explore and fine-tune prompts across Mistral's open models
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Mistral Playground</h1>
+            <p className="text-muted-foreground">
+              Explore and fine-tune prompts across Mistral's open models
+            </p>
+          </div>
+          
+          {/* Mock Mode Toggle */}
+          <div className="flex items-center space-x-3">
+            <span className="text-sm font-medium">Mock Mode:</span>
+            <Button
+              onClick={toggleMockMode}
+              disabled={mockModeLoading}
+              variant={mockMode ? "default" : "outline"}
+              size="sm"
+              className={`${mockMode ? 'bg-yellow-500 hover:bg-yellow-600' : ''}`}
+            >
+              {mockModeLoading ? '...' : mockMode ? '🎭 ON' : '🤖 OFF'}
+            </Button>
+          </div>
+        </div>
+        
+        {mockMode && (
+          <div className="mt-2 p-3 bg-yellow-100 border border-yellow-400 rounded-md">
+            <div className="flex items-center">
+              <span className="text-yellow-800 font-medium">🎭 Mock Mode Enabled</span>
+              <span className="ml-2 text-yellow-700 text-sm">
+                Responses are simulated for testing. Click the toggle above to use real models.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Model Status Display */}
+        {modelStatus !== 'idle' && getModelStatusDisplay()}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -133,6 +266,16 @@ const Playground = () => {
                 <option value="mistralai/Mistral-7B-Instruct-v0.2">Mistral-7B-Instruct-v0.2 (7B, ~14GB RAM)</option>
                 <option value="TheBloke/Mistral-7B-Instruct-v0.1-GGUF">Mistral-7B-GGUF (4-8GB RAM, CPU optimized)</option>
               </select>
+              {actualModelUsed && actualModelUsed !== selectedModel && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-medium">Note:</span> Using fallback model: <code className="bg-blue-100 px-1 rounded">{actualModelUsed}</code>
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    The selected model failed to load, so a compatible fallback was used.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Provider Selection */}
@@ -192,9 +335,25 @@ const Playground = () => {
                   type="number"
                   min="1"
                   max="8192"
-                  value={maxTokens}
-                  onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                  value={maxTokens || ''}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value)
+                    if (isNaN(value) || value < 1) {
+                      setMaxTokens(1)
+                    } else if (value > 8192) {
+                      setMaxTokens(8192)
+                    } else {
+                      setMaxTokens(value)
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const value = parseInt(e.target.value)
+                    if (isNaN(value) || value < 1) {
+                      setMaxTokens(1)
+                    }
+                  }}
                   className="w-full p-2 mt-1 border rounded-md"
+                  placeholder="1-8192"
                 />
               </div>
 
@@ -213,7 +372,7 @@ const Playground = () => {
             </div>
             
             <Button 
-              onClick={handleSubmit} 
+              onClick={handleGenerate} 
               disabled={loading || !prompt.trim()}
               className="w-full"
             >
@@ -231,6 +390,18 @@ const Playground = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {response && actualModelUsed && (
+              <div className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded-md">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Model used for this response:</span> <code className="bg-gray-200 px-1 rounded text-xs">{actualModelUsed}</code>
+                  {actualModelUsed !== selectedModel && (
+                    <span className="ml-2 text-orange-600 text-xs">
+                      (fallback from {selectedModel})
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
             <div className="min-h-[200px] p-3 border rounded-md bg-muted/50">
               {response ? (
                 <pre className="whitespace-pre-wrap text-sm">{response}</pre>
