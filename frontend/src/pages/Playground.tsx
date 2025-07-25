@@ -87,16 +87,30 @@ const Playground = () => {
 
     console.log('🚀 Sending request:', requestBody)
 
+    // Determine timeout based on model size
+    const getTimeoutForModel = (modelName: string) => {
+      if (modelName.includes('Mistral-7B') || modelName.includes('GGUF')) {
+        return 300000 // 5 minutes for large models
+      } else if (modelName.includes('DialoGPT-large')) {
+        return 120000 // 2 minutes for medium models
+      } else {
+        return 60000 // 1 minute for small models
+      }
+    }
+
+    const timeoutMs = getTimeoutForModel(selectedModel)
+    const timeoutMinutes = Math.floor(timeoutMs / 60000)
+
     try {
-      console.log('⏱️ Starting fetch request...')
-      setModelProgress('Checking if model is loaded (first time may take several minutes)...')
+      console.log(`⏱️ Starting fetch request with ${timeoutMinutes} minute timeout...`)
+      setModelProgress(`Initializing model (timeout: ${timeoutMinutes} minutes)...`)
       setModelStatus('loading')
       
       const controller = new AbortController()
       const timeoutId = setTimeout(() => {
-        console.log('⏰ Request timeout after 30 seconds')
+        console.log(`⏰ Request timeout after ${timeoutMinutes} minutes`)
         controller.abort()
-      }, 30000)
+      }, timeoutMs)
       
       const response = await fetch('/api/v1/models/generate', {
         method: 'POST',
@@ -140,9 +154,9 @@ const Playground = () => {
     } catch (error: any) { // Fixed TypeScript error here
       console.log('💥 Network error:', error)
       if (error.name === 'AbortError') {
-        setResponse('Error: Request timed out after 30 seconds')
+        setResponse(`Error: Request timed out after ${timeoutMinutes} minutes. Large models may take longer to download.`)
         setModelStatus('error')
-        setModelError('Request timed out after 30 seconds')
+        setModelError(`Request timed out after ${timeoutMinutes} minutes. Large models may take longer to download.`)
       } else {
         setResponse(`Error: Network error - ${error}`)
         setModelStatus('error')
@@ -174,6 +188,9 @@ const Playground = () => {
               <span className="text-yellow-800 font-medium">Loading Model</span>
             </div>
             <p className="text-yellow-700 text-sm mt-1">{modelProgress}</p>
+            <p className="text-yellow-600 text-xs mt-1">
+              ⏱️ Large models may take several minutes to download on first use
+            </p>
           </div>
         )
       case 'ready':
@@ -282,6 +299,16 @@ const Playground = () => {
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
                     The selected model <code className="bg-blue-100 px-1 rounded">{originalModel}</code> failed to load, so a compatible fallback was used.
+                  </p>
+                </div>
+              )}
+              {selectedModel.includes('Mistral-7B') && (
+                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-medium">⚠️ Large Model:</span> This model may take 5-10 minutes to download on first use.
+                  </p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    Please be patient - the download will only happen once, then the model will be cached for faster subsequent use.
                   </p>
                 </div>
               )}

@@ -76,13 +76,17 @@ async def get_model_status():
     # Get loaded models
     loaded_models = list(model_service.transformers_models.keys())
     vllm_models = list(model_service.vllm_models.keys())
+    ct_models = list(model_service.ct_models.keys())
+    
+    all_loaded = loaded_models + vllm_models + ct_models
     
     return {
-        "loaded_models": loaded_models + vllm_models,
-        "total_loaded": len(loaded_models) + len(vllm_models),
+        "loaded_models": all_loaded,
+        "total_loaded": len(all_loaded),
         "transformers_models": loaded_models,
         "vllm_models": vllm_models,
-        "status": "ready" if (len(loaded_models) + len(vllm_models)) > 0 else "no_models_loaded"
+        "ct_models": ct_models,
+        "status": "ready" if len(all_loaded) > 0 else "no_models_loaded"
     }
 
 @router.post("/toggle-mock", response_model=dict)
