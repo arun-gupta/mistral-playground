@@ -11,10 +11,10 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navigation = [
     { name: 'Playground', href: '/', icon: '🎮' },
-    { name: 'RAG', href: '/rag', icon: '📚' },
-    { name: 'Comparison', href: '/comparison', icon: '🔍' },
-    { name: 'Configs', href: '/configs', icon: '⚙️' },
     { name: 'Models', href: '/models', icon: '🤖' },
+    { name: 'Comparison', href: '/comparison', icon: '🔍' },
+    { name: 'RAG', href: '/rag', icon: '📚' },
+    { name: 'Configs', href: '/configs', icon: '⚙️' },
   ]
 
   return (

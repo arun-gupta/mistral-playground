@@ -5,11 +5,20 @@ A modern, developer-friendly full-stack application for exploring, comparing, an
 ## 🎯 Key Features
 
 ### Main Playground Features
-- **Multi-Model Comparison**: Compare responses from multiple Mistral models side-by-side
+- **Single Model Playground**: Interact with any loaded model in a conversational playground
+- **Models Tab**: Proactively download, manage, and monitor the status of all available models (Not Downloaded, Downloading, On Disk, Loaded)
+- **Comparison Tab**: Compare responses from multiple models side-by-side with performance metrics
+- **Mock Mode**: Enable a mock backend for UI testing and demos without running real models
 - **Advanced Parameter Tuning**: Edit temperature, max tokens, system prompt, top_p
 - **Performance Metrics**: Show token usage and latency per request
 - **Prompt Management**: Save/load/share prompt configurations
 - **Rich Output Rendering**: Markdown rendering of outputs with syntax highlighting
+
+### UI/UX Improvements
+- **Dedicated Tabs**: Playground, Models, Comparison, RAG, Configs for clear workflow
+- **Model Status Indicators**: Visual badges for Not Downloaded, Downloading, On Disk, Loaded
+- **Tooltips and Legends**: Helpful tooltips (e.g., Mock Mode) and legends for model status
+- **Improved Navigation**: Logical tab order for intuitive workflow
 
 ### Advanced Features (Planned)
 - **RAG Mode**: Upload documents → embed → retrieve → generate grounded answers
@@ -18,6 +27,34 @@ A modern, developer-friendly full-stack application for exploring, comparing, an
 - **Multilingual Testing**: Submit prompts in multiple languages and compare outputs
 - **Built-in Recipes**: Pre-built prompts for summarization, Q&A, code assistance
 - **Rating System**: Rate model outputs for quality assessment
+
+## 🖥️ Application Navigation
+
+The main navigation bar includes:
+- **Playground**: Single model interaction and prompt testing
+- **Models**: Manage, download, and monitor all models (with real-time status)
+- **Comparison**: Compare responses from multiple models side-by-side
+- **RAG**: Retrieval-Augmented Generation (document Q&A)
+- **Configs**: Manage prompt and system configurations
+
+## 🚦 Model Status Workflow
+
+Models can be in one of four states:
+- **Not Downloaded**: Model is available but not yet downloaded
+- **Downloading**: Model is currently being downloaded
+- **On Disk**: Model is downloaded and ready to load
+- **Loaded**: Model is loaded in memory and ready for inference
+
+The Models tab provides proactive management and real-time status tracking for all models.
+
+## 🎭 Mock Mode
+
+**Mock Mode** allows you to use the frontend UI without running real models on the backend. This is useful for:
+- UI/UX demos
+- Testing the interface without heavy downloads or compute
+- Development when backend resources are unavailable
+
+When enabled, all model responses are simulated, and no real inference is performed.
 
 ## 🏗️ Architecture
 
