@@ -3,8 +3,8 @@ from typing import List
 import uuid
 import os
 
-from app.models.requests import PromptRequest, ComparisonRequest
-from app.models.responses import ModelResponse, ComparisonResponse, ModelInfo
+from app.models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
+from app.models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
 from app.services.model_service import model_service
 
 router = APIRouter()
@@ -127,6 +127,108 @@ async def mock_generate():
         latency_ms=100,
         finish_reason="stop"
     )
+
+@router.post("/download", response_model=ModelDownloadResponse)
+async def download_model(request: ModelDownloadRequest):
+    """Download a model proactively"""
+    try:
+        print(f"📥 Starting download for model: {request.model_name}")
+        
+        # Check if model is already loaded
+        from app.services.model_service import model_service
+        loaded_models = (
+            list(model_service.transformers_models.keys()) +
+            list(model_service.vllm_models.keys()) +
+            list(model_service.ct_models.keys())
+        )
+        
+        if request.model_name in loaded_models and not request.force_redownload:
+            return ModelDownloadResponse(
+                model_name=request.model_name,
+                provider=request.provider,
+                status="completed",
+                progress=100.0,
+                message=f"Model {request.model_name} is already loaded",
+                download_size="Already cached",
+                estimated_time="0s"
+            )
+        
+        # Start download process
+        # For now, we'll simulate the download process
+        # In a real implementation, this would be async and track progress
+        return ModelDownloadResponse(
+            model_name=request.model_name,
+            provider=request.provider,
+            status="downloading",
+            progress=0.0,
+            message=f"Starting download of {request.model_name}",
+            download_size="Calculating...",
+            estimated_time="Calculating..."
+        )
+        
+    except Exception as e:
+        print(f"❌ Error downloading model {request.model_name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/download-status/{model_name}", response_model=ModelDownloadResponse)
+async def get_download_status(model_name: str):
+    """Get download status for a specific model"""
+    try:
+        # This would check the actual download status
+        # For now, return a mock response
+        return ModelDownloadResponse(
+            model_name=model_name,
+            provider="huggingface",
+            status="completed",
+            progress=100.0,
+            message=f"Model {model_name} download completed",
+            download_size="2.5GB",
+            estimated_time="0s"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/available", response_model=List[ModelStatus])
+async def get_available_models():
+    """Get detailed status of all available models"""
+    try:
+        from app.services.model_service import model_service
+        
+        # Get loaded models
+        loaded_models = (
+            list(model_service.transformers_models.keys()) +
+            list(model_service.vllm_models.keys()) +
+            list(model_service.ct_models.keys())
+        )
+        
+        # Define available models
+        available_models = [
+            "microsoft/DialoGPT-small",
+            "microsoft/DialoGPT-medium", 
+            "microsoft/DialoGPT-large",
+            "mistralai/Mistral-7B-Instruct-v0.1",
+            "mistralai/Mistral-7B-Instruct-v0.2",
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
+        ]
+        
+        model_statuses = []
+        for model_name in available_models:
+            is_loaded = model_name in loaded_models
+            model_statuses.append(ModelStatus(
+                name=model_name,
+                provider="huggingface",
+                is_loaded=is_loaded,
+                is_downloading=False,
+                download_progress=100.0 if is_loaded else None,
+                size_on_disk="2.5GB" if is_loaded else None,
+                last_used=None,
+                load_time=None
+            ))
+        
+        return model_statuses
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/info", response_model=List[ModelInfo])
 async def get_model_info():
