@@ -8,7 +8,7 @@ import asyncio
 
 from app.core.config import settings
 from app.models.requests import PromptRequest, ModelProvider
-from app.models.responses import ModelResponse
+from app.models.responses import ModelResponse, ModelComparison
 
 # Try to import vLLM, but don't fail if it's not available
 try:
@@ -398,8 +398,9 @@ class ModelService:
         }
     
     async def compare_models(self, prompt: str, models: List[str], 
-                           parameters: Dict[str, Any]) -> List[ModelResponse]:
+                           parameters: Dict[str, Any]) -> List[ModelComparison]:
         """Compare responses from multiple models"""
+        
         tasks = []
         
         for model_name in models:
@@ -416,23 +417,29 @@ class ModelService:
         
         responses = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Filter out exceptions and return valid responses
+        # Filter out exceptions and convert to ModelComparison objects
         valid_responses = []
         for i, response in enumerate(responses):
             if isinstance(response, Exception):
-                # Create error response
-                valid_responses.append(ModelResponse(
-                    text=f"Error: {str(response)}",
+                # Create error response as ModelComparison
+                valid_responses.append(ModelComparison(
                     model_name=models[i],
                     provider="vllm",
-                    tokens_used=0,
-                    input_tokens=0,
-                    output_tokens=0,
-                    latency_ms=0,
-                    finish_reason="error"
+                    text=f"Error: {str(response)}",
+                    parameters=parameters,
+                    usage={"total_tokens": 0, "input_tokens": 0, "output_tokens": 0},
+                    latency=0.0
                 ))
             else:
-                valid_responses.append(response)
+                # Convert ModelResponse to ModelComparison
+                valid_responses.append(ModelComparison(
+                    model_name=response.model_name,
+                    provider=response.provider,
+                    text=response.text,
+                    parameters=parameters,
+                    usage=response.usage,
+                    latency=response.latency
+                ))
         
         return valid_responses
     
