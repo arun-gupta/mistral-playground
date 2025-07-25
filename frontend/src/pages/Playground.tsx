@@ -21,8 +21,25 @@ const Playground = () => {
   const [modelProgress, setModelProgress] = useState('')
   const [modelError, setModelError] = useState('')
   const [error, setError] = useState('')
+  const [modelStatuses, setModelStatuses] = useState<Array<{name: string, is_loaded: boolean}>>([])
 
-  // Check mock mode status on component mount
+  // Function to fetch model statuses
+  const fetchModelStatuses = async () => {
+    try {
+      const response = await fetch('/api/v1/models/available')
+      if (response.ok) {
+        const data = await response.json()
+        setModelStatuses(data.map((model: any) => ({
+          name: model.name,
+          is_loaded: model.is_loaded
+        })))
+      }
+    } catch (error) {
+      console.log('Could not fetch model statuses:', error)
+    }
+  }
+
+  // Check mock mode status and fetch model statuses on component mount
   useEffect(() => {
     const checkMockStatus = async () => {
       try {
@@ -35,7 +52,9 @@ const Playground = () => {
         console.log('Could not check mock status:', error)
       }
     }
+
     checkMockStatus()
+    fetchModelStatuses()
   }, [])
 
   const toggleMockMode = async () => {
@@ -72,8 +91,15 @@ const Playground = () => {
     setError('')
     setLoading(true)
     setResponse('')
-    setModelStatus('loading')
-    setModelProgress('Initializing model...')
+    
+    // Only show loading state if model is not already loaded
+    if (!isModelLoaded(selectedModel)) {
+      setModelStatus('loading')
+      setModelProgress('Initializing model...')
+    } else {
+      setModelStatus('ready')
+      setModelProgress('Model ready, generating response...')
+    }
 
     const requestBody = {
       prompt: prompt.trim(),
@@ -103,8 +129,12 @@ const Playground = () => {
 
     try {
       console.log(`⏱️ Starting fetch request with ${timeoutMinutes} minute timeout...`)
-      setModelProgress(`Initializing model (timeout: ${timeoutMinutes} minutes)...`)
-      setModelStatus('loading')
+      
+      // Only show timeout message if model is not already loaded
+      if (!isModelLoaded(selectedModel)) {
+        setModelProgress(`Initializing model (timeout: ${timeoutMinutes} minutes)...`)
+        setModelStatus('loading')
+      }
       
       const controller = new AbortController()
       const timeoutId = setTimeout(() => {
@@ -143,6 +173,10 @@ const Playground = () => {
         }
         setModelStatus('ready')
         setModelProgress('')
+        
+        // Refresh model statuses after successful generation
+        // (in case a model was loaded during this request)
+        fetchModelStatuses()
       } else {
         console.log('📥 Reading error response body...')
         const errorData = await response.json().catch(() => ({}))
@@ -226,6 +260,11 @@ const Playground = () => {
     }
   }
 
+  // Helper function to check if a model is loaded
+  const isModelLoaded = (modelName: string) => {
+    return modelStatuses.find(model => model.name === modelName)?.is_loaded || false
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -279,18 +318,52 @@ const Playground = () => {
           <CardContent className="space-y-4">
             {/* Model Selection */}
             <div>
-              <label className="text-sm font-medium">Model</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Model</label>
+                <Button
+                  onClick={fetchModelStatuses}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  🔄 Refresh Status
+                </Button>
+              </div>
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="w-full p-2 mt-1 border rounded-md"
               >
-                <option value="microsoft/DialoGPT-small">DialoGPT Small (CPU-friendly, 117M)</option>
-                <option value="microsoft/DialoGPT-medium">DialoGPT Medium (345M)</option>
-                <option value="microsoft/DialoGPT-large">DialoGPT Large (774M)</option>
-                <option value="mistralai/Mistral-7B-Instruct-v0.1">Mistral-7B-Instruct-v0.1 (7B, ~14GB RAM)</option>
-                <option value="mistralai/Mistral-7B-Instruct-v0.2">Mistral-7B-Instruct-v0.2 (7B, ~14GB RAM)</option>
-                <option value="TheBloke/Mistral-7B-Instruct-v0.1-GGUF">Mistral-7B-GGUF (4-8GB RAM, CPU optimized)</option>
+                <option value="microsoft/DialoGPT-small">
+                  {isModelLoaded('microsoft/DialoGPT-small') ? '✅ ' : '⏳ '}
+                  DialoGPT Small (CPU-friendly, 117M)
+                  {isModelLoaded('microsoft/DialoGPT-small') && ' - Ready'}
+                </option>
+                <option value="microsoft/DialoGPT-medium">
+                  {isModelLoaded('microsoft/DialoGPT-medium') ? '✅ ' : '⏳ '}
+                  DialoGPT Medium (345M)
+                  {isModelLoaded('microsoft/DialoGPT-medium') && ' - Ready'}
+                </option>
+                <option value="microsoft/DialoGPT-large">
+                  {isModelLoaded('microsoft/DialoGPT-large') ? '✅ ' : '⏳ '}
+                  DialoGPT Large (774M)
+                  {isModelLoaded('microsoft/DialoGPT-large') && ' - Ready'}
+                </option>
+                <option value="mistralai/Mistral-7B-Instruct-v0.1">
+                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.1') ? '✅ ' : '⏳ '}
+                  Mistral-7B-Instruct-v0.1 (7B, ~14GB RAM)
+                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.1') && ' - Ready'}
+                </option>
+                <option value="mistralai/Mistral-7B-Instruct-v0.2">
+                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.2') ? '✅ ' : '⏳ '}
+                  Mistral-7B-Instruct-v0.2 (7B, ~14GB RAM)
+                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.2') && ' - Ready'}
+                </option>
+                <option value="TheBloke/Mistral-7B-Instruct-v0.1-GGUF">
+                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') ? '✅ ' : '⏳ '}
+                  Mistral-7B-GGUF (4-8GB RAM, CPU optimized)
+                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') && ' - Ready'}
+                </option>
               </select>
               {fallbackUsed && originalModel && (
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
@@ -302,13 +375,73 @@ const Playground = () => {
                   </p>
                 </div>
               )}
-              {selectedModel.includes('Mistral-7B') && (
+              
+              {/* Model Status Info */}
+              <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-md">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Model Status:</span>
+                </p>
+                <div className="text-xs text-gray-600 mt-1 space-y-1">
+                  <div className="flex items-center">
+                    <span className="mr-2">✅</span>
+                    <span>Ready models (loaded in memory)</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">⏳</span>
+                    <span>Available models (need to be loaded)</span>
+                  </div>
+                </div>
+                {modelStatuses.filter(m => m.is_loaded).length > 0 && (
+                  <p className="text-xs text-green-600 mt-2">
+                    <span className="font-medium">Ready models:</span> {modelStatuses.filter(m => m.is_loaded).map(m => m.name.split('/').pop()).join(', ')}
+                  </p>
+                )}
+                
+                {/* Management Tip */}
+                <div className="mt-3 pt-2 border-t border-gray-200">
+                  <p className="text-xs text-blue-600">
+                    <span className="font-medium">💡 Tip:</span> Visit the{' '}
+                    <a 
+                      href="/models" 
+                      className="underline hover:text-blue-800 font-medium"
+                      title="Go to Models page for advanced model management"
+                    >
+                      Models page
+                    </a>{' '}
+                    to download models proactively and manage their status.
+                  </p>
+                </div>
+              </div>
+              
+              {selectedModel.includes('Mistral-7B') && !isModelLoaded(selectedModel) && (
                 <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
                   <p className="text-sm text-amber-800">
                     <span className="font-medium">⚠️ Large Model:</span> This model may take 5-10 minutes to download on first use.
                   </p>
                   <p className="text-xs text-amber-600 mt-1">
                     Please be patient - the download will only happen once, then the model will be cached for faster subsequent use.
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2">
+                    <span className="font-medium">💡 Pro tip:</span> Download large models from the{' '}
+                    <a 
+                      href="/models" 
+                      className="underline hover:text-blue-800 font-medium"
+                      title="Go to Models page to download models proactively"
+                    >
+                      Models page
+                    </a>{' '}
+                    before using them here for a better experience.
+                  </p>
+                </div>
+              )}
+              
+              {selectedModel.includes('Mistral-7B') && isModelLoaded(selectedModel) && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-800">
+                    <span className="font-medium">✅ Large Model Ready:</span> This model is already loaded and ready for fast inference.
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    No download time needed - the model is cached in memory for immediate use.
                   </p>
                 </div>
               )}

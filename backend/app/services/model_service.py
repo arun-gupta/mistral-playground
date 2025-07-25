@@ -293,7 +293,7 @@ class ModelService:
                     model_name,
                     model_type="mistral",  # or "llama" depending on the model
                     gpu_layers=0,  # CPU only for now
-                    lib="avx2"  # Use AVX2 instructions for better performance
+                    # Don't specify lib on Apple Silicon - let it auto-detect
                 )
                 print(f"✅ GGUF model downloaded and loaded successfully: {model_name}")
             else:

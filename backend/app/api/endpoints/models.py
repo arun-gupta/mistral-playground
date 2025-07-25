@@ -9,6 +9,9 @@ from app.services.model_service import model_service
 
 router = APIRouter()
 
+# Track downloaded models (in a real app, this would be persistent)
+downloaded_models = set()
+
 @router.post("/generate", response_model=ModelResponse)
 async def generate_response(request: PromptRequest):
     """Generate response from a single model"""
@@ -156,6 +159,10 @@ async def download_model(request: ModelDownloadRequest):
         # Start download process
         # For now, we'll simulate the download process
         # In a real implementation, this would be async and track progress
+        
+        # Add to downloaded models set (simulating successful download)
+        downloaded_models.add(request.model_name)
+        
         return ModelDownloadResponse(
             model_name=request.model_name,
             provider=request.provider,
@@ -170,20 +177,53 @@ async def download_model(request: ModelDownloadRequest):
         print(f"❌ Error downloading model {request.model_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/download-status/{model_name}", response_model=ModelDownloadResponse)
+@router.get("/download-status/{model_name:path}", response_model=ModelDownloadResponse)
 async def get_download_status(model_name: str):
     """Get download status for a specific model"""
     try:
+        # Decode URL-encoded model name
+        import urllib.parse
+        decoded_model_name = urllib.parse.unquote(model_name)
+        
         # This would check the actual download status
-        # For now, return a mock response
+        # For now, return a mock response that simulates progress
+        import time
+        import random
+        
+        # Simulate different download states based on time
+        current_time = time.time()
+        # Use model name hash to create consistent "progress" for demo
+        progress_seed = hash(decoded_model_name) % 100
+        
+        # Check if model is already downloaded
+        if decoded_model_name in downloaded_models:
+            status = "completed"
+            progress = 100.0
+            message = f"Model {decoded_model_name} download completed"
+            estimated_time = "0s"
+        else:
+            # Simulate progress between 0-100%
+            progress = min(100.0, (current_time % 30) * 3.33 + progress_seed)
+            
+            if progress >= 100:
+                status = "completed"
+                message = f"Model {decoded_model_name} download completed"
+                estimated_time = "0s"
+                # Mark as downloaded
+                downloaded_models.add(decoded_model_name)
+            else:
+                status = "downloading"
+                message = f"Downloading {decoded_model_name}... {progress:.1f}%"
+                estimated_time = f"{max(1, int((100 - progress) / 3.33))}s"
+        
         return ModelDownloadResponse(
-            model_name=model_name,
+            model_name=decoded_model_name,
             provider="huggingface",
-            status="completed",
-            progress=100.0,
-            message=f"Model {model_name} download completed",
+            status=status,
+            progress=progress,
+            message=message,
             download_size="2.5GB",
-            estimated_time="0s"
+            estimated_time=estimated_time
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -213,7 +253,7 @@ async def get_available_models():
         
         model_statuses = []
         for model_name in available_models:
-            is_loaded = model_name in loaded_models
+            is_loaded = model_name in loaded_models or model_name in downloaded_models
             model_statuses.append(ModelStatus(
                 name=model_name,
                 provider="huggingface",
