@@ -568,37 +568,7 @@ const Playground = () => {
         </Card>
       </div>
 
-      {/* Model Comparison Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Model Comparison</CardTitle>
-          <CardDescription>
-            Compare responses from different Mistral models
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Mistral-7B</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                Fast, efficient instruction-following model
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Mixtral-8x7B</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                High-performance mixture-of-experts model
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Codestral</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                Specialized for code generation and analysis
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
     </div>
   )
 }
