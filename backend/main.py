@@ -11,6 +11,14 @@ from app.api.routes import api_router
 # Load environment variables
 load_dotenv()
 
+# Disable telemetry for all dependencies
+os.environ["DISABLE_TELEMETRY"] = "1"
+os.environ["ANONYMIZED_TELEMETRY"] = "false"
+os.environ["POSTHOG_DISABLED"] = "1"
+os.environ["HUGGINGFACE_HUB_DISABLE_TELEMETRY"] = "1"
+os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 # Create FastAPI app
 app = FastAPI(
     title="Mistral Playground & Prompt Tuner",
