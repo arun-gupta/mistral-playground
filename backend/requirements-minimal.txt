@@ -8,9 +8,11 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 
 # Model inference (CPU-only)
-transformers==4.37.0
+transformers==4.30.0
 torch==2.2.2
 accelerate==0.25.0
+ctransformers==0.2.27  # For GGUF model support
+huggingface-hub==0.16.4  # Compatible with sentence-transformers
 
 # Vector database and embeddings
 chromadb==0.4.18

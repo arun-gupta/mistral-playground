@@ -13,6 +13,7 @@ pydantic-settings==2.1.0
 transformers==4.37.0
 torch==2.2.2
 accelerate==0.25.0
+ctransformers==0.2.27  # For GGUF model support
 huggingface-hub==0.16.4
 
 # Vector database and embeddings

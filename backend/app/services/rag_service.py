@@ -4,7 +4,6 @@ import re
 from typing import List, Dict, Any, Optional
 import chromadb
 from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
 import fitz  # PyMuPDF
 import asyncio
 
@@ -12,6 +11,9 @@ from app.core.config import settings
 from app.models.requests import RAGRequest
 from app.models.responses import RAGResponse, DocumentChunk, CollectionInfo
 from app.services.model_service import model_service
+
+# Lazy import for sentence_transformers to avoid startup issues
+SentenceTransformer = None
 
 class RAGService:
     """Service for RAG (Retrieval-Augmented Generation) functionality"""
@@ -21,7 +23,26 @@ class RAGService:
             path=settings.CHROMA_PERSIST_DIRECTORY,
             settings=Settings(anonymized_telemetry=False)
         )
-        self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
+        self.embedding_model = None
+        self._embedding_model_loaded = False
+    
+    def _load_embedding_model(self):
+        """Lazy load the embedding model"""
+        if not self._embedding_model_loaded:
+            global SentenceTransformer
+            if SentenceTransformer is None:
+                try:
+                    from sentence_transformers import SentenceTransformer
+                except ImportError as e:
+                    raise ImportError(f"sentence-transformers not available: {e}")
+            
+            self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
+            self._embedding_model_loaded = True
+    
+    def _get_embedding_dimension(self):
+        """Get embedding dimension without loading the full model"""
+        self._load_embedding_model()
+        return self.embedding_model.encode(["test"])
     
     def _split_text(self, text: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> List[str]:
         """Simple text splitter that splits on sentences and paragraphs"""
@@ -62,6 +83,7 @@ class RAGService:
         )
         
         # Generate embeddings and add to collection
+        self._load_embedding_model()
         embeddings = self.embedding_model.encode(chunks)
         
         # Prepare documents for insertion
@@ -103,6 +125,7 @@ class RAGService:
             raise ValueError(f"Collection '{request.collection_name}' not found: {str(e)}")
         
         # Query collection
+        self._load_embedding_model()
         query_embedding = self.embedding_model.encode([request.query])
         results = collection.query(
             query_embeddings=query_embedding.tolist(),
@@ -194,7 +217,7 @@ Answer:"""
             collections.append(CollectionInfo(
                 name=collection.name,
                 document_count=collection.count(),
-                embedding_dimension=len(self.embedding_model.encode(["test"])),
+                embedding_dimension=len(self._get_embedding_dimension()),
                 created_at=collection.metadata.get("created_at", "unknown")
             ))
         return collections

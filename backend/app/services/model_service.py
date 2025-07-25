@@ -45,15 +45,15 @@ class ModelService:
         print(f"   Prompt: {request.prompt[:50]}...")
         
         try:
-            if request.provider == ModelProvider.VLLM:
+            if request.provider == ModelProvider.VLLM.value:
                 if VLLM_AVAILABLE:
                     response = await self._generate_vllm(request)
                 else:
                     print("⚠️  vLLM not available, falling back to Hugging Face")
                     response = await self._generate_huggingface(request)
-            elif request.provider == ModelProvider.HUGGINGFACE:
+            elif request.provider == ModelProvider.HUGGINGFACE.value:
                 response = await self._generate_huggingface(request)
-            elif request.provider == ModelProvider.OLLAMA:
+            elif request.provider == ModelProvider.OLLAMA.value:
                 response = await self._generate_ollama(request)
             else:
                 raise ValueError(f"Unsupported provider: {request.provider}")
@@ -64,12 +64,16 @@ class ModelService:
             return ModelResponse(
                 text=response["text"],
                 model_name=response["model_name"],
-                provider=request.provider.value,
-                tokens_used=response["tokens_used"],
-                input_tokens=response["input_tokens"],
-                output_tokens=response["output_tokens"],
-                latency_ms=latency_ms,
-                finish_reason=response.get("finish_reason", "length")
+                provider=request.provider,
+                prompt=request.prompt,
+                parameters={
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                    "top_p": request.top_p,
+                    "system_prompt": request.system_prompt
+                },
+                usage=response.get("usage"),
+                latency=latency_ms / 1000.0  # Convert to seconds
             )
         except Exception as e:
             print(f"❌ Generation failed: {str(e)}")
@@ -80,12 +84,16 @@ class ModelService:
             return ModelResponse(
                 text=f"Sorry, I encountered an error while generating a response: {str(e)}. Please try a different model or check your configuration.",
                 model_name=request.model_name or "error",
-                provider=request.provider.value,
-                tokens_used=0,
-                input_tokens=0,
-                output_tokens=0,
-                latency_ms=latency_ms,
-                finish_reason="error"
+                provider=request.provider,
+                prompt=request.prompt,
+                parameters={
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                    "top_p": request.top_p,
+                    "system_prompt": request.system_prompt
+                },
+                usage=None,
+                latency=latency_ms / 1000.0  # Convert to seconds
             )
     
     async def _generate_vllm(self, request: PromptRequest) -> Dict[str, Any]:
@@ -391,7 +399,7 @@ class ModelService:
                 max_tokens=parameters.get("max_tokens", 1024),
                 top_p=parameters.get("top_p", 0.9),
                 model_name=model_name,
-                provider=ModelProvider.VLLM
+                provider=ModelProvider.VLLM.value
             )
             tasks.append(self.generate_response(request))
         
