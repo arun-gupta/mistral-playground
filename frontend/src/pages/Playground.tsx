@@ -228,24 +228,7 @@ const Playground = () => {
           </div>
         )
       case 'ready':
-        return (
-          <div className="p-3 bg-green-100 border border-green-400 rounded-md">
-            <div className="flex items-center">
-              <span className="text-green-800 font-medium">✅ Model Ready</span>
-            </div>
-            <p className="text-green-700 text-sm mt-1">
-              Model loaded successfully and ready for inference
-              {actualModelUsed && (
-                <span className="block mt-1">
-                  <span className="font-medium">Model used:</span> <code className="bg-green-200 px-1 rounded text-xs">{actualModelUsed}</code>
-                </span>
-              )}
-            </p>
-            <p className="text-green-600 text-xs mt-1">
-              ⚡ Model is cached in memory - subsequent requests will be faster
-            </p>
-          </div>
-        )
+        return null
       case 'error':
         return (
           <div className="p-3 bg-red-100 border border-red-400 rounded-md">
