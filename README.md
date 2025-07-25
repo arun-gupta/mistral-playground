@@ -14,11 +14,11 @@ A modern, developer-friendly full-stack application for exploring, comparing, an
 - **Prompt Management**: Save/load/share prompt configurations
 - **Rich Output Rendering**: Markdown rendering of outputs with syntax highlighting
 
-### UI/UX Improvements
+### User Interface Features
 - **Dedicated Tabs**: Playground, Models, Comparison, RAG, Configs for clear workflow
 - **Model Status Indicators**: Visual badges for Not Downloaded, Downloading, On Disk, Loaded
 - **Tooltips and Legends**: Helpful tooltips (e.g., Mock Mode) and legends for model status
-- **Improved Navigation**: Logical tab order for intuitive workflow
+- **Intuitive Navigation**: Logical tab order for seamless workflow
 
 ### Advanced Features (Planned)
 - **RAG Mode**: Upload documents → embed → retrieve → generate grounded answers
@@ -40,10 +40,10 @@ The main navigation bar includes:
 ## 🚦 Model Status Workflow
 
 Models can be in one of four states:
-- **Not Downloaded**: Model is available but not yet downloaded
-- **Downloading**: Model is currently being downloaded
-- **On Disk**: Model is downloaded and ready to load
-- **Loaded**: Model is loaded in memory and ready for inference
+- **⏳ Not Downloaded**: Model is available but not yet downloaded
+- **🔄 Downloading**: Model is currently being downloaded
+- **📦 On Disk**: Model is downloaded and ready to load
+- **✅ Loaded**: Model is loaded in memory and ready for inference
 
 The Models tab provides proactive management and real-time status tracking for all models.
 
@@ -71,7 +71,7 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 ### Tech Stack
 - **Frontend**: React 18 + Vite + TypeScript + TailwindCSS + shadcn/ui
 - **Backend**: Python 3.11+ + FastAPI + Pydantic
-- **Models**: vLLM for local inference, Hugging Face Transformers
+- **Models**: vLLM for local inference, Hugging Face Transformers, Ollama
 - **Vector DB**: ChromaDB for RAG functionality
 - **Embeddings**: SentenceTransformers
 - **Document Processing**: PyMuPDF + LangChain
@@ -79,7 +79,39 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 
 ## 🚀 Quick Start
 
-### Option 1: Local Development (Recommended)
+### Option 1: One-Command Setup (Recommended)
+
+The fastest way to get started is using our automated setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/arun-gupta/mistral-playground
+cd mistral-playground
+
+# Run the development setup script
+chmod +x start-dev.sh
+./start-dev.sh
+```
+
+This script will automatically:
+- ✅ Create a Python virtual environment
+- ✅ Install minimal backend dependencies (CPU-friendly)
+- ✅ Create a basic `.env` file with sensible defaults
+- ✅ Start the backend server
+- ✅ Install frontend dependencies (if Node.js is available)
+- ✅ Start the frontend development server
+
+**Access the application:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+**Default configuration:**
+- Uses `microsoft/DialoGPT-small` (CPU-friendly, ~500MB RAM)
+- Mock mode disabled (real model inference)
+- Basic security settings
+
+### Option 2: Manual Setup (Advanced)
 
 **Setup Options:**
 - **GPU Setup**: Use `requirements.txt` for full vLLM support (requires CUDA)
@@ -88,7 +120,7 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 
 1. **Clone and Setup**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/arun-gupta/mistral-playground
    cd mistral-playground
    ```
 
@@ -179,9 +211,9 @@ python3 -c "import secrets; print(secrets.token_hex(32))"
 ### Environment Variables (.env)
 ```bash
 # Model Configuration
-MODEL_PROVIDER=vllm  # vllm, ollama, huggingface
-MODEL_NAME=mistral-7b-instruct
-DEVICE=cuda  # cuda, cpu, mps
+MODEL_PROVIDER=huggingface  # huggingface, vllm, ollama
+MODEL_NAME=microsoft/DialoGPT-small  # Default CPU-friendly model
+DEVICE=cpu  # cpu, cuda, mps
 
 # Vector Database
 CHROMA_PERSIST_DIRECTORY=./chroma_db
@@ -191,6 +223,20 @@ EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 API_HOST=0.0.0.0
 API_PORT=8000
 CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
+
+# Security
+SECRET_KEY=your-secret-key-here  # Generate using ./generate-secret-key.sh
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Logging
+LOG_LEVEL=INFO
+
+# Development/Testing
+MOCK_MODE=false  # Set to true for UI testing without real models
+
+# Telemetry/Privacy
+DISABLE_TELEMETRY=true  # Disable all telemetry collection
 
 # Optional: Hugging Face API
 HUGGINGFACE_API_KEY=your_hf_token_here
@@ -378,22 +424,6 @@ npm run build
 npm test
 ```
 
-### Frontend Development
-```bash
-cd frontend
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run tests
-npm test
-```
-
 ## 📊 Performance Monitoring
 
 The application tracks:
@@ -412,7 +442,7 @@ The application tracks:
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
