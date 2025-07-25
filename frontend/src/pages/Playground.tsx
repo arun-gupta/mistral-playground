@@ -126,10 +126,12 @@ const Playground = () => {
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="w-full p-2 mt-1 border rounded-md"
               >
-                <option value="microsoft/DialoGPT-small">DialoGPT Small (CPU-friendly)</option>
-                <option value="microsoft/DialoGPT-medium">DialoGPT Medium</option>
-                <option value="microsoft/DialoGPT-large">DialoGPT Large</option>
-                <option value="mistral-7b-instruct">Mistral-7B-Instruct (requires GPU)</option>
+                <option value="microsoft/DialoGPT-small">DialoGPT Small (CPU-friendly, 117M)</option>
+                <option value="microsoft/DialoGPT-medium">DialoGPT Medium (345M)</option>
+                <option value="microsoft/DialoGPT-large">DialoGPT Large (774M)</option>
+                <option value="mistralai/Mistral-7B-Instruct-v0.1">Mistral-7B-Instruct-v0.1 (7B, ~14GB RAM)</option>
+                <option value="mistralai/Mistral-7B-Instruct-v0.2">Mistral-7B-Instruct-v0.2 (7B, ~14GB RAM)</option>
+                <option value="TheBloke/Mistral-7B-Instruct-v0.1-GGUF">Mistral-7B-GGUF (4-8GB RAM, CPU optimized)</option>
               </select>
             </div>
 

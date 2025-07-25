@@ -86,32 +86,84 @@ async def mock_generate():
 async def get_model_info():
     """Get detailed information about available models"""
     models_info = [
+        # CPU-friendly tiny models
         ModelInfo(
-            name="mistral-7b-instruct",
-            provider="vllm",
+            name="microsoft/DialoGPT-small",
+            provider="huggingface",
+            context_length=1024,
+            parameters="117M",
+            quantization="fp32",
+            license="MIT",
+            description="Very small, CPU-friendly model for testing"
+        ),
+        ModelInfo(
+            name="microsoft/DialoGPT-medium",
+            provider="huggingface",
+            context_length=1024,
+            parameters="345M",
+            quantization="fp32",
+            license="MIT",
+            description="Medium-sized model, good balance of speed and quality"
+        ),
+        ModelInfo(
+            name="microsoft/DialoGPT-large",
+            provider="huggingface",
+            context_length=1024,
+            parameters="774M",
+            quantization="fp32",
+            license="MIT",
+            description="Larger model with better quality, still CPU-friendly"
+        ),
+        
+        # Quantized Mistral models (CPU-optimized)
+        ModelInfo(
+            name="TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
+            provider="huggingface",
+            context_length=8192,
+            parameters="7B",
+            quantization="GGUF",
+            license="Apache 2.0",
+            description="Quantized Mistral model optimized for CPU inference"
+        ),
+        
+        # Full Mistral models (require more RAM)
+        ModelInfo(
+            name="mistralai/Mistral-7B-Instruct-v0.1",
+            provider="huggingface",
             context_length=8192,
             parameters="7B",
             quantization="fp16",
             license="Apache 2.0",
-            description="Fast, efficient instruction-following model"
+            description="Full Mistral model, requires ~14GB RAM"
         ),
         ModelInfo(
-            name="mixtral-8x7b-instruct",
+            name="mistralai/Mistral-7B-Instruct-v0.2",
+            provider="huggingface",
+            context_length=8192,
+            parameters="7B",
+            quantization="fp16",
+            license="Apache 2.0",
+            description="Latest Mistral model with improved performance"
+        ),
+        
+        # GPU-only models (for reference)
+        ModelInfo(
+            name="mistralai/Mixtral-8x7B-Instruct-v0.1",
             provider="vllm",
             context_length=32768,
             parameters="8x7B",
             quantization="fp16",
             license="Apache 2.0",
-            description="High-performance mixture-of-experts model"
+            description="High-performance mixture-of-experts model (GPU recommended)"
         ),
         ModelInfo(
-            name="codestral",
+            name="mistralai/CodeMistral-7B-Instruct-v0.1",
             provider="vllm",
             context_length=8192,
             parameters="7B",
             quantization="fp16",
             license="Apache 2.0",
-            description="Specialized for code generation and analysis"
+            description="Specialized for code generation and analysis (GPU recommended)"
         )
     ]
     return models_info 

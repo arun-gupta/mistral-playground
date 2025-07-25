@@ -223,12 +223,25 @@ class ModelService:
     
     def get_available_models(self) -> List[str]:
         """Get list of available models"""
-        # This would typically query the model registry
+        # CPU-friendly models ordered by size
         return [
-            "mistral-7b-instruct",
-            "mixtral-8x7b-instruct",
-            "codestral",
-            "mistral-7b-instruct-v0.2"
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # GPU-only models (for reference)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
 
 # Global model service instance

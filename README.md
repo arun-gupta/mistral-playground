@@ -191,14 +191,37 @@ mistral-playground/
 ## 🧠 Model Support
 
 ### Currently Supported Models
-- **Mistral-7B-Instruct**: Fast, efficient instruction-following model
-- **Mixtral-8x7B-Instruct**: High-performance mixture-of-experts model
-- **Codestral**: Specialized for code generation and analysis
+
+#### CPU-Friendly Models (Recommended for Development)
+- **DialoGPT Series**: Microsoft's conversational models
+  - `microsoft/DialoGPT-small` (117M parameters, ~500MB RAM) - Perfect for testing
+  - `microsoft/DialoGPT-medium` (345M parameters, ~1.5GB RAM) - Good balance
+  - `microsoft/DialoGPT-large` (774M parameters, ~3GB RAM) - Better quality
+
+#### Mistral Models (CPU-Optimized)
+- **Quantized Mistral**: CPU-optimized versions
+  - `TheBloke/Mistral-7B-Instruct-v0.1-GGUF` (4-8GB RAM) - Best for CPU production
+  - `TheBloke/Mistral-7B-Instruct-v0.2-GGUF` (4-8GB RAM) - Latest quantized version
+
+#### Full Mistral Models (High RAM)
+- **Mistral-7B Series**: Full models requiring significant RAM
+  - `mistralai/Mistral-7B-Instruct-v0.1` (~14GB RAM) - Original instruction model
+  - `mistralai/Mistral-7B-Instruct-v0.2` (~14GB RAM) - Latest instruction model
+  - `mistralai/Mistral-7B-v0.1` (~14GB RAM) - Base model
+
+#### GPU-Only Models (For Reference)
+- **Mixtral-8x7B-Instruct**: High-performance mixture-of-experts model (~32GB RAM)
+- **CodeMistral-7B-Instruct**: Specialized for code generation (~14GB RAM)
 
 ### Model Providers
-- **vLLM**: High-performance local inference (recommended)
-- **Ollama**: Easy local model management
-- **Hugging Face**: Cloud-based inference
+- **Hugging Face**: Primary provider for CPU-friendly models
+- **vLLM**: High-performance local inference (GPU recommended)
+- **Ollama**: Easy local model management (supports GGUF models)
+
+### Model Selection Guide
+- **Testing/Development**: Use `microsoft/DialoGPT-small`
+- **Production (CPU)**: Use `TheBloke/Mistral-7B-Instruct-v0.1-GGUF`
+- **High Quality**: Use `mistralai/Mistral-7B-Instruct-v0.2` (if you have 16GB+ RAM)
 
 ## 🚀 Upgrading to GPU Setup
 
