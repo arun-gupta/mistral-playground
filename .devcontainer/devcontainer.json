@@ -47,7 +47,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "bash -c 'set -x; bash .devcontainer/setup.sh'",
   "postStartCommand": "bash -c 'set -x; bash start-dev.sh'",
   "remoteUser": "vscode"
 } 
