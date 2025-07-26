@@ -265,12 +265,43 @@ async def get_available_models():
         print(f"❌ Import error in get_available_models: {e}")
         # Return basic model statuses if model service can't be imported
         fallback_models = [
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
-            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
-            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
-            "microsoft/DialoGPT-small",
-            "microsoft/DialoGPT-medium",
-            "microsoft/DialoGPT-large"
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
         
         model_statuses = []
@@ -292,10 +323,43 @@ async def get_available_models():
         print(f"❌ Error in get_available_models: {e}")
         # Return basic model statuses on any other error
         fallback_models = [
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
-            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
-            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
-            "microsoft/DialoGPT-small"
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
         
         model_statuses = []
@@ -323,21 +387,85 @@ async def get_model_list():
         print(f"❌ Import error in get_model_list: {e}")
         # Return a basic list if model service can't be imported
         return [
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
-            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF", 
-            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
-            "microsoft/DialoGPT-small",
-            "microsoft/DialoGPT-medium",
-            "microsoft/DialoGPT-large"
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
     except Exception as e:
         print(f"❌ Error in get_model_list: {e}")
         # Return a basic list on any other error
         return [
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
-            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
-            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
-            "microsoft/DialoGPT-small"
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
 
 @router.get("/info", response_model=List[ModelInfo])
