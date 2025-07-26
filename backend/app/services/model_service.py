@@ -461,12 +461,16 @@ class ModelService:
             "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
             
-            # Meta Llama models (CPU-optimized versions)
-            "TheBloke/Llama-2-7B-Chat-GGUF",           # 4-8GB RAM, CPU optimized
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
             "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
-            "TheBloke/Llama-2-70B-Chat-GGUF",          # 16-24GB RAM, CPU optimized
-            "meta-llama/Llama-2-7b-chat-hf",           # ~14GB RAM, full model
-            "meta-llama/Llama-2-13b-chat-hf",          # ~26GB RAM, full model
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
             
             # Google Gemma models
             "google/gemma-2b",                          # ~4GB RAM, small model

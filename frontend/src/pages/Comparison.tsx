@@ -51,37 +51,26 @@ const Comparison = () => {
   const [topP, setTopP] = useState(0.9)
   const [systemPrompt, setSystemPrompt] = useState('')
 
-  // Available models for comparison
-  const availableModels = [
-    'microsoft/DialoGPT-small',
-    'microsoft/DialoGPT-medium', 
-    'microsoft/DialoGPT-large',
-    'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
-    'mistralai/Mistral-7B-Instruct-v0.1',
-    'mistralai/Mistral-7B-Instruct-v0.2',
-    
-    // Meta Llama models
-    'TheBloke/Llama-2-7B-Chat-GGUF',
-    'TheBloke/Llama-2-13B-Chat-GGUF',
-    'meta-llama/Llama-2-7b-chat-hf',
-    
-    // Google Gemma models
-    'google/gemma-2b',
-    'google/gemma-7b',
-    'google/gemma-2b-it',
-    'google/gemma-7b-it',
-    
-    // Mixtral models
-    'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
-  ]
+  // Available models for comparison - will be populated from backend
+  const [availableModels, setAvailableModels] = useState<string[]>([])
 
-  // Fetch model statuses
+  // Fetch model statuses and available models
   const fetchModelStatuses = async () => {
     try {
-      const response = await fetch('/api/v1/models/available')
-      if (response.ok) {
-        const data = await response.json()
-        setModelStatuses(data)
+      // Fetch model list and statuses in parallel
+      const [listResponse, statusResponse] = await Promise.all([
+        fetch('/api/v1/models/list'),
+        fetch('/api/v1/models/available')
+      ])
+      
+      if (listResponse.ok && statusResponse.ok) {
+        const modelList = await listResponse.json()
+        const statusData = await statusResponse.json()
+        
+        setAvailableModels(modelList)
+        setModelStatuses(statusData)
+      } else {
+        console.error('Failed to fetch models')
       }
     } catch (error) {
       console.error('Failed to fetch model statuses:', error)
@@ -183,10 +172,22 @@ const Comparison = () => {
       {/* Model Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Select Models to Compare</CardTitle>
-          <CardDescription>
-            Choose 2 or more models to compare their responses
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Select Models to Compare</CardTitle>
+              <CardDescription>
+                Choose 2 or more models to compare their responses
+              </CardDescription>
+            </div>
+            <Button
+              onClick={fetchModelStatuses}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              🔄 Refresh Models
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -230,9 +231,116 @@ const Comparison = () => {
             })}
           </div>
           
+          {/* Prepared Model Combinations */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h3 className="text-sm font-semibold text-blue-800 mb-3">🚀 Quick Test Combinations</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
+                onClick={() => setSelectedModels([
+                  'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+                  'TheBloke/Meta-Llama-3-14B-Instruct-GGUF'
+                ])}
+              >
+                <div className="text-left">
+                  <div className="font-medium">⭐ Recommended Duo</div>
+                  <div className="text-xs text-gray-600">Best CPU models</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
+                onClick={() => setSelectedModels([
+                  'microsoft/DialoGPT-small',
+                  'microsoft/DialoGPT-medium',
+                  'microsoft/DialoGPT-large'
+                ])}
+              >
+                <div className="text-left">
+                  <div className="font-medium">🔬 Size Comparison</div>
+                  <div className="text-xs text-gray-600">DialoGPT variants</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
+                onClick={() => setSelectedModels([
+                  'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+                  'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
+                ])}
+              >
+                <div className="text-left">
+                  <div className="font-medium">⚡ Performance Test</div>
+                  <div className="text-xs text-gray-600">Mistral vs Mixtral</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
+                onClick={() => setSelectedModels([
+                  'google/gemma-2b-it',
+                  'google/gemma-7b-it'
+                ])}
+              >
+                <div className="text-left">
+                  <div className="font-medium">🧠 Google Models</div>
+                  <div className="text-xs text-gray-600">Gemma 2B vs 7B</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
+                onClick={() => setSelectedModels([
+                  'TheBloke/Llama-2-13B-Chat-GGUF',
+                  'TheBloke/Meta-Llama-3-14B-Instruct-GGUF'
+                ])}
+              >
+                <div className="text-left">
+                  <div className="font-medium">🔄 Llama Evolution</div>
+                  <div className="text-xs text-gray-600">Llama 2 vs Llama 3</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
+                onClick={() => setSelectedModels([
+                  'mistralai/Mistral-7B-Instruct-v0.2',
+                  'TheBloke/Mistral-7B-Instruct-v0.2-GGUF'
+                ])}
+              >
+                <div className="text-left">
+                  <div className="font-medium">⚖️ Full vs Quantized</div>
+                  <div className="text-xs text-gray-600">Quality vs Speed</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+          
           {selectedModels.length > 0 && (
             <div className="mt-4 p-3 bg-muted rounded-md">
-              <div className="text-sm font-medium mb-2">Selected Models ({selectedModels.length}):</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium">Selected Models ({selectedModels.length}):</div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setSelectedModels([])}
+                >
+                  🗑️ Clear All
+                </Button>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {selectedModels.map((model) => (
                   <Badge key={model} variant="outline">
@@ -248,12 +356,94 @@ const Comparison = () => {
       {/* Prompt Input */}
       <Card>
         <CardHeader>
-          <CardTitle>Prompt</CardTitle>
-          <CardDescription>
-            Enter the prompt that will be sent to all selected models
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Prompt</CardTitle>
+              <CardDescription>
+                Enter the prompt that will be sent to all selected models
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Prepared Prompts */}
+          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+            <h3 className="text-sm font-semibold text-green-800 mb-2">💡 Sample Prompts</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-green-50 text-left"
+                onClick={() => setPrompt("Explain quantum computing in simple terms that a high school student could understand.")}
+              >
+                <div>
+                  <div className="font-medium">🎓 Educational</div>
+                  <div className="text-xs text-gray-600">Quantum computing explanation</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-green-50 text-left"
+                onClick={() => setPrompt("Write a short story about a robot who discovers emotions for the first time.")}
+              >
+                <div>
+                  <div className="font-medium">📖 Creative Writing</div>
+                  <div className="text-xs text-gray-600">Robot emotion story</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-green-50 text-left"
+                onClick={() => setPrompt("What are the main differences between Python and JavaScript? Provide examples.")}
+              >
+                <div>
+                  <div className="font-medium">💻 Technical</div>
+                  <div className="text-xs text-gray-600">Python vs JavaScript</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-green-50 text-left"
+                onClick={() => setPrompt("Analyze the pros and cons of remote work versus office work.")}
+              >
+                <div>
+                  <div className="font-medium">🤔 Analysis</div>
+                  <div className="text-xs text-gray-600">Remote vs office work</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-green-50 text-left"
+                onClick={() => setPrompt("Write a haiku about artificial intelligence.")}
+              >
+                <div>
+                  <div className="font-medium">🎭 Poetry</div>
+                  <div className="text-xs text-gray-600">AI haiku</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-auto p-2 bg-white hover:bg-green-50 text-left"
+                onClick={() => setPrompt("What would happen if humans could photosynthesize like plants?")}
+              >
+                <div>
+                  <div className="font-medium">🔬 Scientific</div>
+                  <div className="text-xs text-gray-600">Human photosynthesis</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+          
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}

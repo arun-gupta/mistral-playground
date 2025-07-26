@@ -10,7 +10,7 @@ const Playground = () => {
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(50)
   const [topP, setTopP] = useState(0.9)
-  const [selectedModel, setSelectedModel] = useState('microsoft/DialoGPT-small')
+  const [selectedModel, setSelectedModel] = useState('TheBloke/Mistral-7B-Instruct-v0.2-GGUF')
   const [selectedProvider, setSelectedProvider] = useState('huggingface')
   const [actualModelUsed, setActualModelUsed] = useState('')
   const [fallbackUsed, setFallbackUsed] = useState(false)
@@ -22,14 +22,38 @@ const Playground = () => {
   const [modelError, setModelError] = useState('')
   const [error, setError] = useState('')
   const [modelStatuses, setModelStatuses] = useState<Array<{name: string, is_loaded: boolean}>>([])
+  const [availableModels, setAvailableModels] = useState<string[]>([])
 
-  // Function to fetch model statuses
+  // Function to fetch model statuses and available models
   const fetchModelStatuses = async () => {
     try {
-      const response = await fetch('/api/v1/models/available')
-      if (response.ok) {
-        const data = await response.json()
-        setModelStatuses(data.map((model: any) => ({
+      // Fetch model list and statuses in parallel
+      const [listResponse, statusResponse] = await Promise.all([
+        fetch('/api/v1/models/list'),
+        fetch('/api/v1/models/available')
+      ])
+      
+      if (listResponse.ok && statusResponse.ok) {
+        const modelList = await listResponse.json()
+        const statusData = await statusResponse.json()
+        
+        console.log('🔍 All available models:', modelList)
+        
+        // Filter to only Mistral & Mixtral models for Playground
+        const mistralModels = modelList.filter((model: string) => 
+          model.includes('Mistral') || model.includes('Mixtral')
+        )
+        
+        console.log('🔍 Filtered Mistral/Mixtral models:', mistralModels)
+        
+        // If no Mistral/Mixtral models found, show all models as fallback
+        if (mistralModels.length === 0) {
+          console.log('⚠️ No Mistral/Mixtral models found, showing all models as fallback')
+          setAvailableModels(modelList)
+        } else {
+          setAvailableModels(mistralModels)
+        }
+        setModelStatuses(statusData.map((model: any) => ({
           name: model.name,
           is_loaded: model.is_loaded
         })))
@@ -304,101 +328,72 @@ const Playground = () => {
             <div>
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Model</label>
-                <Button
-                  onClick={fetchModelStatuses}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  🔄 Refresh Status
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={fetchModelStatuses}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    🔄 Refresh Status
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/v1/models/list')
+                        const data = await response.json()
+                        console.log('🔍 Direct API test:', data)
+                        alert(`Found ${data.length} models: ${data.join(', ')}`)
+                      } catch (error) {
+                        console.error('API test failed:', error)
+                        alert('API test failed: ' + error)
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    🐛 Test API
+                  </Button>
+                </div>
               </div>
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="w-full p-2 mt-1 border rounded-md"
               >
-                <option value="microsoft/DialoGPT-small">
-                  {isModelLoaded('microsoft/DialoGPT-small') ? '✅ ' : '⏳ '}
-                  DialoGPT Small (CPU-friendly, 117M)
-                  {isModelLoaded('microsoft/DialoGPT-small') && ' - Loaded'}
-                </option>
-                <option value="microsoft/DialoGPT-medium">
-                  {isModelLoaded('microsoft/DialoGPT-medium') ? '✅ ' : '⏳ '}
-                  DialoGPT Medium (345M)
-                  {isModelLoaded('microsoft/DialoGPT-medium') && ' - Loaded'}
-                </option>
-                <option value="microsoft/DialoGPT-large">
-                  {isModelLoaded('microsoft/DialoGPT-large') ? '✅ ' : '⏳ '}
-                  DialoGPT Large (774M)
-                  {isModelLoaded('microsoft/DialoGPT-large') && ' - Loaded'}
-                </option>
-                <option value="mistralai/Mistral-7B-Instruct-v0.1">
-                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.1') ? '✅ ' : '⏳ '}
-                  Mistral-7B-Instruct-v0.1 (7B, ~14GB RAM)
-                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.1') && ' - Loaded'}
-                </option>
-                <option value="mistralai/Mistral-7B-Instruct-v0.2">
-                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.2') ? '✅ ' : '⏳ '}
-                  Mistral-7B-Instruct-v0.2 (7B, ~14GB RAM)
-                  {isModelLoaded('mistralai/Mistral-7B-Instruct-v0.2') && ' - Loaded'}
-                </option>
-                <option value="TheBloke/Mistral-7B-Instruct-v0.1-GGUF">
-                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') ? '✅ ' : '⏳ '}
-                  Mistral-7B-GGUF (4-8GB RAM, CPU optimized)
-                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') && ' - Loaded'}
-                </option>
-                <option value="TheBloke/Mistral-7B-Instruct-v0.2-GGUF">
-                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.2-GGUF') ? '✅ ' : '⏳ '}
-                  Mistral-7B-v0.2-GGUF (4-8GB RAM, CPU optimized)
-                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.2-GGUF') && ' - Loaded'}
-                </option>
-                
-                {/* Meta Llama models */}
-                <option value="TheBloke/Llama-2-7B-Chat-GGUF">
-                  {isModelLoaded('TheBloke/Llama-2-7B-Chat-GGUF') ? '✅ ' : '⏳ '}
-                  Llama-2-7B-Chat-GGUF (4-8GB RAM, CPU optimized)
-                  {isModelLoaded('TheBloke/Llama-2-7B-Chat-GGUF') && ' - Loaded'}
-                </option>
-                <option value="TheBloke/Llama-2-13B-Chat-GGUF">
-                  {isModelLoaded('TheBloke/Llama-2-13B-Chat-GGUF') ? '✅ ' : '⏳ '}
-                  Llama-2-13B-Chat-GGUF (8-12GB RAM, CPU optimized)
-                  {isModelLoaded('TheBloke/Llama-2-13B-Chat-GGUF') && ' - Loaded'}
-                </option>
-                <option value="meta-llama/Llama-2-7b-chat-hf">
-                  {isModelLoaded('meta-llama/Llama-2-7b-chat-hf') ? '✅ ' : '⏳ '}
-                  Llama-2-7B-Chat (7B, ~14GB RAM)
-                  {isModelLoaded('meta-llama/Llama-2-7b-chat-hf') && ' - Loaded'}
-                </option>
-                
-                {/* Google Gemma models */}
-                <option value="google/gemma-2b">
-                  {isModelLoaded('google/gemma-2b') ? '✅ ' : '⏳ '}
-                  Gemma-2B (~4GB RAM, efficient)
-                  {isModelLoaded('google/gemma-2b') && ' - Loaded'}
-                </option>
-                <option value="google/gemma-7b">
-                  {isModelLoaded('google/gemma-7b') ? '✅ ' : '⏳ '}
-                  Gemma-7B (~14GB RAM, good performance)
-                  {isModelLoaded('google/gemma-7b') && ' - Loaded'}
-                </option>
-                <option value="google/gemma-2b-it">
-                  {isModelLoaded('google/gemma-2b-it') ? '✅ ' : '⏳ '}
-                  Gemma-2B-IT (~4GB RAM, instruction tuned)
-                  {isModelLoaded('google/gemma-2b-it') && ' - Loaded'}
-                </option>
-                <option value="google/gemma-7b-it">
-                  {isModelLoaded('google/gemma-7b-it') ? '✅ ' : '⏳ '}
-                  Gemma-7B-IT (~14GB RAM, instruction tuned)
-                  {isModelLoaded('google/gemma-7b-it') && ' - Loaded'}
-                </option>
-                
-                {/* Mixtral models */}
-                <option value="TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF">
-                  {isModelLoaded('TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF') ? '✅ ' : '⏳ '}
-                  Mixtral-8x7B-GGUF (16-24GB RAM, CPU optimized)
-                  {isModelLoaded('TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF') && ' - Loaded'}
-                </option>
+                {availableModels.length === 0 ? (
+                  <option value="" disabled>
+                    ⚠️ No models available - check console for details
+                  </option>
+                ) : (
+                  availableModels.map((modelName) => {
+                    const isLoaded = isModelLoaded(modelName)
+                    const isRecommended = modelName.includes('Mistral-7B-Instruct-v0.2') || 
+                                         modelName.includes('Mixtral-8x7B-Instruct-v0.1-GGUF')
+                    
+                    // Generate description based on model name
+                    let description = ''
+                    if (modelName.includes('GGUF')) {
+                      description = 'CPU optimized (4-8GB RAM)'
+                    } else if (modelName.includes('Mixtral')) {
+                      description = 'High performance (~32GB RAM, GPU recommended)'
+                    } else if (modelName.includes('CodeMistral')) {
+                      description = 'Code generation (~14GB RAM, GPU recommended)'
+                    } else {
+                      description = 'Full model (~14GB RAM)'
+                    }
+                    
+                    return (
+                      <option key={modelName} value={modelName}>
+                        {isLoaded ? '✅ ' : '⏳ '}
+                        {modelName} - {description}
+                        {isRecommended && ' ⭐ Recommended'}
+                        {isLoaded && ' - Loaded'}
+                      </option>
+                    )
+                  })
+                )}
               </select>
               {fallbackUsed && originalModel && (
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
@@ -428,7 +423,7 @@ const Playground = () => {
                 </div>
                 {modelStatuses.filter(m => m.is_loaded).length > 0 && (
                   <p className="text-xs text-green-600 mt-2">
-                    <span className="font-medium">Loaded models:</span> {modelStatuses.filter(m => m.is_loaded).map(m => m.name.split('/').pop()).join(', ')}
+                    <span className="font-medium">Loaded models:</span> {modelStatuses.filter(m => m.is_loaded).map(m => m.name).join(', ')}
                   </p>
                 )}
                 

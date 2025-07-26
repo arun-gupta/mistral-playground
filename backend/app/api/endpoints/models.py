@@ -241,37 +241,13 @@ async def get_available_models():
             list(model_service.ct_models.keys())
         )
         
-        # Define available models
-        available_models = [
-            "microsoft/DialoGPT-small",
-            "microsoft/DialoGPT-medium", 
-            "microsoft/DialoGPT-large",
-            "mistralai/Mistral-7B-Instruct-v0.1",
-            "mistralai/Mistral-7B-Instruct-v0.2",
-            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
-            
-            # Meta Llama models
-            "TheBloke/Llama-2-7B-Chat-GGUF",
-            "TheBloke/Llama-2-13B-Chat-GGUF",
-            "TheBloke/Llama-2-70B-Chat-GGUF",
-            "meta-llama/Llama-2-7b-chat-hf",
-            "meta-llama/Llama-2-13b-chat-hf",
-            
-            # Google Gemma models
-            "google/gemma-2b",
-            "google/gemma-7b",
-            "google/gemma-2b-it",
-            "google/gemma-7b-it",
-            
-            # Mixtral models
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",
-            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF"
-        ]
+        # Get available models from the service
+        available_models = model_service.get_available_models()
         
         model_statuses = []
         for model_name in available_models:
-            is_loaded = model_name in loaded_models or model_name in downloaded_models
+            # Only mark as loaded if actually loaded in memory
+            is_loaded = model_name in loaded_models
             model_statuses.append(ModelStatus(
                 name=model_name,
                 provider="huggingface",
@@ -285,6 +261,15 @@ async def get_available_models():
         
         return model_statuses
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/list", response_model=List[str])
+async def get_model_list():
+    """Get simple list of all available model names"""
+    try:
+        from app.services.model_service import model_service
+        return model_service.get_available_models()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -372,7 +357,8 @@ async def get_model_info():
             description="Specialized for code generation and analysis (GPU recommended)"
         ),
         
-        # Meta Llama models (CPU-optimized versions)
+        # Meta Llama models (2 and 3 together)
+        # Llama 2 models (legacy)
         ModelInfo(
             name="TheBloke/Llama-2-7B-Chat-GGUF",
             provider="huggingface",
@@ -392,15 +378,6 @@ async def get_model_info():
             description="Larger quantized Llama-2 chat model with better quality"
         ),
         ModelInfo(
-            name="TheBloke/Llama-2-70B-Chat-GGUF",
-            provider="huggingface",
-            context_length=4096,
-            parameters="70B",
-            quantization="GGUF",
-            license="Meta License",
-            description="High-quality quantized Llama-2 chat model (requires significant RAM)"
-        ),
-        ModelInfo(
             name="meta-llama/Llama-2-7b-chat-hf",
             provider="huggingface",
             context_length=4096,
@@ -409,15 +386,27 @@ async def get_model_info():
             license="Meta License",
             description="Full Llama-2 chat model, requires ~14GB RAM"
         ),
+        
+        # Llama 3 models (newer, better performance)
         ModelInfo(
-            name="meta-llama/Llama-2-13b-chat-hf",
+            name="TheBloke/Meta-Llama-3-10B-Instruct-GGUF",
             provider="huggingface",
-            context_length=4096,
-            parameters="13B",
-            quantization="fp16",
+            context_length=8192,
+            parameters="10B",
+            quantization="GGUF",
             license="Meta License",
-            description="Full Llama-2 chat model, requires ~26GB RAM"
+            description="Lightweight Llama 3 model optimized for CPU inference"
         ),
+        ModelInfo(
+            name="TheBloke/Meta-Llama-3-14B-Instruct-GGUF",
+            provider="huggingface",
+            context_length=8192,
+            parameters="14B",
+            quantization="GGUF",
+            license="Meta License",
+            description="High-quality Llama 3 model with excellent performance"
+        ),
+
         
         # Google Gemma models
         ModelInfo(

@@ -293,13 +293,13 @@ mistral-playground/
   - `mistralai/Mistral-7B-v0.1` (~14GB RAM) - Base model
 
 #### Meta Llama Models
-- **Quantized Llama-2**: CPU-optimized versions
+- **Llama 2 Models** (legacy):
   - `TheBloke/Llama-2-7B-Chat-GGUF` (4-8GB RAM) - Popular chat model, CPU optimized
   - `TheBloke/Llama-2-13B-Chat-GGUF` (8-12GB RAM) - Larger model, better quality
-  - `TheBloke/Llama-2-70B-Chat-GGUF` (16-24GB RAM) - High-quality, requires significant RAM
-- **Full Llama-2 Models**: Full models requiring significant RAM
   - `meta-llama/Llama-2-7b-chat-hf` (~14GB RAM) - Full Llama-2 chat model
-  - `meta-llama/Llama-2-13b-chat-hf` (~26GB RAM) - Large Llama-2 chat model
+- **Llama 3 Models** (newer, better performance):
+  - `TheBloke/Meta-Llama-3-10B-Instruct-GGUF` (6-10GB RAM) - Lightweight option
+  - `TheBloke/Meta-Llama-3-14B-Instruct-GGUF` (8-12GB RAM) - Best balance
 
 #### Google Gemma Models
 - **Gemma Series**: Efficient models from Google

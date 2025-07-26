@@ -56,10 +56,11 @@ const RAG = () => {
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(500)
   const [topK, setTopK] = useState(3)
-  const [selectedModel, setSelectedModel] = useState('microsoft/DialoGPT-medium')
+  const [selectedModel, setSelectedModel] = useState('TheBloke/Mistral-7B-Instruct-v0.2-GGUF')
   const [selectedProvider, setSelectedProvider] = useState('huggingface')
   const [showContext, setShowContext] = useState(false)
   const [modelStatuses, setModelStatuses] = useState<Array<{name: string, is_loaded: boolean}>>([])
+  const [availableModels, setAvailableModels] = useState<Array<{name: string, provider: string, description: string}>>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [showCollectionDetails, setShowCollectionDetails] = useState(false)
@@ -71,13 +72,51 @@ const RAG = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
-  // Fetch model statuses
+  // Fetch model statuses and available models
   const fetchModelStatuses = async () => {
     try {
-      const response = await fetch('/api/v1/models/available')
-      if (response.ok) {
-        const data = await response.json()
-        setModelStatuses(data.map((model: any) => ({
+      // Fetch model list and statuses in parallel
+      const [listResponse, statusResponse] = await Promise.all([
+        fetch('/api/v1/models/list'),
+        fetch('/api/v1/models/available')
+      ])
+      
+      if (listResponse.ok && statusResponse.ok) {
+        const modelList = await listResponse.json()
+        const statusData = await statusResponse.json()
+        
+        // Filter to only Mistral & Mixtral models for RAG
+        const mistralModels = modelList.filter((model: string) => 
+          model.includes('Mistral') || model.includes('Mixtral')
+        )
+        
+        // Create model objects with descriptions
+        const modelObjects = mistralModels.map((modelName: string) => {
+          const isRecommended = modelName.includes('Mistral-7B-Instruct-v0.2') || 
+                               modelName.includes('Mixtral-8x7B-Instruct-v0.1-GGUF')
+          
+          let description = ''
+          if (modelName.includes('GGUF')) {
+            description = 'CPU optimized (4-8GB RAM)'
+          } else if (modelName.includes('Mixtral')) {
+            description = 'High performance (~32GB RAM, GPU recommended)'
+          } else {
+            description = 'Full model (~14GB RAM)'
+          }
+          
+          if (isRecommended) {
+            description += ' ⭐ Recommended'
+          }
+          
+          return {
+            name: modelName,
+            provider: 'huggingface',
+            description
+          }
+        })
+        
+        setAvailableModels(modelObjects)
+        setModelStatuses(statusData.map((model: any) => ({
           name: model.name,
           is_loaded: model.is_loaded
         })))
@@ -91,31 +130,6 @@ const RAG = () => {
   const isModelLoaded = (modelName: string) => {
     return modelStatuses.find(model => model.name === modelName)?.is_loaded || false
   }
-
-  // Available models for RAG
-  const availableModels = [
-    { name: 'microsoft/DialoGPT-small', provider: 'huggingface', description: 'Fast, small model (117M params)' },
-    { name: 'microsoft/DialoGPT-medium', provider: 'huggingface', description: 'Balanced model (345M params)' },
-    { name: 'microsoft/DialoGPT-large', provider: 'huggingface', description: 'Better quality (774M params)' },
-    { name: 'TheBloke/Mistral-7B-Instruct-v0.1-GGUF', provider: 'huggingface', description: 'High quality, CPU optimized' },
-    { name: 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', provider: 'huggingface', description: 'Latest Mistral, CPU optimized' },
-    { name: 'mistralai/Mistral-7B-Instruct-v0.1', provider: 'huggingface', description: 'Full Mistral model (high RAM)' },
-    { name: 'mistralai/Mistral-7B-Instruct-v0.2', provider: 'huggingface', description: 'Latest full Mistral model' },
-    
-    // Meta Llama models
-    { name: 'TheBloke/Llama-2-7B-Chat-GGUF', provider: 'huggingface', description: 'Llama-2 chat, CPU optimized' },
-    { name: 'TheBloke/Llama-2-13B-Chat-GGUF', provider: 'huggingface', description: 'Large Llama-2 chat, CPU optimized' },
-    { name: 'meta-llama/Llama-2-7b-chat-hf', provider: 'huggingface', description: 'Full Llama-2 chat model' },
-    
-    // Google Gemma models
-    { name: 'google/gemma-2b', provider: 'huggingface', description: 'Small, efficient Gemma model' },
-    { name: 'google/gemma-7b', provider: 'huggingface', description: 'Medium Gemma model, good performance' },
-    { name: 'google/gemma-2b-it', provider: 'huggingface', description: 'Instruction-tuned Gemma-2B' },
-    { name: 'google/gemma-7b-it', provider: 'huggingface', description: 'Instruction-tuned Gemma-7B' },
-    
-    // Mixtral models
-    { name: 'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF', provider: 'huggingface', description: 'High-performance Mixtral, CPU optimized' }
-  ]
 
   // Generate default collection name from file
   useEffect(() => {
@@ -790,7 +804,17 @@ const RAG = () => {
           <CardContent className="space-y-4">
             {/* Model Selection */}
             <div>
-              <label htmlFor="model-select" className="block text-sm font-medium mb-1">Model for Generation</label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="model-select" className="block text-sm font-medium">Model for Generation</label>
+                <Button
+                  onClick={fetchModelStatuses}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  🔄 Refresh Models
+                </Button>
+              </div>
               <div className="flex items-center gap-2">
                 <select
                   id="model-select"

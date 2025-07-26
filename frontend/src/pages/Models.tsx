@@ -27,12 +27,171 @@ interface ModelDownloadResponse {
   timestamp: string
 }
 
+interface ModelGroup {
+  family: string
+  displayName: string
+  models: ModelStatus[]
+  expanded: boolean
+}
+
+type SortOption = 'size' | 'name' | 'status'
+type FilterOption = 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'
+
 const Models = () => {
   const [models, setModels] = useState<ModelStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [downloadingModels, setDownloadingModels] = useState<Set<string>>(new Set())
   const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({})
+  const [sortBy, setSortBy] = useState<SortOption>('size')
+  const [filterBy, setFilterBy] = useState<FilterOption>('all')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const { toast } = useToast()
+
+  // Model categorization and filtering logic
+  const getModelFamily = (modelName: string): string => {
+    if (modelName.includes('Mistral-7B') || modelName.includes('Mixtral')) return 'mistral'
+    if (modelName.includes('Llama-3') || modelName.includes('Meta-Llama-3') || modelName.includes('Llama-2')) return 'llama'
+    if (modelName.includes('gemma')) return 'gemma'
+    if (modelName.includes('DialoGPT')) return 'dialogpt'
+    return 'other'
+  }
+
+  const getModelSize = (modelName: string): number => {
+    if (modelName.includes('70B') || modelName.includes('Mixtral-8x7B')) return 70
+    if (modelName.includes('13B')) return 13
+    if (modelName.includes('8B') || modelName.includes('7B')) return 7
+    if (modelName.includes('2B')) return 2
+    if (modelName.includes('DialoGPT-large')) return 0.774
+    if (modelName.includes('DialoGPT-medium')) return 0.345
+    if (modelName.includes('DialoGPT-small')) return 0.117
+    return 0
+  }
+
+  const isKeyVariant = (modelName: string): boolean => {
+    // Show only Instruct and GGUF variants by default
+    const isInstruct = modelName.includes('Instruct') || modelName.includes('chat')
+    const isGGUF = modelName.includes('GGUF')
+    const isBase = modelName.includes('Base') || (!isInstruct && !isGGUF)
+    
+    // For small models (DialoGPT), show all variants
+    if (modelName.includes('DialoGPT')) return true
+    
+    // For larger models, show only Instruct and GGUF variants
+    return isInstruct || isGGUF
+  }
+
+  const isRecommended = (modelName: string): boolean => {
+    // Recommended models for different use cases
+    const recommended = [
+      'microsoft/DialoGPT-small', // Testing
+      'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', // Production CPU
+      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF', // CPU-optimized Llama 3
+      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF', // High-quality Llama 3
+      'google/gemma-2b-it', // Efficient development
+      'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF' // High performance
+    ]
+    return recommended.includes(modelName)
+  }
+
+  const isGPURecommended = (modelName: string): boolean => {
+    // Models that would perform significantly better with GPU
+    // Only include models that are actually in our system AND need GPU
+    const gpuRecommended = [
+      'mistralai/Mixtral-8x7B-Instruct-v0.1', // Full Mixtral (~70B effective, ~32GB RAM)
+      'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF', // Mixtral GGUF (~70B effective, 16-24GB RAM)
+      'mistralai/CodeMistral-7B-Instruct-v0.1' // CodeMistral (~14GB RAM, specialized)
+    ]
+    return gpuRecommended.includes(modelName)
+  }
+
+  // Group and filter models
+  const getGroupedModels = (): ModelGroup[] => {
+    let filteredModels = models
+
+    // Apply family filter
+    if (filterBy !== 'all') {
+      filteredModels = models.filter(model => getModelFamily(model.name) === filterBy)
+    }
+
+    // Apply recommended filter
+    if (filterBy === 'recommended') {
+      filteredModels = models.filter(model => isRecommended(model.name))
+    }
+
+    // Apply advanced variants filter
+    if (!showAdvanced) {
+      filteredModels = filteredModels.filter(model => isKeyVariant(model.name))
+    }
+
+    // Sort models
+    filteredModels.sort((a, b) => {
+      switch (sortBy) {
+        case 'size':
+          return getModelSize(b.name) - getModelSize(a.name)
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'status':
+          if (a.is_loaded && !b.is_loaded) return -1
+          if (!a.is_loaded && b.is_loaded) return 1
+          return 0
+        default:
+          return 0
+      }
+    })
+
+    // Group by family
+    const groups: Record<string, ModelStatus[]> = {}
+    filteredModels.forEach(model => {
+      const family = getModelFamily(model.name)
+      if (!groups[family]) groups[family] = []
+      groups[family].push(model)
+    })
+
+    // Sort models within each group
+    Object.keys(groups).forEach(family => {
+      groups[family].sort((a, b) => {
+        // First priority: Recommended models
+        const aIsRecommended = isRecommended(a.name)
+        const bIsRecommended = isRecommended(b.name)
+        if (aIsRecommended && !bIsRecommended) return -1
+        if (!aIsRecommended && bIsRecommended) return 1
+        
+        // Second priority: For Llama family, put Llama 3 first, then Llama 2
+        if (family === 'llama') {
+          const aIsLlama3 = a.name.includes('Llama-3') || a.name.includes('Meta-Llama-3')
+          const bIsLlama3 = b.name.includes('Llama-3') || b.name.includes('Meta-Llama-3')
+          if (aIsLlama3 && !bIsLlama3) return -1
+          if (!aIsLlama3 && bIsLlama3) return 1
+        }
+        
+        // Third priority: Sort by size within each subgroup
+        return getModelSize(b.name) - getModelSize(a.name)
+      })
+    })
+
+    // Convert to ModelGroup array
+    const familyNames: Record<string, string> = {
+      mistral: 'Mistral & Mixtral',
+      llama: 'Meta Llama',
+      gemma: 'Google Gemma',
+      dialogpt: 'Microsoft DialoGPT',
+      other: 'Other Models'
+    }
+
+    return Object.entries(groups).map(([family, models]) => ({
+      family,
+      displayName: familyNames[family] || family,
+      models,
+      expanded: false
+    })).sort((a, b) => {
+      // Sort groups: Mistral first, then Llama, then others
+      if (a.family === 'mistral') return -1
+      if (b.family === 'mistral') return 1
+      if (a.family === 'llama') return -1
+      if (b.family === 'llama') return 1
+      return 0
+    })
+  }
 
   // Fetch available models
   const fetchModels = async () => {
@@ -112,20 +271,18 @@ const Models = () => {
             title: "Success",
             description: `Model ${modelName} is already downloaded and ready to use!`,
           })
-          // Remove from downloading set since it's already done
           setDownloadingModels(prev => {
             const newSet = new Set(prev)
             newSet.delete(modelName)
             return newSet
           })
-          fetchModels() // Refresh the list
+          fetchModels()
         } else if (data.status === 'downloading') {
           console.log(`📥 Starting download polling for ${modelName}`)
           toast({
             title: "Download Started",
             description: `Started downloading ${modelName}. This may take several minutes.`,
           })
-          // Start polling for progress
           pollDownloadProgress(modelName)
         }
       } else {
@@ -138,7 +295,6 @@ const Models = () => {
         description: `Failed to download ${modelName}`,
         variant: "destructive"
       })
-      // Remove from downloading set on error
       setDownloadingModels(prev => {
         const newSet = new Set(prev)
         newSet.delete(modelName)
@@ -155,21 +311,17 @@ const Models = () => {
         if (response.ok) {
           const data: ModelDownloadResponse = await response.json()
           
-          console.log(`📊 Download status for ${modelName}:`, data)
-          
           if (data.progress !== undefined) {
             setDownloadProgress(prev => ({ ...prev, [modelName]: data.progress! }))
           }
           
           if (data.status === 'completed') {
-            console.log(`✅ Download completed for ${modelName}`)
             clearInterval(pollInterval)
             setDownloadingModels(prev => {
               const newSet = new Set(prev)
               newSet.delete(modelName)
               return newSet
             })
-            // Clear progress for this model
             setDownloadProgress(prev => {
               const newProgress = { ...prev }
               delete newProgress[modelName]
@@ -179,16 +331,14 @@ const Models = () => {
               title: "Download Complete",
               description: `Model ${modelName} has been downloaded successfully!`,
             })
-            fetchModels() // Refresh the list
+            fetchModels()
           } else if (data.status === 'failed') {
-            console.log(`❌ Download failed for ${modelName}`)
             clearInterval(pollInterval)
             setDownloadingModels(prev => {
               const newSet = new Set(prev)
               newSet.delete(modelName)
               return newSet
             })
-            // Clear progress for this model
             setDownloadProgress(prev => {
               const newProgress = { ...prev }
               delete newProgress[modelName]
@@ -200,16 +350,13 @@ const Models = () => {
               variant: "destructive"
             })
           }
-        } else {
-          console.error(`❌ Failed to get download status for ${modelName}:`, response.status)
         }
       } catch (error) {
         console.error('Error polling download progress:', error)
         clearInterval(pollInterval)
       }
-    }, 2000) // Poll every 2 seconds
+    }, 2000)
 
-    // Stop polling after 10 minutes
     setTimeout(() => {
       clearInterval(pollInterval)
     }, 600000)
@@ -217,51 +364,37 @@ const Models = () => {
 
   // Get model size category
   const getModelSizeCategory = (modelName: string) => {
-    if (modelName.includes('Mistral-7B')) {
-      return 'Large (7B parameters)'
-    } else if (modelName.includes('Mixtral-8x7B')) {
-      return 'Very Large (8x7B parameters)'
-    } else if (modelName.includes('Llama-2-70B')) {
-      return 'Very Large (70B parameters)'
-    } else if (modelName.includes('Llama-2-13B')) {
-      return 'Large (13B parameters)'
-    } else if (modelName.includes('Llama-2-7B')) {
-      return 'Large (7B parameters)'
-    } else if (modelName.includes('gemma-7b')) {
-      return 'Large (7B parameters)'
-    } else if (modelName.includes('gemma-2b')) {
-      return 'Medium (2B parameters)'
-    } else if (modelName.includes('DialoGPT-large')) {
-      return 'Medium (774M parameters)'
-    } else if (modelName.includes('DialoGPT-medium')) {
-      return 'Medium (345M parameters)'
-    } else {
-      return 'Small (117M parameters)'
-    }
+    const size = getModelSize(modelName)
+    if (size >= 70) return 'Very Large (70B+ parameters)'
+    if (size >= 10) return 'Large (10B+ parameters)'
+    if (size >= 7) return 'Large (7B parameters)'
+    if (size >= 2) return 'Medium (2B parameters)'
+    if (size >= 0.5) return 'Medium (500M+ parameters)'
+    return 'Small (100M+ parameters)'
   }
 
   // Get estimated download time
   const getEstimatedDownloadTime = (modelName: string) => {
-    if (modelName.includes('Mixtral-8x7B') || modelName.includes('Llama-2-70B')) {
-      return '15-30 minutes'
-    } else if (modelName.includes('Llama-2-13B') || modelName.includes('gemma-7b')) {
-      return '8-15 minutes'
-    } else if (modelName.includes('Mistral-7B') || modelName.includes('Llama-2-7B')) {
-      return '5-10 minutes'
-    } else if (modelName.includes('gemma-2b')) {
-      return '3-5 minutes'
-    } else if (modelName.includes('DialoGPT-large')) {
-      return '2-5 minutes'
-    } else {
-      return '30 seconds - 2 minutes'
-    }
+    const size = getModelSize(modelName)
+    if (size >= 70) return '15-30 minutes'
+    if (size >= 10) return '8-15 minutes'
+    if (size >= 7) return '5-10 minutes'
+    if (size >= 2) return '3-5 minutes'
+    return '30 seconds - 2 minutes'
+  }
+
+  // Get model variant type
+  const getModelVariant = (modelName: string) => {
+    if (modelName.includes('GGUF')) return 'Quantized'
+    if (modelName.includes('Instruct') || modelName.includes('chat')) return 'Instruct'
+    if (modelName.includes('Base') || (!modelName.includes('Instruct') && !modelName.includes('chat'))) return 'Base'
+    return 'Standard'
   }
 
   useEffect(() => {
     fetchModels()
   }, [])
 
-  // Clear any stale downloading state on mount
   useEffect(() => {
     setDownloadingModels(new Set())
     setDownloadProgress({})
@@ -286,6 +419,13 @@ const Models = () => {
       </div>
     )
   }
+
+  const groupedModels = getGroupedModels()
+    .sort((a, b) => {
+      if (a.family === 'mistral') return -1;
+      if (b.family === 'mistral') return 1;
+      return 0;
+    });
 
   return (
     <div className="space-y-6">
@@ -357,147 +497,220 @@ const Models = () => {
         </Card>
       </div>
 
-      {/* Model Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {models.map((model) => {
-          const isDownloading = downloadingModels.has(model.name)
-          const progress = downloadProgress[model.name] || 0
-          
-          return (
-            <Card key={model.name} className="relative">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg font-semibold truncate">
-                      {model.name.split('/').pop()}
-                    </CardTitle>
-                    <CardDescription className="text-sm text-muted-foreground">
-                      {model.name}
-                    </CardDescription>
-                  </div>
-                                     <div className="flex flex-col items-end space-y-1">
-                     {model.is_loaded ? (
-                       <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-                         <span className="mr-1">✅</span>
-                         Loaded
-                       </Badge>
-                     ) : isDownloading ? (
-                       <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
-                         Downloading
-                       </Badge>
-                     ) : model.download_progress === 100 ? (
-                       <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">
-                         <span className="mr-1">📦</span>
-                         On Disk
-                       </Badge>
-                     ) : (
-                       <Badge variant="outline" className="text-muted-foreground border-gray-300">
-                         <span className="mr-1">⏳</span>
-                         Not Downloaded
-                       </Badge>
-                     )}
-                   </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {/* Model Info */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Size:</span>
-                    <span className="font-medium">{getModelSizeCategory(model.name)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Provider:</span>
-                    <span className="font-medium">{model.provider}</span>
-                  </div>
-                  {model.size_on_disk && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Size on disk:</span>
-                      <span className="font-medium">{model.size_on_disk}</span>
-                    </div>
-                  )}
-                  {model.last_used && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Last used:</span>
-                      <span className="font-medium">{new Date(model.last_used).toLocaleDateString()}</span>
-                    </div>
-                  )}
-                </div>
+      {/* Filters and Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Filters & Controls</span>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                {showAdvanced ? 'Hide' : 'Show'} Advanced Variants
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            {/* Family Filter */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Filter by Family</label>
+              <select
+                value={filterBy}
+                onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="all">All Families</option>
+                <option value="mistral">Mistral & Mixtral</option>
+                <option value="llama">Meta Llama 3</option>
+                <option value="gemma">Google Gemma</option>
+                <option value="dialogpt">Microsoft DialoGPT</option>
+                <option value="recommended">Recommended Only</option>
+              </select>
+            </div>
 
-                {/* Download Progress */}
-                {isDownloading && (
-                  <div className="space-y-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                        <span className="text-sm font-medium text-blue-800">Downloading...</span>
-                      </div>
-                      <span className="text-sm font-bold text-blue-800">{Math.round(progress)}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2 bg-blue-100" />
-                    <div className="flex justify-between text-xs text-blue-600">
-                      <span>Progress: {Math.round(progress)}%</span>
-                      <span>ETA: {getEstimatedDownloadTime(model.name)}</span>
-                    </div>
-                    <div className="text-xs text-blue-600">
-                      ⏱️ This may take several minutes for large models
-                    </div>
-                  </div>
-                )}
+            {/* Sort Options */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Sort by</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="size">Size (Largest First)</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="status">Status (Loaded First)</option>
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-                {/* Action Button */}
-                <div className="pt-2">
-                  {model.is_loaded ? (
-                    <Button 
-                      variant="outline" 
-                      className="w-full bg-green-50 border-green-200 text-green-800 hover:bg-green-100" 
-                      disabled
-                    >
-                      <span className="mr-2">✅</span>
-                      Ready to Use
-                    </Button>
-                  ) : isDownloading ? (
-                    <Button 
-                      variant="outline" 
-                      className="w-full bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100" 
-                      disabled
-                    >
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                      Downloading... {Math.round(progress)}%
-                    </Button>
-                  ) : model.download_progress === 100 ? (
-                    <Button 
-                      variant="outline" 
-                      className="w-full bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100"
-                      disabled
-                    >
-                      <span className="mr-2">📦</span>
-                      On Disk (Ready to Load)
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => downloadModel(model.name)}
-                      className="w-full bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100"
-                      disabled={downloadingModels.size > 0}
-                    >
-                      <span className="mr-2">📥</span>
-                      Download Model
-                    </Button>
-                  )}
-                </div>
+      {/* Model Groups */}
+      <div className="space-y-6">
+        {groupedModels.map((group) => (
+          <Card key={group.family}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>{group.displayName}</span>
+                <Badge variant="outline" className="text-xs">
+                  {group.models.length} models
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.models.map((model) => {
+                  const isDownloading = downloadingModels.has(model.name)
+                  const progress = downloadProgress[model.name] || 0
+                  
+                  return (
+                    <Card key={model.name} className="relative">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-sm font-semibold truncate">
+                              {model.name.split('/').pop()}
+                            </CardTitle>
+                            <CardDescription className="text-xs text-muted-foreground">
+                              {model.name}
+                            </CardDescription>
+                          </div>
+                          <div className="flex flex-col items-end space-y-1">
+                            {isRecommended(model.name) && (
+                              <Badge variant="default" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                                ⭐ Recommended
+                              </Badge>
+                            )}
+                            {isGPURecommended(model.name) && (
+                              <Badge variant="default" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                🚀 GPU Recommended
+                              </Badge>
+                            )}
+                            {model.is_loaded ? (
+                              <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
+                                <span className="mr-1">✅</span>
+                                Loaded
+                              </Badge>
+                            ) : isDownloading ? (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                                Downloading
+                              </Badge>
+                            ) : model.download_progress === 100 ? (
+                              <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                <span className="mr-1">📦</span>
+                                On Disk
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-muted-foreground border-gray-300 text-xs">
+                                <span className="mr-1">⏳</span>
+                                Not Downloaded
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="space-y-3">
+                        {/* Model Info */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Size:</span>
+                            <span className="font-medium">{getModelSizeCategory(model.name)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Type:</span>
+                            <span className="font-medium">{getModelVariant(model.name)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Provider:</span>
+                            <span className="font-medium">{model.provider}</span>
+                          </div>
+                        </div>
 
-                {/* Download Time Estimate */}
-                {!model.is_loaded && !isDownloading && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    ⏱️ Estimated download time: {getEstimatedDownloadTime(model.name)}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )
-        })}
+                        {/* Download Progress */}
+                        {isDownloading && (
+                          <div className="space-y-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-blue-800">Downloading...</span>
+                              <span className="text-xs font-bold text-blue-800">{Math.round(progress)}%</span>
+                            </div>
+                            <Progress value={progress} className="h-1 bg-blue-100" />
+                          </div>
+                        )}
+
+                        {/* Action Button */}
+                        <div className="pt-1">
+                          {model.is_loaded ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="w-full bg-green-50 border-green-200 text-green-800 hover:bg-green-100 text-xs" 
+                              disabled
+                            >
+                              <span className="mr-1">✅</span>
+                              Ready to Use
+                            </Button>
+                          ) : isDownloading ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="w-full bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 text-xs" 
+                              disabled
+                            >
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                              {Math.round(progress)}%
+                            </Button>
+                          ) : model.download_progress === 100 ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="w-full bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100 text-xs"
+                              disabled
+                            >
+                              <span className="mr-1">📦</span>
+                              On Disk
+                            </Button>
+                          ) : (
+                            <Button 
+                              onClick={() => downloadModel(model.name)}
+                              size="sm"
+                              className="w-full bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100 text-xs"
+                              disabled={downloadingModels.size > 0}
+                            >
+                              <span className="mr-1">📥</span>
+                              Download
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Download Time Estimate */}
+                        {!model.is_loaded && !isDownloading && (
+                          <p className="text-xs text-muted-foreground text-center">
+                            ⏱️ {getEstimatedDownloadTime(model.name)}
+                          </p>
+                        )}
+
+                        {/* GPU Warning for GPU-recommended models */}
+                        {isGPURecommended(model.name) && (
+                          <div className="p-2 bg-orange-50 border border-orange-200 rounded-md">
+                            <p className="text-xs text-orange-800 text-center">
+                              <span className="font-medium">⚠️ GPU Recommended:</span> This model will be very slow on CPU. Consider GPU setup for better performance.
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Help Section */}
@@ -511,28 +724,28 @@ const Models = () => {
               <h4 className="font-medium mb-3">📊 Model States</h4>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
+                  <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 text-xs">
                     <span className="mr-1">⏳</span>
                     Not Downloaded
                   </Badge>
                   <span className="text-sm text-muted-foreground">Ready to download</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
                     Downloading
                   </Badge>
                   <span className="text-sm text-muted-foreground">Currently downloading</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">
+                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                     <span className="mr-1">📦</span>
                     On Disk
                   </Badge>
                   <span className="text-sm text-muted-foreground">On disk, ready to load</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
                     <span className="mr-1">✅</span>
                     Loaded
                   </Badge>
