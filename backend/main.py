@@ -7,6 +7,42 @@ from dotenv import load_dotenv
 
 from app.core.config import settings
 from app.api.routes import api_router
+import warnings
+
+# Suppress telemetry warnings
+warnings.filterwarnings("ignore", message="Failed to send telemetry event")
+
+# Monkey patch telemetry to prevent errors
+import sys
+import os
+from types import ModuleType
+
+# Redirect stderr to suppress telemetry warnings
+class SuppressTelemetry:
+    def __enter__(self):
+        self.original_stderr = sys.stderr
+        sys.stderr = open(os.devnull, 'w')
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stderr.close()
+        sys.stderr = self.original_stderr
+
+# Suppress telemetry during imports
+with SuppressTelemetry():
+    try:
+        import chromadb
+        # Patch ChromaDB telemetry
+        if hasattr(chromadb, 'telemetry'):
+            chromadb.telemetry.capture = lambda *args, **kwargs: None
+    except ImportError:
+        pass
+    
+    try:
+        import posthog
+        posthog.capture = lambda *args, **kwargs: None
+    except ImportError:
+        pass
 
 # Load environment variables
 load_dotenv()
@@ -18,6 +54,20 @@ os.environ["POSTHOG_DISABLED"] = "1"
 os.environ["HUGGINGFACE_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["CHROMA_TELEMETRY"] = "false"
+os.environ["CHROMA_DISABLE_TELEMETRY"] = "true"
+os.environ["CHROMA_ANONYMIZED_TELEMETRY"] = "false"
+os.environ["CHROMA_SERVER_TELEMETRY"] = "false"
+os.environ["CHROMA_CLIENT_TELEMETRY"] = "false"
+os.environ["CHROMA_DISABLE_ANONYMIZED_TELEMETRY"] = "true"
+os.environ["CHROMA_DISABLE_SERVER_TELEMETRY"] = "true"
+os.environ["CHROMA_DISABLE_CLIENT_TELEMETRY"] = "true"
+os.environ["CHROMA_DISABLE_TELEMETRY_EVENTS"] = "true"
+os.environ["CHROMA_DISABLE_ALL_TELEMETRY"] = "true"
+os.environ["CHROMA_TELEMETRY_ENABLED"] = "false"
+os.environ["CHROMA_ENABLE_TELEMETRY"] = "false"
+os.environ["CHROMA_COLLECT_TELEMETRY"] = "false"
+os.environ["CHROMA_SEND_TELEMETRY"] = "false"
 
 # Create FastAPI app
 app = FastAPI(
