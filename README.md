@@ -378,6 +378,7 @@ When running in GitHub Codespaces, the application is optimized for cloud develo
 - **CORS**: Configured for GitHub.dev domains
 - **Port Forwarding**: Automatic setup for backend (8000) and frontend (5173)
 - **Environment**: Pre-configured Python 3.11 and Node.js 18
+- **Resources**: 4 CPU cores, 16GB RAM, 32GB storage
 
 #### **Development Experience**
 - **VS Code Extensions**: Python, TypeScript, TailwindCSS, and more
@@ -388,8 +389,8 @@ When running in GitHub Codespaces, the application is optimized for cloud develo
 #### **Performance Considerations**
 - **Mock Mode**: Use for UI testing and development
 - **Real Models**: Edit `.env` and set `MOCK_MODE=false` for actual inference
-- **Memory**: Codespaces have limited RAM, stick to smaller models
-- **Storage**: Models are downloaded to ephemeral storage
+- **Resources**: 4 cores and 16GB RAM support quantized Mistral/Llama models
+- **Storage**: 32GB available for model downloads and data
 
 #### **Troubleshooting Codespaces**
 ```bash
