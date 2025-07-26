@@ -24,7 +24,15 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-bold">Mistral Playground & Model Explorer</h1>
+              <h1 className="text-xl font-bold">
+                <a 
+                  href="http://localhost:5173" 
+                  className="hover:text-primary transition-colors cursor-pointer"
+                  title="Go to main page"
+                >
+                  Mistral Playground & Model Explorer
+                </a>
+              </h1>
               <nav className="hidden md:flex space-x-1">
                 {navigation.map((item) => {
                   const isActive = location.pathname === item.href
