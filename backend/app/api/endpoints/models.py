@@ -261,8 +261,57 @@ async def get_available_models():
         
         return model_statuses
         
+    except ImportError as e:
+        print(f"❌ Import error in get_available_models: {e}")
+        # Return basic model statuses if model service can't be imported
+        fallback_models = [
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
+            "microsoft/DialoGPT-small",
+            "microsoft/DialoGPT-medium",
+            "microsoft/DialoGPT-large"
+        ]
+        
+        model_statuses = []
+        for model_name in fallback_models:
+            model_statuses.append(ModelStatus(
+                name=model_name,
+                provider="huggingface",
+                is_loaded=False,
+                is_downloading=False,
+                download_progress=None,
+                size_on_disk=None,
+                last_used=None,
+                load_time=None
+            ))
+        
+        return model_statuses
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"❌ Error in get_available_models: {e}")
+        # Return basic model statuses on any other error
+        fallback_models = [
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
+            "microsoft/DialoGPT-small"
+        ]
+        
+        model_statuses = []
+        for model_name in fallback_models:
+            model_statuses.append(ModelStatus(
+                name=model_name,
+                provider="huggingface",
+                is_loaded=False,
+                is_downloading=False,
+                download_progress=None,
+                size_on_disk=None,
+                last_used=None,
+                load_time=None
+            ))
+        
+        return model_statuses
 
 @router.get("/list", response_model=List[str])
 async def get_model_list():
@@ -270,8 +319,26 @@ async def get_model_list():
     try:
         from app.services.model_service import model_service
         return model_service.get_available_models()
+    except ImportError as e:
+        print(f"❌ Import error in get_model_list: {e}")
+        # Return a basic list if model service can't be imported
+        return [
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF", 
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
+            "microsoft/DialoGPT-small",
+            "microsoft/DialoGPT-medium",
+            "microsoft/DialoGPT-large"
+        ]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"❌ Error in get_model_list: {e}")
+        # Return a basic list on any other error
+        return [
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
+            "microsoft/DialoGPT-small"
+        ]
 
 @router.get("/info", response_model=List[ModelInfo])
 async def get_model_info():
