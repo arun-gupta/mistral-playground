@@ -1,6 +1,6 @@
 # Mistral Playground & Model Explorer
 
-A modern, developer-friendly full-stack application for exploring, comparing, and experimenting with Mistral's open models (Mistral-7B, Mixtral) and other leading open-source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
+A modern, developer-friendly full-stack application for exploring and experimenting with Mistral's powerful open models (Mistral-7B, Mixtral) to understand their capabilities and performance. The platform also enables comprehensive comparison with other leading open-source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
 
 ## 🎯 Key Features
 
