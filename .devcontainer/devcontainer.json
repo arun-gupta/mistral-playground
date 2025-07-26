@@ -47,6 +47,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postStartCommand": "bash -c 'set -x; bash start-dev.sh'",
+  "postStartCommand": "bash -c 'set -x; echo \"🚀 Starting Mistral Playground setup...\" && bash start-dev.sh 2>&1 | tee /tmp/startup.log && echo \"✅ Setup complete! Check /tmp/startup.log for details.\"'",
   "remoteUser": "vscode"
 } 

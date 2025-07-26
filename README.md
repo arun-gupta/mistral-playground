@@ -395,8 +395,22 @@ When running in GitHub Codespaces, the application is optimized for cloud develo
 
 #### **Troubleshooting Codespaces**
 ```bash
+# Run the comprehensive test script
+bash .devcontainer/test-codespaces.sh
+
 # Check if services are running
 ps aux | grep -E "(uvicorn|npm)"
+
+# Check startup logs
+cat /tmp/startup.log
+
+# Test API endpoints
+curl http://localhost:8000/health
+curl http://localhost:5173
+
+# Manual restart if needed
+bash start-dev.sh
+```
 
 # View logs
 tail -f logs/backend.log
