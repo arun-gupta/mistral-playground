@@ -1,40 +1,54 @@
 # Mistral Playground & Model Explorer
 
-A modern, developer-friendly full-stack application for exploring, comparing, and experimenting with Mistral's open models (Mistral-7B, Mixtral, Codestral).
+A modern, developer-friendly full-stack application for exploring, comparing, and experimenting with Mistral's open models (Mistral-7B, Mixtral) and other leading open-source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
 
 ## 🎯 Key Features
 
 ### Main Playground Features
-- **Single Model Playground**: Interact with any loaded model in a conversational playground
-- **Models Tab**: Proactively download, manage, and monitor the status of all available models (Not Downloaded, Downloading, On Disk, Loaded)
-- **Comparison Tab**: Compare responses from multiple models side-by-side with performance metrics
+- **Single Model Playground**: Interact with any loaded model in a conversational playground (Mistral/Mixtral models prioritized)
+- **Models Tab**: Proactively download, manage, and monitor the status of all available models with organized grouping and filtering
+- **Comparison Tab**: Compare responses from multiple models side-by-side with performance metrics and prepared test combinations
+- **RAG Mode**: Upload documents (PDF, TXT, MD) and generate grounded answers using Retrieval-Augmented Generation
 - **Mock Mode**: Enable a mock backend for UI testing and demos without running real models
-- **Advanced Parameter Tuning**: Edit temperature, max tokens, system prompt, top_p
+- **Advanced Parameter Tuning**: Edit temperature, max tokens, system prompt, top_p, and other generation parameters
 - **Performance Metrics**: Show token usage and latency per request
-- **Model Management**: Download, load, and manage different models
+- **Model Management**: Download, load, and manage different models with real-time status tracking
 - **Rich Output Rendering**: Markdown rendering of outputs with syntax highlighting
+- **API-Driven Model Lists**: Dynamic model fetching ensures all pages stay in sync
 
 ### User Interface Features
 - **Dedicated Tabs**: Playground, Models, Comparison, RAG, Configs for clear workflow
 - **Model Status Indicators**: Visual badges for Not Downloaded, Downloading, On Disk, Loaded
 - **Tooltips and Legends**: Helpful tooltips (e.g., Mock Mode) and legends for model status
 - **Intuitive Navigation**: Logical tab order for seamless workflow
+- **Model Organization**: Grouped by family (Mistral, Llama, Gemma) with filtering and sorting
+- **Visual Feedback**: Upload progress indicators, processing status, and success/error states
+- **Collection Management**: Metadata support (description, tags, visibility) for RAG collections
 
-### Advanced Features (Planned)
-- **RAG Mode**: Upload documents → embed → retrieve → generate grounded answers
-- **Codestral Mode**: Prompt flows for code tasks with inline diff view
-- **Model Explorer**: Metadata viewer and raw API request/response inspection
-- **Multilingual Testing**: Submit prompts in multiple languages and compare outputs
-- **Built-in Recipes**: Pre-built prompts for summarization, Q&A, code assistance
-- **Rating System**: Rate model outputs for quality assessment
+### 🚀 Future Roadmap
+
+#### Phase 1: Enhanced User Experience
+- **🎭 Multi-Modal Capabilities**: Image + text analysis, OCR, visual question answering
+- **🔄 Conversation Memory & Context**: Persistent chat sessions, context window management, conversation export
+- **📊 Model Performance Analytics**: Detailed metrics dashboard, response time comparisons, token usage analysis, cost estimation
+
+#### Phase 2: Advanced AI Features  
+- **🎯 Advanced Prompt Engineering**: Pre-built templates (Chain-of-Thought, Few-shot), A/B testing, prompt performance metrics
+- **🌐 API Integration Hub**: External service integration, function calling demonstrations, real-time data processing
+- **🎨 Creative Generation Studio**: Story generation, poetry creation, code generation with language selection, art prompt generation
+
+#### Phase 3: Enterprise Features
+- **🔧 Fine-tuning Interface**: Custom model training, training progress monitoring, model comparison
+- **📝 Advanced Document Processing**: Multi-format support, document summarization, table extraction, citation generation
+- **🤖 Agent Framework**: Multi-agent systems, task delegation, workflow automation
 
 ## 🖥️ Application Navigation
 
 The main navigation bar includes:
-- **Playground**: Single model interaction and testing
-- **Models**: Manage, download, and monitor all models (with real-time status)
-- **Comparison**: Compare responses from multiple models side-by-side
-- **RAG**: Retrieval-Augmented Generation (document Q&A)
+- **Playground**: Single model interaction and testing (Mistral/Mixtral models only)
+- **Models**: Manage, download, and monitor all models with organized grouping and real-time status
+- **Comparison**: Compare responses from multiple models side-by-side with prepared test combinations
+- **RAG**: Retrieval-Augmented Generation with document upload, collection management, and grounded Q&A
 - **Configs**: Manage prompt and system configurations
 
 ## 🚦 Model Status Workflow
@@ -45,16 +59,17 @@ Models can be in one of four states:
 - **📦 On Disk**: Model is downloaded and ready to load
 - **✅ Loaded**: Model is loaded in memory and ready for inference
 
-The Models tab provides proactive management and real-time status tracking for all models.
+The Models tab provides proactive management and real-time status tracking for all models. Models are organized by family (Mistral & Mixtral, Meta Llama, Google Gemma, DialoGPT) with filtering and sorting options. Recommended models are highlighted with badges.
 
 ## 🎭 Mock Mode
 
 **Mock Mode** allows you to use the frontend UI without running real models on the backend. This is useful for:
-- UI/UX demos
-- Testing the interface without heavy downloads or compute
+- UI/UX demos and presentations
+- Testing the interface without heavy downloads or compute requirements
 - Development when backend resources are unavailable
+- Quick feature exploration without model loading delays
 
-When enabled, all model responses are simulated, and no real inference is performed.
+When enabled, all model responses are simulated, and no real inference is performed. A helpful tooltip explains this feature in the UI.
 
 ## 🏗️ Architecture
 
@@ -294,10 +309,11 @@ mistral-playground/
 
 #### Meta Llama Models
 - **Llama 2 Models** (legacy):
-  - `TheBloke/Llama-2-7B-Chat-GGUF` (4-8GB RAM) - Popular chat model, CPU optimized
   - `TheBloke/Llama-2-13B-Chat-GGUF` (8-12GB RAM) - Larger model, better quality
-  - `meta-llama/Llama-2-7b-chat-hf` (~14GB RAM) - Full Llama-2 chat model
 - **Llama 3 Models** (newer, better performance):
+  - `meta-llama/Meta-Llama-3-8B-Instruct` (~16GB RAM) - Full instruct model
+  - `meta-llama/Meta-Llama-3-8B` (~16GB RAM) - Full base model
+  - `TheBloke/Meta-Llama-3-8B-Instruct-GGUF` (4-8GB RAM) - Quantized instruct
   - `TheBloke/Meta-Llama-3-10B-Instruct-GGUF` (6-10GB RAM) - Lightweight option
   - `TheBloke/Meta-Llama-3-14B-Instruct-GGUF` (8-12GB RAM) - Best balance
 
@@ -323,9 +339,10 @@ mistral-playground/
 
 ### Model Selection Guide
 - **Testing/Development**: Use `microsoft/DialoGPT-small` or `google/gemma-2b`
-- **Production (CPU)**: Use `TheBloke/Mistral-7B-Instruct-v0.2-GGUF` or `TheBloke/Llama-2-7B-Chat-GGUF`
-- **High Quality**: Use `mistralai/Mistral-7B-Instruct-v0.2` or `meta-llama/Llama-2-7b-chat-hf` (if you have 16GB+ RAM)
+- **Production (CPU)**: Use `TheBloke/Mistral-7B-Instruct-v0.2-GGUF` or `TheBloke/Meta-Llama-3-8B-Instruct-GGUF`
+- **High Quality**: Use `mistralai/Mistral-7B-Instruct-v0.2` or `meta-llama/Meta-Llama-3-8B-Instruct` (if you have 16GB+ RAM)
 - **Maximum Performance**: Use `TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF` (if you have 24GB+ RAM)
+- **RAG & Playground**: Only Mistral and Mixtral models are available for focused testing
 
 ## 🚀 Upgrading to GPU Setup
 
