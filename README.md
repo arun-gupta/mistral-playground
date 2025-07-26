@@ -97,7 +97,27 @@ For detailed API documentation, see [API.md](API.md) or visit the interactive do
 
 ## 🚀 Quick Start
 
-### Option 1: One-Command Setup (Recommended)
+### Option 1: GitHub Codespaces (Recommended for Cloud Development)
+
+The fastest way to get started is using GitHub Codespaces:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground)
+
+1. **Click the "Open in GitHub Codespaces" button above**
+2. **Wait for setup to complete** (takes 2-3 minutes)
+3. **Access the application**:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
+
+**Codespaces Features:**
+- ✅ **Automatic setup** - No local installation required
+- ✅ **Pre-configured environment** - Python, Node.js, and all dependencies
+- ✅ **Mock mode enabled** - Fast startup for UI testing
+- ✅ **Port forwarding** - Automatic access to all services
+- ✅ **VS Code extensions** - Python, TypeScript, and TailwindCSS support
+
+### Option 2: One-Command Setup (Local Development)
 
 The fastest way to get started is using our automated setup script:
 
@@ -129,7 +149,7 @@ This script will automatically:
 - Mock mode disabled (real model inference)
 - Basic security settings
 
-### Option 2: Manual Setup (Advanced)
+### Option 3: Manual Setup (Advanced)
 
 **Setup Options:**
 - **GPU Setup**: Use `requirements.txt` for full vLLM support (requires CUDA)
@@ -192,7 +212,7 @@ This script will automatically:
    - Backend API: http://localhost:8000
    - API Docs: http://localhost:8000/docs
 
-### Option 2: Docker Deployment
+### Option 4: Docker Deployment
 
 1. **Build and Run**
    ```bash
@@ -346,6 +366,48 @@ mistral-playground/
 - **High Quality**: Use `mistralai/Mistral-7B-Instruct-v0.2` or `meta-llama/Meta-Llama-3-8B-Instruct` (if you have 16GB+ RAM)
 - **Maximum Performance**: Use `TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF` (if you have 24GB+ RAM)
 - **RAG & Playground**: Only Mistral and Mixtral models are available for focused testing
+
+## ☁️ GitHub Codespaces
+
+### Codespaces-Specific Features
+
+When running in GitHub Codespaces, the application is optimized for cloud development:
+
+#### **Automatic Configuration**
+- **Mock Mode**: Enabled by default for fast startup
+- **CORS**: Configured for GitHub.dev domains
+- **Port Forwarding**: Automatic setup for backend (8000) and frontend (5173)
+- **Environment**: Pre-configured Python 3.11 and Node.js 18
+
+#### **Development Experience**
+- **VS Code Extensions**: Python, TypeScript, TailwindCSS, and more
+- **Hot Reload**: Both frontend and backend support live reloading
+- **Logging**: Separate log files for backend and frontend
+- **Process Management**: Easy start/stop of services
+
+#### **Performance Considerations**
+- **Mock Mode**: Use for UI testing and development
+- **Real Models**: Edit `.env` and set `MOCK_MODE=false` for actual inference
+- **Memory**: Codespaces have limited RAM, stick to smaller models
+- **Storage**: Models are downloaded to ephemeral storage
+
+#### **Troubleshooting Codespaces**
+```bash
+# Check if services are running
+ps aux | grep -E "(uvicorn|npm)"
+
+# View logs
+tail -f logs/backend.log
+tail -f logs/frontend.log
+
+# Restart services
+kill $(cat logs/backend.pid)
+kill $(cat logs/frontend.pid)
+bash .devcontainer/start.sh
+
+# Check environment
+cat .env
+```
 
 ## 🚀 Upgrading to GPU Setup
 
