@@ -27,17 +27,27 @@ const Playground = () => {
   // Function to fetch model statuses and available models
   const fetchModelStatuses = async () => {
     try {
+      console.log('🔍 Fetching model data from API...')
+      
       // Fetch model list and statuses in parallel
       const [listResponse, statusResponse] = await Promise.all([
         fetch('/api/v1/models/list'),
         fetch('/api/v1/models/available')
       ])
       
+      console.log('📡 API Responses:', {
+        listStatus: listResponse.status,
+        listOk: listResponse.ok,
+        statusStatus: statusResponse.status,
+        statusOk: statusResponse.ok
+      })
+      
       if (listResponse.ok && statusResponse.ok) {
         const modelList = await listResponse.json()
         const statusData = await statusResponse.json()
         
         console.log('🔍 All available models:', modelList)
+        console.log('🔍 Status data:', statusData)
         
         // Filter to only Mistral & Mixtral models for Playground
         const mistralModels = modelList.filter((model: string) => 
@@ -57,9 +67,34 @@ const Playground = () => {
           name: model.name,
           is_loaded: model.is_loaded
         })))
+      } else {
+        console.error('❌ API calls failed:', {
+          listStatus: listResponse.status,
+          statusStatus: statusResponse.status
+        })
+        
+        // Fallback to hardcoded models if API fails
+        const fallbackModels = [
+          'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+          'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
+          'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
+        ]
+        console.log('🔄 Using fallback models:', fallbackModels)
+        setAvailableModels(fallbackModels)
+        setModelStatuses([])
       }
     } catch (error) {
-      console.log('Could not fetch model statuses:', error)
+      console.error('❌ Could not fetch model statuses:', error)
+      
+      // Fallback to hardcoded models on error
+      const fallbackModels = [
+        'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+        'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
+        'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
+      ]
+      console.log('🔄 Using fallback models due to error:', fallbackModels)
+      setAvailableModels(fallbackModels)
+      setModelStatuses([])
     }
   }
 
@@ -340,13 +375,58 @@ const Playground = () => {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch('/api/v1/models/list')
-                        const data = await response.json()
-                        console.log('🔍 Direct API test:', data)
-                        alert(`Found ${data.length} models: ${data.join(', ')}`)
+                        console.log('🧪 Testing API endpoints...')
+                        
+                        // Test multiple endpoints
+                        const endpoints = [
+                          '/api/v1/models/list',
+                          '/api/v1/models/available',
+                          '/api/v1/models/mock-status',
+                          '/health'
+                        ]
+                        
+                        const results: Record<string, any> = {}
+                        
+                        for (const endpoint of endpoints) {
+                          try {
+                            const response = await fetch(endpoint)
+                            const data = await response.json()
+                            results[endpoint] = {
+                              status: response.status,
+                              ok: response.ok,
+                              data: data
+                            }
+                            console.log(`✅ ${endpoint}:`, results[endpoint])
+                          } catch (error) {
+                            results[endpoint] = {
+                              status: 'error',
+                              ok: false,
+                              error: error instanceof Error ? error.message : String(error)
+                            }
+                            console.error(`❌ ${endpoint}:`, error)
+                          }
+                        }
+                        
+                        console.log('🧪 All API test results:', results)
+                        
+                        // Show summary
+                        const workingEndpoints = Object.keys(results).filter(k => results[k].ok)
+                        const failedEndpoints = Object.keys(results).filter(k => !results[k].ok)
+                        
+                        let message = `API Test Results:\n\n`
+                        message += `✅ Working (${workingEndpoints.length}): ${workingEndpoints.join(', ')}\n\n`
+                        message += `❌ Failed (${failedEndpoints.length}): ${failedEndpoints.join(', ')}\n\n`
+                        
+                        if (results['/api/v1/models/list']?.ok) {
+                          const models = results['/api/v1/models/list'].data
+                          message += `📋 Models found: ${models.length}\n`
+                          message += `Models: ${models.join(', ')}`
+                        }
+                        
+                        alert(message)
                       } catch (error) {
-                        console.error('API test failed:', error)
-                        alert('API test failed: ' + error)
+                        console.error('Comprehensive API test failed:', error)
+                        alert('Comprehensive API test failed: ' + error)
                       }
                     }}
                     variant="outline"
