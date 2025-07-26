@@ -1,7 +1,5 @@
 # [Mistral Playground & Model Explorer](https://github.com/arun-gupta/mistral-playground)
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=flat&logo=play)](http://localhost:5173)
-
 A modern, developer-friendly full-stack application for exploring and experimenting with Mistral's powerful open models (Mistral-7B, Mixtral) to understand their capabilities and performance. The platform also enables comprehensive comparison with other leading open-source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
 
 ## 🎯 Key Features
