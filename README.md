@@ -1,5 +1,7 @@
 # [Mistral Playground & Model Explorer](https://github.com/arun-gupta/mistral-playground)
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground)
+
 A modern, developer-friendly full-stack application for exploring and experimenting with Mistral's powerful open models (Mistral-7B, Mixtral) to understand their capabilities and performance. The platform also enables comprehensive comparison with other leading open-source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
 
 ## 🎯 Key Features
@@ -101,9 +103,7 @@ For detailed API documentation, see [API.md](API.md) or visit the interactive do
 
 The fastest way to get started is using GitHub Codespaces:
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground)
-
-1. **Click the "Open in GitHub Codespaces" button above**
+1. **Click the "Open in GitHub Codespaces" button at the top of this README**
 2. **Wait for setup to complete** (takes 2-3 minutes)
 3. **Access the application**:
    - Frontend: http://localhost:5173
