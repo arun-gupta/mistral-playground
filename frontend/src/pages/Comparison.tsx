@@ -58,7 +58,21 @@ const Comparison = () => {
     'microsoft/DialoGPT-large',
     'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
     'mistralai/Mistral-7B-Instruct-v0.1',
-    'mistralai/Mistral-7B-Instruct-v0.2'
+    'mistralai/Mistral-7B-Instruct-v0.2',
+    
+    // Meta Llama models
+    'TheBloke/Llama-2-7B-Chat-GGUF',
+    'TheBloke/Llama-2-13B-Chat-GGUF',
+    'meta-llama/Llama-2-7b-chat-hf',
+    
+    // Google Gemma models
+    'google/gemma-2b',
+    'google/gemma-7b',
+    'google/gemma-2b-it',
+    'google/gemma-7b-it',
+    
+    // Mixtral models
+    'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
   ]
 
   // Fetch model statuses

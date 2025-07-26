@@ -100,7 +100,21 @@ const RAG = () => {
     { name: 'TheBloke/Mistral-7B-Instruct-v0.1-GGUF', provider: 'huggingface', description: 'High quality, CPU optimized' },
     { name: 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', provider: 'huggingface', description: 'Latest Mistral, CPU optimized' },
     { name: 'mistralai/Mistral-7B-Instruct-v0.1', provider: 'huggingface', description: 'Full Mistral model (high RAM)' },
-    { name: 'mistralai/Mistral-7B-Instruct-v0.2', provider: 'huggingface', description: 'Latest full Mistral model' }
+    { name: 'mistralai/Mistral-7B-Instruct-v0.2', provider: 'huggingface', description: 'Latest full Mistral model' },
+    
+    // Meta Llama models
+    { name: 'TheBloke/Llama-2-7B-Chat-GGUF', provider: 'huggingface', description: 'Llama-2 chat, CPU optimized' },
+    { name: 'TheBloke/Llama-2-13B-Chat-GGUF', provider: 'huggingface', description: 'Large Llama-2 chat, CPU optimized' },
+    { name: 'meta-llama/Llama-2-7b-chat-hf', provider: 'huggingface', description: 'Full Llama-2 chat model' },
+    
+    // Google Gemma models
+    { name: 'google/gemma-2b', provider: 'huggingface', description: 'Small, efficient Gemma model' },
+    { name: 'google/gemma-7b', provider: 'huggingface', description: 'Medium Gemma model, good performance' },
+    { name: 'google/gemma-2b-it', provider: 'huggingface', description: 'Instruction-tuned Gemma-2B' },
+    { name: 'google/gemma-7b-it', provider: 'huggingface', description: 'Instruction-tuned Gemma-7B' },
+    
+    // Mixtral models
+    { name: 'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF', provider: 'huggingface', description: 'High-performance Mixtral, CPU optimized' }
   ]
 
   // Generate default collection name from file

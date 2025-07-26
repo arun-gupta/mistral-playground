@@ -219,6 +219,18 @@ const Models = () => {
   const getModelSizeCategory = (modelName: string) => {
     if (modelName.includes('Mistral-7B')) {
       return 'Large (7B parameters)'
+    } else if (modelName.includes('Mixtral-8x7B')) {
+      return 'Very Large (8x7B parameters)'
+    } else if (modelName.includes('Llama-2-70B')) {
+      return 'Very Large (70B parameters)'
+    } else if (modelName.includes('Llama-2-13B')) {
+      return 'Large (13B parameters)'
+    } else if (modelName.includes('Llama-2-7B')) {
+      return 'Large (7B parameters)'
+    } else if (modelName.includes('gemma-7b')) {
+      return 'Large (7B parameters)'
+    } else if (modelName.includes('gemma-2b')) {
+      return 'Medium (2B parameters)'
     } else if (modelName.includes('DialoGPT-large')) {
       return 'Medium (774M parameters)'
     } else if (modelName.includes('DialoGPT-medium')) {
@@ -230,8 +242,14 @@ const Models = () => {
 
   // Get estimated download time
   const getEstimatedDownloadTime = (modelName: string) => {
-    if (modelName.includes('Mistral-7B')) {
+    if (modelName.includes('Mixtral-8x7B') || modelName.includes('Llama-2-70B')) {
+      return '15-30 minutes'
+    } else if (modelName.includes('Llama-2-13B') || modelName.includes('gemma-7b')) {
+      return '8-15 minutes'
+    } else if (modelName.includes('Mistral-7B') || modelName.includes('Llama-2-7B')) {
       return '5-10 minutes'
+    } else if (modelName.includes('gemma-2b')) {
+      return '3-5 minutes'
     } else if (modelName.includes('DialoGPT-large')) {
       return '2-5 minutes'
     } else {

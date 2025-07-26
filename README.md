@@ -292,8 +292,28 @@ mistral-playground/
   - `mistralai/Mistral-7B-Instruct-v0.2` (~14GB RAM) - Latest instruction model
   - `mistralai/Mistral-7B-v0.1` (~14GB RAM) - Base model
 
+#### Meta Llama Models
+- **Quantized Llama-2**: CPU-optimized versions
+  - `TheBloke/Llama-2-7B-Chat-GGUF` (4-8GB RAM) - Popular chat model, CPU optimized
+  - `TheBloke/Llama-2-13B-Chat-GGUF` (8-12GB RAM) - Larger model, better quality
+  - `TheBloke/Llama-2-70B-Chat-GGUF` (16-24GB RAM) - High-quality, requires significant RAM
+- **Full Llama-2 Models**: Full models requiring significant RAM
+  - `meta-llama/Llama-2-7b-chat-hf` (~14GB RAM) - Full Llama-2 chat model
+  - `meta-llama/Llama-2-13b-chat-hf` (~26GB RAM) - Large Llama-2 chat model
+
+#### Google Gemma Models
+- **Gemma Series**: Efficient models from Google
+  - `google/gemma-2b` (~4GB RAM) - Small, efficient model for development
+  - `google/gemma-7b` (~14GB RAM) - Medium-sized model with good performance
+  - `google/gemma-2b-it` (~4GB RAM) - Instruction-tuned version for better chat
+  - `google/gemma-7b-it` (~14GB RAM) - Instruction-tuned version for better chat
+
+#### Mixtral Models (High Performance)
+- **Mixtral-8x7B**: High-performance mixture-of-experts models
+  - `TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF` (16-24GB RAM) - CPU optimized version
+  - `mistralai/Mixtral-8x7B-Instruct-v0.1` (~32GB RAM) - Full model, GPU recommended
+
 #### GPU-Only Models (For Reference)
-- **Mixtral-8x7B-Instruct**: High-performance mixture-of-experts model (~32GB RAM)
 - **CodeMistral-7B-Instruct**: Specialized for code generation (~14GB RAM)
 
 ### Model Providers
@@ -302,9 +322,10 @@ mistral-playground/
 - **Ollama**: Easy local model management (supports GGUF models)
 
 ### Model Selection Guide
-- **Testing/Development**: Use `microsoft/DialoGPT-small`
-- **Production (CPU)**: Use `TheBloke/Mistral-7B-Instruct-v0.1-GGUF`
-- **High Quality**: Use `mistralai/Mistral-7B-Instruct-v0.2` (if you have 16GB+ RAM)
+- **Testing/Development**: Use `microsoft/DialoGPT-small` or `google/gemma-2b`
+- **Production (CPU)**: Use `TheBloke/Mistral-7B-Instruct-v0.2-GGUF` or `TheBloke/Llama-2-7B-Chat-GGUF`
+- **High Quality**: Use `mistralai/Mistral-7B-Instruct-v0.2` or `meta-llama/Llama-2-7b-chat-hf` (if you have 16GB+ RAM)
+- **Maximum Performance**: Use `TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF` (if you have 24GB+ RAM)
 
 ## 🚀 Upgrading to GPU Setup
 

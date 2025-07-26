@@ -248,7 +248,25 @@ async def get_available_models():
             "microsoft/DialoGPT-large",
             "mistralai/Mistral-7B-Instruct-v0.1",
             "mistralai/Mistral-7B-Instruct-v0.2",
-            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
+            
+            # Meta Llama models
+            "TheBloke/Llama-2-7B-Chat-GGUF",
+            "TheBloke/Llama-2-13B-Chat-GGUF",
+            "TheBloke/Llama-2-70B-Chat-GGUF",
+            "meta-llama/Llama-2-7b-chat-hf",
+            "meta-llama/Llama-2-13b-chat-hf",
+            
+            # Google Gemma models
+            "google/gemma-2b",
+            "google/gemma-7b",
+            "google/gemma-2b-it",
+            "google/gemma-7b-it",
+            
+            # Mixtral models
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF"
         ]
         
         model_statuses = []
@@ -352,6 +370,102 @@ async def get_model_info():
             quantization="fp16",
             license="Apache 2.0",
             description="Specialized for code generation and analysis (GPU recommended)"
+        ),
+        
+        # Meta Llama models (CPU-optimized versions)
+        ModelInfo(
+            name="TheBloke/Llama-2-7B-Chat-GGUF",
+            provider="huggingface",
+            context_length=4096,
+            parameters="7B",
+            quantization="GGUF",
+            license="Meta License",
+            description="Quantized Llama-2 chat model optimized for CPU inference"
+        ),
+        ModelInfo(
+            name="TheBloke/Llama-2-13B-Chat-GGUF",
+            provider="huggingface",
+            context_length=4096,
+            parameters="13B",
+            quantization="GGUF",
+            license="Meta License",
+            description="Larger quantized Llama-2 chat model with better quality"
+        ),
+        ModelInfo(
+            name="TheBloke/Llama-2-70B-Chat-GGUF",
+            provider="huggingface",
+            context_length=4096,
+            parameters="70B",
+            quantization="GGUF",
+            license="Meta License",
+            description="High-quality quantized Llama-2 chat model (requires significant RAM)"
+        ),
+        ModelInfo(
+            name="meta-llama/Llama-2-7b-chat-hf",
+            provider="huggingface",
+            context_length=4096,
+            parameters="7B",
+            quantization="fp16",
+            license="Meta License",
+            description="Full Llama-2 chat model, requires ~14GB RAM"
+        ),
+        ModelInfo(
+            name="meta-llama/Llama-2-13b-chat-hf",
+            provider="huggingface",
+            context_length=4096,
+            parameters="13B",
+            quantization="fp16",
+            license="Meta License",
+            description="Full Llama-2 chat model, requires ~26GB RAM"
+        ),
+        
+        # Google Gemma models
+        ModelInfo(
+            name="google/gemma-2b",
+            provider="huggingface",
+            context_length=8192,
+            parameters="2B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Small, efficient model from Google, good for development"
+        ),
+        ModelInfo(
+            name="google/gemma-7b",
+            provider="huggingface",
+            context_length=8192,
+            parameters="7B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Medium-sized Gemma model with good performance"
+        ),
+        ModelInfo(
+            name="google/gemma-2b-it",
+            provider="huggingface",
+            context_length=8192,
+            parameters="2B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Instruction-tuned version of Gemma-2B for better chat"
+        ),
+        ModelInfo(
+            name="google/gemma-7b-it",
+            provider="huggingface",
+            context_length=8192,
+            parameters="7B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Instruction-tuned version of Gemma-7B for better chat"
+        ),
+        
+        # Mixtral models (high performance)
+        ModelInfo(
+            name="TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
+            provider="huggingface",
+            context_length=32768,
+            parameters="8x7B",
+            quantization="GGUF",
+            license="Apache 2.0",
+            description="Quantized Mixtral model optimized for CPU inference"
         )
     ]
     return models_info 

@@ -348,6 +348,57 @@ const Playground = () => {
                   Mistral-7B-GGUF (4-8GB RAM, CPU optimized)
                   {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.1-GGUF') && ' - Loaded'}
                 </option>
+                <option value="TheBloke/Mistral-7B-Instruct-v0.2-GGUF">
+                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.2-GGUF') ? '✅ ' : '⏳ '}
+                  Mistral-7B-v0.2-GGUF (4-8GB RAM, CPU optimized)
+                  {isModelLoaded('TheBloke/Mistral-7B-Instruct-v0.2-GGUF') && ' - Loaded'}
+                </option>
+                
+                {/* Meta Llama models */}
+                <option value="TheBloke/Llama-2-7B-Chat-GGUF">
+                  {isModelLoaded('TheBloke/Llama-2-7B-Chat-GGUF') ? '✅ ' : '⏳ '}
+                  Llama-2-7B-Chat-GGUF (4-8GB RAM, CPU optimized)
+                  {isModelLoaded('TheBloke/Llama-2-7B-Chat-GGUF') && ' - Loaded'}
+                </option>
+                <option value="TheBloke/Llama-2-13B-Chat-GGUF">
+                  {isModelLoaded('TheBloke/Llama-2-13B-Chat-GGUF') ? '✅ ' : '⏳ '}
+                  Llama-2-13B-Chat-GGUF (8-12GB RAM, CPU optimized)
+                  {isModelLoaded('TheBloke/Llama-2-13B-Chat-GGUF') && ' - Loaded'}
+                </option>
+                <option value="meta-llama/Llama-2-7b-chat-hf">
+                  {isModelLoaded('meta-llama/Llama-2-7b-chat-hf') ? '✅ ' : '⏳ '}
+                  Llama-2-7B-Chat (7B, ~14GB RAM)
+                  {isModelLoaded('meta-llama/Llama-2-7b-chat-hf') && ' - Loaded'}
+                </option>
+                
+                {/* Google Gemma models */}
+                <option value="google/gemma-2b">
+                  {isModelLoaded('google/gemma-2b') ? '✅ ' : '⏳ '}
+                  Gemma-2B (~4GB RAM, efficient)
+                  {isModelLoaded('google/gemma-2b') && ' - Loaded'}
+                </option>
+                <option value="google/gemma-7b">
+                  {isModelLoaded('google/gemma-7b') ? '✅ ' : '⏳ '}
+                  Gemma-7B (~14GB RAM, good performance)
+                  {isModelLoaded('google/gemma-7b') && ' - Loaded'}
+                </option>
+                <option value="google/gemma-2b-it">
+                  {isModelLoaded('google/gemma-2b-it') ? '✅ ' : '⏳ '}
+                  Gemma-2B-IT (~4GB RAM, instruction tuned)
+                  {isModelLoaded('google/gemma-2b-it') && ' - Loaded'}
+                </option>
+                <option value="google/gemma-7b-it">
+                  {isModelLoaded('google/gemma-7b-it') ? '✅ ' : '⏳ '}
+                  Gemma-7B-IT (~14GB RAM, instruction tuned)
+                  {isModelLoaded('google/gemma-7b-it') && ' - Loaded'}
+                </option>
+                
+                {/* Mixtral models */}
+                <option value="TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF">
+                  {isModelLoaded('TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF') ? '✅ ' : '⏳ '}
+                  Mixtral-8x7B-GGUF (16-24GB RAM, CPU optimized)
+                  {isModelLoaded('TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF') && ' - Loaded'}
+                </option>
               </select>
               {fallbackUsed && originalModel && (
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
