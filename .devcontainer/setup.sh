@@ -19,27 +19,35 @@ sudo apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0
 
+# Get the workspace directory
+WORKSPACE_DIR=$(pwd)
+echo "📁 Workspace directory: $WORKSPACE_DIR"
+
 # Create Python virtual environment
 echo "🐍 Setting up Python environment..."
-python3 -m venv /workspaces/mistral-playground/venv
-source /workspaces/mistral-playground/venv/bin/activate
+python3 -m venv $WORKSPACE_DIR/venv
+source $WORKSPACE_DIR/venv/bin/activate
 
 # Upgrade pip
 pip install --upgrade pip
 
-# Install Python dependencies
+# Install Python dependencies (use minimal for faster setup)
 echo "📚 Installing Python dependencies..."
-cd /workspaces/mistral-playground/backend
-pip install -r requirements-basic.txt
+cd $WORKSPACE_DIR/backend
+if [ -f "requirements-minimal.txt" ]; then
+    pip install -r requirements-minimal.txt
+else
+    pip install -r requirements-basic.txt
+fi
 
 # Install frontend dependencies
 echo "🎨 Installing frontend dependencies..."
-cd /workspaces/mistral-playground/frontend
+cd $WORKSPACE_DIR/frontend
 npm install
 
 # Generate secret key if .env doesn't exist
 echo "🔑 Setting up environment..."
-cd /workspaces/mistral-playground
+cd $WORKSPACE_DIR
 if [ ! -f .env ]; then
     echo "Creating .env file..."
     cp .env.example .env
@@ -57,12 +65,12 @@ if [ ! -f .env ]; then
 fi
 
 # Create necessary directories
-mkdir -p /workspaces/mistral-playground/chroma_db
-mkdir -p /workspaces/mistral-playground/logs
+mkdir -p $WORKSPACE_DIR/chroma_db
+mkdir -p $WORKSPACE_DIR/logs
 
 # Set permissions
-chmod +x /workspaces/mistral-playground/start-dev.sh
-chmod +x /workspaces/mistral-playground/start.sh
+chmod +x $WORKSPACE_DIR/start-dev.sh
+chmod +x $WORKSPACE_DIR/start.sh
 
 echo "✅ Setup complete! Mistral Playground is ready for Codespaces."
 echo ""

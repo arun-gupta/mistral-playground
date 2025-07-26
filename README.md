@@ -379,6 +379,7 @@ When running in GitHub Codespaces, the application is optimized for cloud develo
 - **Port Forwarding**: Automatic setup for backend (8000) and frontend (5173)
 - **Environment**: Pre-configured Python 3.11 and Node.js 18
 - **Resources**: 4 CPU cores, 16GB RAM, 32GB storage
+- **Startup Script**: Uses the same `start-dev.sh` as local development
 
 #### **Development Experience**
 - **VS Code Extensions**: Python, TypeScript, TailwindCSS, and more
