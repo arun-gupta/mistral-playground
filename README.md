@@ -1,6 +1,6 @@
-# Mistral Playground & Prompt Tuner
+# Mistral Playground & Model Explorer
 
-A modern, developer-friendly full-stack application for exploring, comparing, and fine-tuning prompts across Mistral's open models (Mistral-7B, Mixtral, Codestral).
+A modern, developer-friendly full-stack application for exploring, comparing, and experimenting with Mistral's open models (Mistral-7B, Mixtral, Codestral).
 
 ## 🎯 Key Features
 
@@ -11,7 +11,7 @@ A modern, developer-friendly full-stack application for exploring, comparing, an
 - **Mock Mode**: Enable a mock backend for UI testing and demos without running real models
 - **Advanced Parameter Tuning**: Edit temperature, max tokens, system prompt, top_p
 - **Performance Metrics**: Show token usage and latency per request
-- **Prompt Management**: Save/load/share prompt configurations
+- **Model Management**: Download, load, and manage different models
 - **Rich Output Rendering**: Markdown rendering of outputs with syntax highlighting
 
 ### User Interface Features
@@ -31,7 +31,7 @@ A modern, developer-friendly full-stack application for exploring, comparing, an
 ## 🖥️ Application Navigation
 
 The main navigation bar includes:
-- **Playground**: Single model interaction and prompt testing
+- **Playground**: Single model interaction and testing
 - **Models**: Manage, download, and monitor all models (with real-time status)
 - **Comparison**: Compare responses from multiple models side-by-side
 - **RAG**: Retrieval-Augmented Generation (document Q&A)
@@ -457,15 +457,15 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 🎥 Demo Video Script
 
-1. **Introduction (0-10s)**: "Welcome to Mistral Playground - your comprehensive tool for exploring and fine-tuning prompts across Mistral's open models."
+1. **Introduction (0-10s)**: "Welcome to Mistral Playground & Model Explorer - your comprehensive tool for exploring and experimenting with Mistral's open models."
 
 2. **Basic Playground (10-30s)**: "Start by comparing responses from different Mistral models. Adjust parameters like temperature and max tokens in real-time."
 
 3. **Advanced Features (30-50s)**: "Upload documents for RAG-powered responses, or use Codestral for specialized code tasks with inline diff views."
 
-4. **Prompt Management (50-70s)**: "Save your favorite prompt configurations and share them with your team."
+4. **Model Management (50-70s)**: "Download, load, and manage different models with real-time status tracking."
 
-5. **Performance Insights (70-90s)**: "Monitor token usage and latency to optimize your prompts for production use."
+5. **Performance Insights (70-90s)**: "Monitor token usage and latency to understand model performance."
 
 ## 🧠 Development Notes
 
@@ -473,6 +473,6 @@ This application was developed using Mistral models for:
 - **Code Generation**: Initial project structure and boilerplate
 - **Documentation**: README and API documentation
 - **UI Copy**: Component text and user interface labels
-- **Testing**: Prompt validation and edge case identification
+- **Testing**: Model validation and edge case identification
 
 The models demonstrated excellent capabilities in understanding complex requirements and generating production-ready code with proper error handling and documentation. 

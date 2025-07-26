@@ -71,8 +71,8 @@ os.environ["CHROMA_SEND_TELEMETRY"] = "false"
 
 # Create FastAPI app
 app = FastAPI(
-    title="Mistral Playground & Prompt Tuner",
-    description="A comprehensive tool for exploring and fine-tuning prompts across Mistral's open models",
+    title="Mistral Playground & Model Explorer",
+    description="A comprehensive tool for exploring and experimenting with Mistral's open models",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -99,7 +99,7 @@ async def health_check():
 @app.get("/")
 async def root():
     return {
-        "message": "Mistral Playground & Prompt Tuner API",
+        "message": "Mistral Playground & Model Explorer API",
         "version": "1.0.0",
         "docs": "/docs"
     }

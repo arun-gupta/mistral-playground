@@ -1,1 +1,1 @@
-# Mistral Playground & Prompt Tuner Backend 
+# Mistral Playground & Model Explorer Backend 

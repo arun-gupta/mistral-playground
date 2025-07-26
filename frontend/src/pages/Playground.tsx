@@ -256,7 +256,7 @@ const Playground = () => {
           <div>
             <h1 className="text-3xl font-bold">Mistral Playground</h1>
             <p className="text-muted-foreground">
-              Explore and fine-tune prompts across Mistral's open models
+              Explore and experiment with Mistral's open models
             </p>
           </div>
           

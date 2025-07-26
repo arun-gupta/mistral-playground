@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Mistral Playground & Prompt Tuner - Startup Script
+# Mistral Playground & Model Explorer - Startup Script
 
-echo "🚀 Starting Mistral Playground & Prompt Tuner..."
+echo "🚀 Starting Mistral Playground & Model Explorer..."
 
 # Check if Python is installed
 if ! command -v python3 &> /dev/null; then
