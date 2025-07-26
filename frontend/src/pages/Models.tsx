@@ -196,9 +196,17 @@ const Models = () => {
   // Fetch available models
   const fetchModels = async () => {
     try {
+      console.log('🔍 Fetching models from API...')
       const response = await fetch('/api/v1/models/available')
+      
+      console.log('📡 API Response:', {
+        status: response.status,
+        ok: response.ok
+      })
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('🔍 Models data:', data)
         setModels(data)
         
         // Clear downloading state for models that are already loaded or downloaded
@@ -223,19 +231,91 @@ const Models = () => {
           return newProgress
         })
       } else {
-        console.error('Failed to fetch models')
+        console.error('❌ Failed to fetch models:', response.status)
+        
+        // Fallback to hardcoded models if API fails
+        const fallbackModels: ModelStatus[] = [
+          {
+            name: 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+            provider: 'huggingface',
+            is_loaded: false,
+            is_downloading: false,
+            download_progress: 0
+          },
+          {
+            name: 'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
+            provider: 'huggingface',
+            is_loaded: false,
+            is_downloading: false,
+            download_progress: 0
+          },
+          {
+            name: 'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF',
+            provider: 'huggingface',
+            is_loaded: false,
+            is_downloading: false,
+            download_progress: 0
+          },
+          {
+            name: 'microsoft/DialoGPT-small',
+            provider: 'huggingface',
+            is_loaded: false,
+            is_downloading: false,
+            download_progress: 0
+          }
+        ]
+        
+        console.log('🔄 Using fallback models:', fallbackModels)
+        setModels(fallbackModels)
+        
         toast({
-          title: "Error",
-          description: "Failed to fetch available models",
-          variant: "destructive"
+          title: "API Unavailable",
+          description: "Using fallback models. Backend API may not be running.",
+          variant: "default"
         })
       }
     } catch (error) {
-      console.error('Error fetching models:', error)
+      console.error('❌ Error fetching models:', error)
+      
+      // Fallback to hardcoded models on error
+      const fallbackModels: ModelStatus[] = [
+        {
+          name: 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+          provider: 'huggingface',
+          is_loaded: false,
+          is_downloading: false,
+          download_progress: 0
+        },
+        {
+          name: 'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
+          provider: 'huggingface',
+          is_loaded: false,
+          is_downloading: false,
+          download_progress: 0
+        },
+        {
+          name: 'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF',
+          provider: 'huggingface',
+          is_loaded: false,
+          is_downloading: false,
+          download_progress: 0
+        },
+        {
+          name: 'microsoft/DialoGPT-small',
+          provider: 'huggingface',
+          is_loaded: false,
+          is_downloading: false,
+          download_progress: 0
+        }
+      ]
+      
+      console.log('🔄 Using fallback models due to error:', fallbackModels)
+      setModels(fallbackModels)
+      
       toast({
-        title: "Error",
-        description: "Failed to fetch available models",
-        variant: "destructive"
+        title: "Connection Error",
+        description: "Using fallback models. Check if backend is running.",
+        variant: "default"
       })
     } finally {
       setLoading(false)
@@ -509,6 +589,66 @@ const Models = () => {
                 onClick={() => setShowAdvanced(!showAdvanced)}
               >
                 {showAdvanced ? 'Hide' : 'Show'} Advanced Variants
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    console.log('🧪 Testing Models API endpoints...')
+                    
+                    const endpoints = [
+                      '/api/v1/models/available',
+                      '/api/v1/models/list',
+                      '/api/v1/models/mock-status',
+                      '/health'
+                    ]
+                    
+                    const results: Record<string, any> = {}
+                    
+                    for (const endpoint of endpoints) {
+                      try {
+                        const response = await fetch(endpoint)
+                        const data = await response.json()
+                        results[endpoint] = {
+                          status: response.status,
+                          ok: response.ok,
+                          data: data
+                        }
+                        console.log(`✅ ${endpoint}:`, results[endpoint])
+                      } catch (error) {
+                        results[endpoint] = {
+                          status: 'error',
+                          ok: false,
+                          error: error instanceof Error ? error.message : String(error)
+                        }
+                        console.error(`❌ ${endpoint}:`, error)
+                      }
+                    }
+                    
+                    console.log('🧪 All Models API test results:', results)
+                    
+                    const workingEndpoints = Object.keys(results).filter(k => results[k].ok)
+                    const failedEndpoints = Object.keys(results).filter(k => !results[k].ok)
+                    
+                    let message = `Models API Test Results:\n\n`
+                    message += `✅ Working (${workingEndpoints.length}): ${workingEndpoints.join(', ')}\n\n`
+                    message += `❌ Failed (${failedEndpoints.length}): ${failedEndpoints.join(', ')}\n\n`
+                    
+                    if (results['/api/v1/models/available']?.ok) {
+                      const models = results['/api/v1/models/available'].data
+                      message += `📋 Models found: ${models.length}\n`
+                      message += `Models: ${models.map((m: any) => m.name).join(', ')}`
+                    }
+                    
+                    alert(message)
+                  } catch (error) {
+                    console.error('Comprehensive Models API test failed:', error)
+                    alert('Comprehensive Models API test failed: ' + error)
+                  }
+                }}
+              >
+                🐛 Test API
               </Button>
             </div>
           </CardTitle>
