@@ -2,7 +2,7 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground)
 
-A modern, developer-friendly full-stack application for exploring and experimenting with Mistral's powerful open models (Mistral-7B, Mixtral) to understand their capabilities and performance. The platform also enables comprehensive comparison with other leading open-source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
+A modern, developer-friendly full-stack application for exploring and experimenting with Mistral's powerful open models (Mistral-7B, Mixtral) to understand their capabilities and performance. The platform also enables comprehensive comparison with other leading open source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
 
 ## 🎯 Key Features
 
@@ -596,7 +596,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 🙏 Acknowledgments
 
-- **Mistral AI** for providing excellent open-source models
+- **Mistral AI** for providing excellent open source models
 - **vLLM** team for high-performance inference
 - **ChromaDB** for vector database capabilities
 - **shadcn/ui** for beautiful React components
