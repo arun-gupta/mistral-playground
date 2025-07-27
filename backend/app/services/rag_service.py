@@ -9,10 +9,10 @@ import asyncio
 import json
 from datetime import datetime
 
-from ..core.config import settings
-from ..models.requests import RAGRequest
-from ..models.responses import RAGResponse, DocumentChunk, CollectionInfo
-from ..services.model_service import model_service
+from backend.app.core.config import settings
+from backend.app.models.requests import RAGRequest
+from backend.app.models.responses import RAGResponse, DocumentChunk, CollectionInfo
+from backend.app.services.model_service import model_service
 
 # Lazy import for sentence_transformers to avoid startup issues
 SentenceTransformer = None
