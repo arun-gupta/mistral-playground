@@ -1,84 +1,110 @@
 #!/bin/bash
 
-# Exit on any error
+# Codespaces Setup Script - Shows real-time progress
+
 set -e
 
-echo "🚀 Setting up Mistral Playground in Codespaces..."
+echo "🚀 Mistral Playground Codespaces Setup"
+echo "======================================"
+echo ""
 
-# Update package lists
-sudo apt-get update
+# Show system info
+echo "📋 System Information:"
+echo "   - Python: $(python3 --version 2>/dev/null || echo 'Not found')"
+echo "   - Node.js: $(node --version 2>/dev/null || echo 'Not found')"
+echo "   - npm: $(npm --version 2>/dev/null || echo 'Not found')"
+echo ""
 
-# Install system dependencies
-echo "📦 Installing system dependencies..."
-sudo apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    wget \
-    unzip \
-    libgl1-mesa-glx \
-    libglib2.0-0
-
-# Get the workspace directory
-WORKSPACE_DIR=$(pwd)
-echo "📁 Workspace directory: $WORKSPACE_DIR"
-
-# Create Python virtual environment
+# Setup Python environment
 echo "🐍 Setting up Python environment..."
-python3 -m venv $WORKSPACE_DIR/venv
-source $WORKSPACE_DIR/venv/bin/activate
-
-# Upgrade pip
-pip install --upgrade pip
-
-# Install Python dependencies (use minimal for faster setup)
-echo "📚 Installing Python dependencies..."
-cd $WORKSPACE_DIR/backend
-if [ -f "requirements-minimal.txt" ]; then
-    pip install -r requirements-minimal.txt
+if [ ! -d "venv" ]; then
+    echo "   - Creating virtual environment..."
+    python3 -m venv venv
+    echo "   ✅ Virtual environment created"
 else
-    pip install -r requirements-basic.txt
+    echo "   ✅ Virtual environment exists"
 fi
 
-# Install frontend dependencies
-echo "🎨 Installing frontend dependencies..."
-cd $WORKSPACE_DIR/frontend
-npm install
+echo "   - Activating virtual environment..."
+source venv/bin/activate
+echo "   ✅ Virtual environment activated"
 
-# Generate secret key if .env doesn't exist
-echo "🔑 Setting up environment..."
-cd $WORKSPACE_DIR
-if [ ! -f .env ]; then
-    echo "Creating .env file..."
-    cp .env.example .env
-    
-    # Generate a secure secret key
-    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
-    sed -i "s/your-secret-key-here/$SECRET_KEY/" .env
-    
-    # Set Codespaces-specific settings
-    sed -i "s/MOCK_MODE=false/MOCK_MODE=true/" .env
-    sed -i "s/API_HOST=0.0.0.0/API_HOST=0.0.0.0/" .env
-    sed -i "s/CORS_ORIGINS=\[\"http:\/\/localhost:5173\", \"http:\/\/localhost:3000\"\]/CORS_ORIGINS=[\"https:\/\/*.github.dev\", \"http:\/\/localhost:5173\", \"http:\/\/localhost:3000\"]/" .env
-    
-    echo "✅ Environment file created with Codespaces settings"
+# Install backend dependencies
+echo ""
+echo "🔧 Installing backend dependencies..."
+cd backend
+echo "   - Upgrading pip..."
+pip install --upgrade pip
+echo "   - Installing minimal requirements..."
+pip install -r requirements-minimal.txt
+echo "   ✅ Backend dependencies installed"
+cd ..
+
+# Create .env file
+echo ""
+echo "📝 Setting up configuration..."
+if [ ! -f ".env" ]; then
+    echo "   - Creating .env file..."
+    cat > .env << EOF
+# Model Configuration
+MODEL_PROVIDER=huggingface
+MODEL_NAME=microsoft/DialoGPT-small
+DEVICE=cpu
+
+# Vector Database
+CHROMA_PERSIST_DIRECTORY=./chroma_db
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
+
+# Security
+SECRET_KEY=your-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Logging
+LOG_LEVEL=INFO
+
+# Development/Testing
+MOCK_MODE=False
+EOF
+    echo "   ✅ .env file created"
+else
+    echo "   ✅ .env file exists"
 fi
 
-# Create necessary directories
-mkdir -p $WORKSPACE_DIR/chroma_db
-mkdir -p $WORKSPACE_DIR/logs
-
-# Set permissions
-chmod +x $WORKSPACE_DIR/start-dev.sh
-chmod +x $WORKSPACE_DIR/start.sh
-
-echo "✅ Setup complete! Mistral Playground is ready for Codespaces."
+# Setup frontend
 echo ""
-echo "📋 Next steps:"
-echo "1. The application will start automatically"
-echo "2. Backend API will be available at: http://localhost:8000"
-echo "3. Frontend will be available at: http://localhost:5173"
-echo "4. API docs will be available at: http://localhost:8000/docs"
+echo "🎨 Setting up frontend..."
+if command -v node &> /dev/null && command -v npm &> /dev/null; then
+    echo "   - Node.js: $(node --version)"
+    echo "   - npm: $(npm --version)"
+    
+    cd frontend
+    if [ ! -d "node_modules" ]; then
+        echo "   - Installing frontend dependencies..."
+        npm install
+        echo "   ✅ Frontend dependencies installed"
+    else
+        echo "   ✅ Frontend dependencies exist"
+    fi
+    cd ..
+else
+    echo "   ⚠️  Node.js/npm not available"
+fi
+
 echo ""
-echo "🎯 Note: Mock mode is enabled by default in Codespaces for faster startup."
-echo "   To use real models, edit .env and set MOCK_MODE=false" 
+echo "✅ Setup complete!"
+echo ""
+echo "🎯 Next steps:"
+echo "   1. Start the backend: cd backend && source ../venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+echo "   2. Start the frontend: cd frontend && npm run dev"
+echo "   3. Access the application:"
+echo "      - Frontend: http://localhost:5173"
+echo "      - Backend API: http://localhost:8000"
+echo "      - API Docs: http://localhost:8000/docs"
+echo ""
+echo "�� Ready to develop!" 

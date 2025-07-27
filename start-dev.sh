@@ -2,7 +2,14 @@
 
 # Mistral Playground & Model Explorer - Development Startup Script
 
+set -e  # Exit on any error
+
 echo "🚀 Starting Mistral Playground & Model Explorer in development mode..."
+echo "📋 System Information:"
+echo "   - Python: $(python3 --version 2>/dev/null || echo 'Not found')"
+echo "   - Node.js: $(node --version 2>/dev/null || echo 'Not found')"
+echo "   - npm: $(npm --version 2>/dev/null || echo 'Not found')"
+echo ""
 
 # Check if Python is installed
 if ! command -v python3 &> /dev/null; then
@@ -14,19 +21,28 @@ fi
 if [ ! -d "venv" ]; then
     echo "📦 Creating Python virtual environment..."
     python3 -m venv venv
+    echo "✅ Virtual environment created"
+else
+    echo "✅ Virtual environment already exists"
 fi
 
 # Activate virtual environment
 echo "🔧 Activating virtual environment..."
 source venv/bin/activate
+echo "✅ Virtual environment activated"
 
 # Install backend dependencies if requirements files exist
 if [ -f "backend/requirements-minimal.txt" ]; then
     echo "📦 Installing minimal backend dependencies..."
     cd backend
+    echo "   - Upgrading pip..."
     pip install --upgrade pip
+    echo "   - Installing requirements..."
     pip install -r requirements-minimal.txt
+    echo "✅ Backend dependencies installed"
     cd ..
+else
+    echo "⚠️  requirements-minimal.txt not found, skipping backend setup"
 fi
 
 # Create .env file if it doesn't exist
@@ -58,10 +74,15 @@ LOG_LEVEL=INFO
 # Development/Testing
 MOCK_MODE=False
 EOF
-    echo "⚠️  Created basic .env file. You may want to customize it later."
+    echo "✅ Created basic .env file"
+    echo "⚠️  You may want to customize it later"
+else
+    echo "✅ .env file already exists"
 fi
 
-echo "✅ Environment check passed"
+echo ""
+echo "✅ Environment setup complete!"
+echo ""
 
 # Function to cleanup background processes
 cleanup() {
@@ -77,35 +98,49 @@ trap cleanup SIGINT SIGTERM
 # Start backend
 echo "🔧 Starting backend server..."
 cd backend
+echo "   - Starting uvicorn server on port 8000..."
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 cd ..
 
 # Wait a moment for backend to start
+echo "   - Waiting for backend to initialize..."
 sleep 3
+
+# Check if backend is running
+if curl -s http://localhost:8000/api/v1/models/test > /dev/null; then
+    echo "✅ Backend server is running"
+else
+    echo "⚠️  Backend server may not be fully started yet"
+fi
 
 # Check if Node.js is available for frontend
 if command -v node &> /dev/null && command -v npm &> /dev/null; then
-    echo "✅ Node.js found: $(node --version)"
-    echo "✅ npm found: $(npm --version)"
+    echo ""
+    echo "🎨 Setting up frontend..."
+    echo "   - Node.js: $(node --version)"
+    echo "   - npm: $(npm --version)"
     
     # Check if frontend dependencies are installed
     if [ ! -d "frontend/node_modules" ]; then
-        echo "📦 Installing frontend dependencies..."
+        echo "   - Installing frontend dependencies..."
         cd frontend
         npm install
+        echo "✅ Frontend dependencies installed"
         cd ..
+    else
+        echo "✅ Frontend dependencies already installed"
     fi
     
     # Start frontend
-    echo "🎨 Starting frontend development server..."
+    echo "   - Starting frontend development server..."
     cd frontend
     npm run dev &
     FRONTEND_PID=$!
     cd ..
     
     echo ""
-    echo "🎉 Services started!"
+    echo "🎉 All services started successfully!"
     echo ""
     echo "📱 Frontend: http://localhost:5173"
     echo "🔧 Backend API: http://localhost:8000"
@@ -139,6 +174,10 @@ else
     echo ""
     echo "Press Ctrl+C to stop backend service"
 fi
+
+echo ""
+echo "🔄 Services are running. Check the URLs above to access the application."
+echo ""
 
 # Wait for background processes
 wait 
