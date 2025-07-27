@@ -43,9 +43,12 @@ const Comparison = () => {
   const [comparison, setComparison] = useState<ComparisonResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
-  const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
-  const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)  // Toggle for GPU recommended models
+  const [showLoadedOnly, setShowLoadedOnly] = useState(false)
+  const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)
+  const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)
+  const [filterBy, setFilterBy] = useState<'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'>('all')
+  const [sortBy, setSortBy] = useState<'size' | 'name' | 'status'>('size')
+  const [showAdvanced, setShowAdvanced] = useState(true)
   const { toast } = useToast()
 
   // Common parameters for all models
@@ -56,6 +59,37 @@ const Comparison = () => {
 
   // Available models for comparison - will be populated from backend
   const [availableModels, setAvailableModels] = useState<string[]>([])
+
+  // Helper functions for filtering and sorting
+  const getModelFamily = (modelName: string): string => {
+    if (modelName.includes('mistral') || modelName.includes('Mixtral')) return 'mistral'
+    if (modelName.includes('llama') || modelName.includes('Llama')) return 'llama'
+    if (modelName.includes('gemma') || modelName.includes('Gemma')) return 'gemma'
+    if (modelName.includes('dialogpt') || modelName.includes('DialoGPT')) return 'dialogpt'
+    return 'other'
+  }
+
+  const getModelSize = (modelName: string): number => {
+    if (modelName.includes('14B') || modelName.includes('14b')) return 14
+    if (modelName.includes('13B') || modelName.includes('13b')) return 13
+    if (modelName.includes('10B') || modelName.includes('10b')) return 10
+    if (modelName.includes('8B') || modelName.includes('8b') || modelName.includes('8x7B')) return 8
+    if (modelName.includes('7B') || modelName.includes('7b')) return 7
+    if (modelName.includes('2B') || modelName.includes('2b')) return 2
+    if (modelName.includes('1B') || modelName.includes('1b')) return 1
+    return 0
+  }
+
+  const isKeyVariant = (modelName: string): boolean => {
+    const keyVariants = [
+      'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
+      'google/gemma-2b-it',
+      'microsoft/DialoGPT-small'
+    ]
+    return keyVariants.includes(modelName)
+  }
 
   // Fetch model statuses and available models
   const fetchModelStatuses = async () => {
@@ -112,6 +146,22 @@ const Comparison = () => {
   const getFilteredAvailableModels = () => {
     let filtered = availableModels
 
+    // Apply family filter
+    if (filterBy !== 'all') {
+      filtered = filtered.filter(modelName => {
+        const family = getModelFamily(modelName)
+        if (filterBy === 'recommended') {
+          return isRecommended(modelName)
+        }
+        return family === filterBy
+      })
+    }
+
+    // Apply advanced variants filter
+    if (!showAdvanced) {
+      filtered = filtered.filter(modelName => isKeyVariant(modelName))
+    }
+
     // Apply loaded filter
     if (showLoadedOnly) {
       filtered = filtered.filter(modelName => isModelLoaded(modelName))
@@ -126,6 +176,24 @@ const Comparison = () => {
     if (showGPURecommendedOnly) {
       filtered = filtered.filter(modelName => isGPURecommended(modelName))
     }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'size':
+          return getModelSize(b) - getModelSize(a) // Largest first
+        case 'name':
+          return a.localeCompare(b)
+        case 'status':
+          const aLoaded = isModelLoaded(a)
+          const bLoaded = isModelLoaded(b)
+          if (aLoaded && !bLoaded) return -1
+          if (!aLoaded && bLoaded) return 1
+          return a.localeCompare(b)
+        default:
+          return 0
+      }
+    })
 
     return filtered
   }
@@ -238,79 +306,157 @@ const Comparison = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Model Filters */}
-          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700">Model Filters</label>
+          <div className="space-y-4">
+            {/* Unified Controls Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Family Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Filter by Family</label>
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value as 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Families</option>
+                  <option value="mistral">Mistral & Mixtral</option>
+                  <option value="llama">Meta Llama 3</option>
+                  <option value="gemma">Google Gemma</option>
+                  <option value="dialogpt">Microsoft DialoGPT</option>
+                  <option value="recommended">Recommended Only</option>
+                </select>
               </div>
-              
-              {/* Loaded Models Toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Loaded Models Only</span>
+
+              {/* Sort Options */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Sort by</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'size' | 'name' | 'status')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="size">Size (Largest First)</option>
+                  <option value="name">Name (A-Z)</option>
+                  <option value="status">Status (Loaded First)</option>
+                </select>
+              </div>
+
+              {/* Advanced Variants Toggle */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Advanced Variants</label>
                 <div className="flex items-center space-x-3">
                   <button
                     type="button"
-                    onClick={() => setShowLoadedOnly(!showLoadedOnly)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                      showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                      showAdvanced ? 'bg-green-600' : 'bg-gray-200'
                     }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                        showAdvanced ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
-                  <span className="text-xs text-gray-500">
-                    {showLoadedOnly ? 'ON' : 'OFF'}
+                  <span className="text-sm text-gray-600">
+                    {showAdvanced ? 'Show All' : 'Hide Advanced'}
                   </span>
                 </div>
               </div>
 
-              {/* Recommended Models Toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Recommended Models Only</span>
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-                      showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        showRecommendedOnly ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-xs text-gray-500">
-                    {showRecommendedOnly ? 'ON' : 'OFF'}
-                  </span>
-                </div>
+              {/* Refresh Models Button */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Model Management</label>
+                <Button
+                  onClick={fetchModelStatuses}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  🔄 Refresh Models
+                </Button>
               </div>
+            </div>
 
-              {/* GPU Recommended Models Toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">GPU Recommended Only</span>
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowGPURecommendedOnly(!showGPURecommendedOnly)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                      showGPURecommendedOnly ? 'bg-orange-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        showGPURecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+            {/* Model Filters Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Model Filters</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Loaded Models Toggle */}
+                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-blue-800">Loaded Models Only</span>
+                    <p className="text-xs text-blue-600 mt-1">Show models ready to use</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowLoadedOnly(!showLoadedOnly)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
                       }`}
-                    />
-                  </button>
-                  <span className="text-xs text-gray-500">
-                    {showGPURecommendedOnly ? 'ON' : 'OFF'}
-                  </span>
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-blue-800">
+                      {showLoadedOnly ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Recommended Models Toggle */}
+                <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-purple-800">Recommended Models Only</span>
+                    <p className="text-xs text-purple-600 mt-1">Show curated best models</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showRecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-purple-800">
+                      {showRecommendedOnly ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* GPU Recommended Models Toggle */}
+                <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-orange-800">GPU Recommended Only</span>
+                    <p className="text-xs text-orange-600 mt-1">Show GPU-optimized models</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowGPURecommendedOnly(!showGPURecommendedOnly)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                        showGPURecommendedOnly ? 'bg-orange-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showGPURecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-orange-800">
+                      {showGPURecommendedOnly ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
