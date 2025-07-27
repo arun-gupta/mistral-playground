@@ -18,7 +18,7 @@ class ModelResponse(BaseModel):
 class ComparisonResponse(BaseModel):
     """Response model for model comparison"""
     prompt: str = Field(..., description="Original prompt")
-    responses: List[ModelResponse] = Field(..., description="Responses from different models")
+    responses: List[ModelComparison] = Field(..., description="Responses from different models")
     comparison_id: str = Field(..., description="Unique comparison identifier")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Comparison timestamp")
 
