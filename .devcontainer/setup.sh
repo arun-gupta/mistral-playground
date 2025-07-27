@@ -96,15 +96,61 @@ else
     echo "   ⚠️  Node.js/npm not available"
 fi
 
+# Start backend server
+echo ""
+echo "🚀 Starting backend server..."
+cd backend
+echo "   - Starting uvicorn server on port 8000..."
+source ../venv/bin/activate
+nohup uvicorn main:app --reload --host 0.0.0.0 --port 8000 > ../backend.log 2>&1 &
+BACKEND_PID=$!
+echo $BACKEND_PID > ../backend.pid
+cd ..
+
+# Wait for backend to start
+echo "   - Waiting for backend to initialize..."
+sleep 5
+
+# Check if backend is running
+if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+    echo "   ✅ Backend server is running"
+else
+    echo "   ⚠️  Backend server may not be fully started yet"
+fi
+
+# Start frontend server
+echo ""
+echo "🎨 Starting frontend server..."
+if command -v node &> /dev/null && command -v npm &> /dev/null; then
+    cd frontend
+    echo "   - Starting frontend development server..."
+    nohup npm run dev > ../frontend.log 2>&1 &
+    FRONTEND_PID=$!
+    echo $FRONTEND_PID > ../frontend.pid
+    cd ..
+    
+    echo "   ✅ Frontend server started"
+else
+    echo "   ⚠️  Frontend requires Node.js to run"
+fi
+
 echo ""
 echo "✅ Setup complete!"
 echo ""
-echo "🎯 Next steps:"
-echo "   1. Start the backend: cd backend && source ../venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000"
-echo "   2. Start the frontend: cd frontend && npm run dev"
-echo "   3. Access the application:"
-echo "      - Frontend: http://localhost:5173"
-echo "      - Backend API: http://localhost:8000"
-echo "      - API Docs: http://localhost:8000/docs"
+echo "🎉 Services are running!"
+echo "📱 Frontend: http://localhost:5173"
+echo "🔧 Backend API: http://localhost:8000"
+echo "📚 API Docs: http://localhost:8000/docs"
 echo ""
-echo "�� Ready to develop!" 
+echo "📋 Model Manager now shows all 25+ available models!"
+echo "🔍 Check the Models tab to see the full selection."
+echo ""
+echo "📝 Logs:"
+echo "   - Backend: tail -f backend.log"
+echo "   - Frontend: tail -f frontend.log"
+echo ""
+echo "🛑 To stop services:"
+echo "   - Backend: kill \$(cat backend.pid)"
+echo "   - Frontend: kill \$(cat frontend.pid)"
+echo ""
+echo "🚀 Ready to explore!" 

@@ -113,7 +113,8 @@ The fastest way to get started is using GitHub Codespaces:
 **Codespaces Features:**
 - ✅ **Automatic setup** - No local installation required
 - ✅ **Pre-configured environment** - Python, Node.js, and all dependencies
-- ✅ **Mock mode enabled** - Fast startup for UI testing
+- ✅ **Automatic server startup** - Backend and frontend start automatically
+- ✅ **Full model selection** - All 25+ models available in Model Manager
 - ✅ **Port forwarding** - Automatic access to all services
 - ✅ **VS Code extensions** - Python, TypeScript, and TailwindCSS support
 
@@ -228,6 +229,20 @@ This script will automatically:
   cd frontend
   npm install
   ```
+
+**Models Page Issues:**
+- **Only 4 models shown**: This happens when the backend API is not running. The frontend falls back to a limited list.
+  ```bash
+  # Start the backend manually
+  cd backend
+  source ../venv/bin/activate
+  uvicorn main:app --reload --host 0.0.0.0 --port 8000
+  
+  # Or restart the full setup
+  bash start-dev.sh
+  ```
+- **API connection errors**: Check if the backend is running on port 8000
+- **Full model list**: Once backend is running, you'll see all 25+ available models
    ```bash
    # Terminal 1: Backend
    cd backend
