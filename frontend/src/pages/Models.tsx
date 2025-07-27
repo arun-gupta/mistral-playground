@@ -932,18 +932,24 @@ const Models = () => {
 
             {/* Loaded Models Toggle */}
             <div>
-              <label className="block text-sm font-medium mb-1">Show Loaded Only</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="loaded-toggle"
-                  checked={showLoadedOnly}
-                  onChange={(e) => setShowLoadedOnly(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label htmlFor="loaded-toggle" className="text-sm text-gray-700">
-                  {showLoadedOnly ? '✅ Showing loaded models only' : '📋 Show all models'}
-                </label>
+              <label className="block text-sm font-medium mb-1">Loaded Models Filter</label>
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLoadedOnly(!showLoadedOnly)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm text-gray-700">
+                  {showLoadedOnly ? 'Show loaded models only' : 'Show all models'}
+                </span>
               </div>
             </div>
 
