@@ -128,8 +128,8 @@ git clone https://github.com/arun-gupta/mistral-playground
 cd mistral-playground
 
 # Run the complete development setup script
-chmod +x start-dev.sh
-./start-dev.sh
+chmod +x setup-and-start.sh
+./setup-and-start.sh
 ```
 
 This script will automatically:
@@ -140,7 +140,7 @@ This script will automatically:
 - ✅ Create a basic `.env` file with sensible defaults
 - ✅ Start both backend and frontend servers
 
-**💡 This is now the single script for both setup and startup!**
+**💡 This script does both setup AND startup in one command!**
 
 **Access the application:**
 - Frontend: http://localhost:5173
@@ -235,12 +235,12 @@ This script will automatically:
 **Models Page Issues:**
 - **Only 4 models shown**: This happens when the backend API is not running. The frontend falls back to a limited list.
   ```bash
-  # Start the backend manually (from project root)
-  source venv/bin/activate
-  python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-  
-  # Or restart the full setup
-  bash start-dev.sh
+                # Start the backend manually (from project root)
+              source venv/bin/activate
+              python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+              
+              # Or restart the full setup
+              bash setup-and-start.sh
   ```
 - **ModuleNotFoundError**: If you see "No module named 'app.models'", run from project root:
   ```bash

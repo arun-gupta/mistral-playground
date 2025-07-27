@@ -47,6 +47,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postStartCommand": "bash -c 'chmod +x .devcontainer/setup.sh && .devcontainer/setup.sh'",
+  "postStartCommand": "bash -c 'chmod +x .devcontainer/setup-and-start.sh && .devcontainer/setup-and-start.sh'",
   "remoteUser": "vscode"
 } 
