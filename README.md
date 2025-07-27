@@ -1,6 +1,8 @@
 # <a href="https://github.com/arun-gupta/mistral-playground" target="_blank">Mistral Playground & Model Explorer</a>
 
-<a href="https://codespaces.new/arun-gupta/mistral-playground" target="_blank"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces"></a>
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground)
+
+> 💡 **Tip**: Right-click the "Open in GitHub Codespaces" button and select "Open in new tab" for the best experience.
 
 A modern, developer-friendly full-stack application specifically designed for exploring and experimenting with **Mistral AI's powerful open models**. This playground is optimized for **Mistral-7B** and **Mixtral-8x7B** models, providing comprehensive tools to understand their capabilities, performance characteristics, and real-world applications.
 
@@ -29,7 +31,7 @@ A modern, developer-friendly full-stack application specifically designed for ex
 ## 🚀 **Quick Start**
 
 ### **Option 1: GitHub Codespaces (Recommended)**
-1. **Click the "Open in GitHub Codespaces" button above**
+1. **Right-click the "Open in GitHub Codespaces" button above and select "Open in new tab"** (for best experience)
 2. **Wait for setup to complete** (2-3 minutes)
 3. **Access the application**:
    - Frontend: http://localhost:5173
