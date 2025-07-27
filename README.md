@@ -1,6 +1,6 @@
-# [Mistral Playground & Model Explorer](https://github.com/arun-gupta/mistral-playground)
+# [Mistral Playground & Model Explorer](https://github.com/arun-gupta/mistral-playground){:target="_blank"}
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground){:target="_blank"}
 
 A modern, developer-friendly full-stack application specifically designed for exploring and experimenting with **Mistral AI's powerful open models**. This playground is optimized for **Mistral-7B** and **Mixtral-8x7B** models, providing comprehensive tools to understand their capabilities, performance characteristics, and real-world applications.
 
