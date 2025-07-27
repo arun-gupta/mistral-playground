@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🚀 Mistral Playground Codespaces Setup"
+echo "🚀 Mistral Playground Codespaces Setup (AUTOMATED - NO PROMPTS)"
 echo "======================================"
 echo ""
 
@@ -32,6 +32,7 @@ echo "   ✅ Virtual environment activated"
 # Install backend dependencies
 echo ""
 echo "🔧 Installing backend dependencies..."
+echo "   - AUTOMATIC: Using CPU dependencies (no user input required)"
 cd backend
 echo "   - Upgrading pip..."
 pip install --upgrade pip
