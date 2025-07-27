@@ -35,7 +35,7 @@ interface ModelGroup {
 }
 
 type SortOption = 'size' | 'name' | 'status'
-type FilterOption = 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'
+type FilterOption = 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended' | 'loaded'
 
 const Models = () => {
   const [models, setModels] = useState<ModelStatus[]>([])
@@ -117,6 +117,11 @@ const Models = () => {
     // Apply recommended filter
     if (filterBy === 'recommended') {
       filteredModels = models.filter(model => isRecommended(model.name))
+    }
+
+    // Apply loaded filter
+    if (filterBy === 'loaded') {
+      filteredModels = models.filter(model => model.is_loaded)
     }
 
     // Apply advanced variants filter
@@ -943,6 +948,7 @@ const Models = () => {
                 <option value="gemma">Google Gemma</option>
                 <option value="dialogpt">Microsoft DialoGPT</option>
                 <option value="recommended">Recommended Only</option>
+                <option value="loaded">Loaded Only</option>
               </select>
             </div>
 
