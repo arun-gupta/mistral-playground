@@ -98,10 +98,10 @@ echo ""
 echo "🚀 Starting backend server..."
 echo "   - Starting uvicorn server on port 8000..."
 source venv/bin/activate
-# Run from project root with backend module path
+# Run from project root with backend module path and set PYTHONPATH
 echo "   - Backend logs will appear below:"
 echo "   ==================================="
-python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
+PYTHONPATH=$PWD python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 echo $BACKEND_PID > backend.pid
 
