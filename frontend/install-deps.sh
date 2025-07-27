@@ -28,6 +28,12 @@ fi
 # Double-check the installation
 if npm list tailwindcss-animate > /dev/null 2>&1; then
     echo "✅ tailwindcss-animate installation verified"
+    
+    # Run post-install script to re-add tailwindcss-animate to config
+    echo "🔄 Running post-install script..."
+    if [ -f "post-install.js" ]; then
+        node post-install.js
+    fi
 else
     echo "❌ Failed to install tailwindcss-animate"
     exit 1

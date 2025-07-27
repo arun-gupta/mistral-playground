@@ -1,6 +1,3 @@
-// Import tailwindcss-animate
-import tailwindcssAnimate from "tailwindcss-animate"
-
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -76,5 +73,7 @@ export default {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  // Temporarily removed tailwindcss-animate to fix Codespaces VS Code extension error
+  // Will be re-added after dependencies are installed
+  plugins: [],
 } 
