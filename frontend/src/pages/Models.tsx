@@ -35,7 +35,7 @@ interface ModelGroup {
 }
 
 type SortOption = 'size' | 'name' | 'status'
-type FilterOption = 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended' | 'loaded'
+type FilterOption = 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'
 
 const Models = () => {
   const [models, setModels] = useState<ModelStatus[]>([])
@@ -46,6 +46,7 @@ const Models = () => {
   const [sortBy, setSortBy] = useState<SortOption>('size')
   const [filterBy, setFilterBy] = useState<FilterOption>('all')
   const [showAdvanced, setShowAdvanced] = useState(true)  // Changed from false to true
+  const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
   const { toast } = useToast()
 
   // Model categorization and filtering logic
@@ -120,8 +121,8 @@ const Models = () => {
     }
 
     // Apply loaded filter
-    if (filterBy === 'loaded') {
-      filteredModels = models.filter(model => model.is_loaded)
+    if (showLoadedOnly) {
+      filteredModels = filteredModels.filter(model => model.is_loaded)
     }
 
     // Apply advanced variants filter
@@ -948,8 +949,24 @@ const Models = () => {
                 <option value="gemma">Google Gemma</option>
                 <option value="dialogpt">Microsoft DialoGPT</option>
                 <option value="recommended">Recommended Only</option>
-                <option value="loaded">Loaded Only</option>
               </select>
+            </div>
+
+            {/* Loaded Models Toggle */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Show Loaded Only</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="loaded-toggle"
+                  checked={showLoadedOnly}
+                  onChange={(e) => setShowLoadedOnly(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label htmlFor="loaded-toggle" className="text-sm text-gray-700">
+                  {showLoadedOnly ? '✅ Showing loaded models only' : '📋 Show all models'}
+                </label>
+              </div>
             </div>
 
             {/* Sort Options */}
