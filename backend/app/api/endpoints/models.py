@@ -7,6 +7,7 @@ from datetime import datetime
 from backend.app.models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
 from backend.app.models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
 from backend.app.services.model_service import model_service
+from backend.app.services.download_service import download_service
 
 router = APIRouter()
 
@@ -162,48 +163,19 @@ async def download_model(request: ModelDownloadRequest):
     try:
         print(f"📥 Starting download for model: {request.model_name}")
         
-        # Check if model is already loaded
-        try:
-            from backend.app.services.model_service import model_service
-            loaded_models = (
-                list(model_service.transformers_models.keys()) +
-                list(model_service.vllm_models.keys()) +
-                list(model_service.ct_models.keys())
-            )
-        except ImportError as e:
-            print(f"⚠️ Model service import failed, using empty loaded models list: {e}")
-            loaded_models = []
-        except Exception as e:
-            print(f"⚠️ Error getting loaded models, using empty list: {e}")
-            loaded_models = []
+        # Use the actual download service
+        result = await download_service.download_model(request.model_name, request.provider)
         
-        if request.model_name in loaded_models and not request.force_redownload:
-            return ModelDownloadResponse(
-                model_name=request.model_name,
-                provider=request.provider,
-                status="completed",
-                progress=100.0,
-                message=f"Model {request.model_name} is already loaded",
-                download_size="Already cached",
-                estimated_time="0s"
-            )
-        
-        # Start download process
-        # For now, we'll simulate the download process
-        # In a real implementation, this would be async and track progress
-        
-        # Add to downloaded models set (simulating successful download)
-        downloaded_models.add(request.model_name)
-        
+        # Convert the result to ModelDownloadResponse
         return ModelDownloadResponse(
-            model_name=request.model_name,
-            provider=request.provider,
-            status="downloading",
-            progress=0.0,
-            message=f"Starting download of {request.model_name}",
-            download_size="Calculating...",
-            estimated_time="Calculating...",
-            timestamp=datetime.now().isoformat()
+            model_name=result["model_name"],
+            provider=result["provider"],
+            status=result["status"],
+            progress=result["progress"],
+            message=result["message"],
+            download_size=result["download_size"],
+            estimated_time=result["estimated_time"],
+            timestamp=result["timestamp"]
         )
         
     except Exception as e:
@@ -224,31 +196,20 @@ async def download_model(request: ModelDownloadRequest):
 async def get_download_status(model_name: str):
     """Get the status of a model download"""
     try:
-        # For now, we'll simulate download status
-        # In a real implementation, this would check actual download progress
+        # Use the actual download service
+        result = await download_service.get_download_status(model_name)
         
-        if model_name in downloaded_models:
-            return ModelDownloadResponse(
-                model_name=model_name,
-                provider="huggingface",
-                status="completed",
-                progress=100.0,
-                message=f"Model {model_name} downloaded successfully",
-                download_size="2.5GB",
-                estimated_time="0s",
-                timestamp=datetime.now().isoformat()
-            )
-        else:
-            return ModelDownloadResponse(
-                model_name=model_name,
-                provider="huggingface",
-                status="downloading",
-                progress=50.0,  # Simulate 50% progress
-                message=f"Downloading {model_name}...",
-                download_size="2.5GB",
-                estimated_time="5 minutes",
-                timestamp=datetime.now().isoformat()
-            )
+        # Convert the result to ModelDownloadResponse
+        return ModelDownloadResponse(
+            model_name=result["model_name"],
+            provider=result["provider"],
+            status=result["status"],
+            progress=result["progress"],
+            message=result["message"],
+            download_size=result["download_size"],
+            estimated_time=result["estimated_time"],
+            timestamp=result["timestamp"]
+        )
             
     except Exception as e:
         return ModelDownloadResponse(
@@ -275,20 +236,37 @@ async def get_available_models():
             list(model_service.ct_models.keys())
         )
         
+        # Get downloaded models from download service
+        downloaded_models_list = download_service.get_downloaded_models()
+        
         # Get available models from the service
         available_models = model_service.get_available_models()
         
         model_statuses = []
         for model_name in available_models:
-            # Only mark as loaded if actually loaded in memory
+            # Check if model is loaded in memory
             is_loaded = model_name in loaded_models
+            
+            # Check if model is downloaded to disk
+            is_downloaded = model_name in downloaded_models_list
+            
+            # Check if model is currently downloading
+            is_downloading = model_name in download_service.active_downloads
+            
+            # Get download progress if downloading
+            download_progress = None
+            if is_downloading and model_name in download_service.download_status:
+                download_progress = download_service.download_status[model_name]["progress"]
+            elif is_downloaded:
+                download_progress = 100.0
+            
             model_statuses.append(ModelStatus(
                 name=model_name,
                 provider="huggingface",
                 is_loaded=is_loaded,
-                is_downloading=False,
-                download_progress=100.0 if is_loaded else None,
-                size_on_disk="2.5GB" if is_loaded else None,
+                is_downloading=is_downloading,
+                download_progress=download_progress,
+                size_on_disk="2.5GB" if is_downloaded else None,
                 last_used=None,
                 load_time=None
             ))
@@ -338,15 +316,31 @@ async def get_available_models():
             "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
         
+        # Get downloaded models from download service
+        downloaded_models_list = download_service.get_downloaded_models()
+        
         model_statuses = []
         for model_name in fallback_models:
+            # Check if model is downloaded to disk
+            is_downloaded = model_name in downloaded_models_list
+            
+            # Check if model is currently downloading
+            is_downloading = model_name in download_service.active_downloads
+            
+            # Get download progress if downloading
+            download_progress = None
+            if is_downloading and model_name in download_service.download_status:
+                download_progress = download_service.download_status[model_name]["progress"]
+            elif is_downloaded:
+                download_progress = 100.0
+            
             model_statuses.append(ModelStatus(
                 name=model_name,
                 provider="huggingface",
                 is_loaded=False,
-                is_downloading=False,
-                download_progress=None,
-                size_on_disk=None,
+                is_downloading=is_downloading,
+                download_progress=download_progress,
+                size_on_disk="2.5GB" if is_downloaded else None,
                 last_used=None,
                 load_time=None
             ))
@@ -396,15 +390,31 @@ async def get_available_models():
             "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
         
+        # Get downloaded models from download service
+        downloaded_models_list = download_service.get_downloaded_models()
+        
         model_statuses = []
         for model_name in fallback_models:
+            # Check if model is downloaded to disk
+            is_downloaded = model_name in downloaded_models_list
+            
+            # Check if model is currently downloading
+            is_downloading = model_name in download_service.active_downloads
+            
+            # Get download progress if downloading
+            download_progress = None
+            if is_downloading and model_name in download_service.download_status:
+                download_progress = download_service.download_status[model_name]["progress"]
+            elif is_downloaded:
+                download_progress = 100.0
+            
             model_statuses.append(ModelStatus(
                 name=model_name,
                 provider="huggingface",
                 is_loaded=False,
-                is_downloading=False,
-                download_progress=None,
-                size_on_disk=None,
+                is_downloading=is_downloading,
+                download_progress=download_progress,
+                size_on_disk="2.5GB" if is_downloaded else None,
                 last_used=None,
                 load_time=None
             ))
