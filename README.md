@@ -82,11 +82,27 @@ The main navigation is optimized for Mistral workflows:
 
 ## 🚦 **Mistral Model Status Workflow**
 
-Mistral models can be in one of four states:
-- **⏳ Not Downloaded**: Mistral model is available but not yet downloaded
-- **🔄 Downloading**: Mistral model is currently being downloaded
-- **📦 On Disk**: Mistral model is downloaded and ready to load
-- **✅ Loaded**: Mistral model is loaded in memory and ready for inference
+Mistral models follow a streamlined three-state workflow:
+
+### **State 1: Not Downloaded** ⏳
+- **Status**: Model is available but not yet downloaded
+- **Action**: Click "📥 Download & Load" to download and load in one step
+- **Progress**: Shows download progress with percentage
+
+### **State 2: Downloaded** 📦  
+- **Status**: Model is downloaded to disk, ready to load into memory
+- **Action**: Click "⚡ Load Model" to load into memory
+- **Progress**: Shows "Loading..." with spinner
+
+### **State 3: Ready** ✅
+- **Status**: Model is loaded in memory and ready for inference
+- **Action**: Click "✅ Use Now" to navigate to Playground
+- **Performance**: Immediate response generation
+
+### **Efficient Workflow**
+- **One-Click Setup**: "Download & Load" combines both operations for new models
+- **Smart Caching**: Downloaded models persist on disk for faster subsequent loads
+- **Real-Time Status**: Live progress tracking for both download and loading operations
 
 ## 🎭 **Mistral Mock Mode**
 

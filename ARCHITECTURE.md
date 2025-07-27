@@ -27,6 +27,10 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 - **Documentation**: Automatic OpenAPI/Swagger documentation
 - **CORS**: Configured for cross-origin requests
 - **Logging**: Structured logging with configurable levels
+- **Services**:
+  - **ModelService**: Handles model inference across different providers
+  - **DownloadService**: Manages model downloads with progress tracking and persistent storage
+  - **RAGService**: Handles document processing and retrieval-augmented generation
 
 ### **Model Inference Layer**
 - **Primary**: Hugging Face Transformers for CPU inference
@@ -95,6 +99,9 @@ mistral-playground/
 │   │   ├── core/              # Core configuration
 │   │   ├── models/            # Pydantic models
 │   │   └── services/          # Business logic services
+│   │       ├── model_service.py      # Model inference service
+│   │       ├── download_service.py   # Model download management
+│   │       └── rag_service.py        # RAG functionality
 │   ├── main.py                # FastAPI application entry point
 │   └── requirements*.txt      # Python dependencies
 ├── frontend/                   # React frontend
@@ -133,10 +140,24 @@ mistral-playground/
 
 ### **Model Management Flow**
 1. **Model Discovery**: Backend fetches available models from providers
-2. **Status Tracking**: Real-time tracking of model download/load status
-3. **User Selection**: User selects models to download/load
-4. **Background Processing**: Models downloaded and loaded asynchronously
-5. **Status Updates**: Frontend receives real-time status updates
+2. **Status Tracking**: Real-time tracking of model download/load status via DownloadService
+3. **User Selection**: User selects models to download/load with three-state workflow:
+   - **Not Downloaded**: "Download & Load" button for one-step setup
+   - **Downloaded**: "Load Model" button to load into memory
+   - **Ready**: "Use Now" button to navigate to Playground
+4. **Background Processing**: 
+   - DownloadService handles model downloads with progress tracking
+   - ModelService manages model loading into memory
+   - Persistent storage tracks download completion
+5. **Status Updates**: Frontend receives real-time status updates for both download and loading operations
+
+### **Download Service Architecture**
+1. **Persistent Storage**: Models tracked in `./models/` directory with completion markers
+2. **Progress Tracking**: Real-time download progress with estimated time calculation
+3. **Async Operations**: Non-blocking downloads that don't freeze the server
+4. **State Management**: Tracks active downloads, completed downloads, and failed downloads
+5. **Error Handling**: Graceful error handling with user-friendly messages
+6. **Concurrent Downloads**: Supports multiple simultaneous downloads with resource management
 
 ## 🔒 **Security Architecture**
 
