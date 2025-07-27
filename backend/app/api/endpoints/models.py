@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 import uuid
 import os
+from datetime import datetime
 
 from backend.app.models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
 from backend.app.models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
@@ -201,7 +202,8 @@ async def download_model(request: ModelDownloadRequest):
             progress=0.0,
             message=f"Starting download of {request.model_name}",
             download_size="Calculating...",
-            estimated_time="Calculating..."
+            estimated_time="Calculating...",
+            timestamp=datetime.now().isoformat()
         )
         
     except Exception as e:
@@ -214,7 +216,8 @@ async def download_model(request: ModelDownloadRequest):
             progress=0.0,
             message=f"Download failed: {str(e)}",
             download_size="Unknown",
-            estimated_time="Unknown"
+            estimated_time="Unknown",
+            timestamp=datetime.now().isoformat()
         )
 
 @router.get("/download-status/{model_name:path}", response_model=ModelDownloadResponse)
@@ -232,7 +235,8 @@ async def get_download_status(model_name: str):
                 progress=100.0,
                 message=f"Model {model_name} downloaded successfully",
                 download_size="2.5GB",
-                estimated_time="0s"
+                estimated_time="0s",
+                timestamp=datetime.now().isoformat()
             )
         else:
             return ModelDownloadResponse(
@@ -242,7 +246,8 @@ async def get_download_status(model_name: str):
                 progress=50.0,  # Simulate 50% progress
                 message=f"Downloading {model_name}...",
                 download_size="2.5GB",
-                estimated_time="5 minutes"
+                estimated_time="5 minutes",
+                timestamp=datetime.now().isoformat()
             )
             
     except Exception as e:
@@ -253,7 +258,8 @@ async def get_download_status(model_name: str):
             progress=0.0,
             message=f"Error checking download status: {str(e)}",
             download_size="Unknown",
-            estimated_time="Unknown"
+            estimated_time="Unknown",
+            timestamp=datetime.now().isoformat()
         )
 
 @router.get("/available", response_model=List[ModelStatus])
