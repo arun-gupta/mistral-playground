@@ -145,7 +145,11 @@ const Models = () => {
 
     // Apply downloaded filter
     if (showDownloadedOnly) {
-      filteredModels = filteredModels.filter(model => model.download_progress === 100 || model.size_on_disk)
+      filteredModels = filteredModels.filter(model => 
+        model.download_progress === 100 || 
+        model.size_on_disk || 
+        model.is_loaded  // Include loaded models since they must be downloaded
+      )
     }
 
     // Apply recommended filter

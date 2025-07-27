@@ -167,7 +167,11 @@ const Comparison = () => {
     if (showDownloadedOnly) {
       filtered = filtered.filter(modelName => {
         const modelStatus = modelStatuses.find(m => m.name === modelName)
-        return modelStatus && (modelStatus.download_progress === 100 || modelStatus.size_on_disk)
+        return modelStatus && (
+          modelStatus.download_progress === 100 || 
+          modelStatus.size_on_disk || 
+          modelStatus.is_loaded  // Include loaded models since they must be downloaded
+        )
       })
     }
 
