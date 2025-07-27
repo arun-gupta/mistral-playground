@@ -97,11 +97,10 @@ trap cleanup SIGINT SIGTERM
 
 # Start backend
 echo "🔧 Starting backend server..."
-cd backend
 echo "   - Starting uvicorn server on port 8000..."
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+# Run from project root with backend module path
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
-cd ..
 
 # Wait a moment for backend to start
 echo "   - Waiting for backend to initialize..."

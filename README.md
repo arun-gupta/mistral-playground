@@ -233,13 +233,18 @@ This script will automatically:
 **Models Page Issues:**
 - **Only 4 models shown**: This happens when the backend API is not running. The frontend falls back to a limited list.
   ```bash
-  # Start the backend manually
-  cd backend
-  source ../venv/bin/activate
-  uvicorn main:app --reload --host 0.0.0.0 --port 8000
+  # Start the backend manually (from project root)
+  source venv/bin/activate
+  python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
   
   # Or restart the full setup
   bash start-dev.sh
+  ```
+- **ModuleNotFoundError**: If you see "No module named 'app.models'", run from project root:
+  ```bash
+  # From project root directory
+  source venv/bin/activate
+  python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
   ```
 - **API connection errors**: Check if the backend is running on port 8000
 - **Full model list**: Once backend is running, you'll see all 25+ available models

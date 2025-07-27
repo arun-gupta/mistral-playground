@@ -99,13 +99,12 @@ fi
 # Start backend server
 echo ""
 echo "🚀 Starting backend server..."
-cd backend
 echo "   - Starting uvicorn server on port 8000..."
-source ../venv/bin/activate
-nohup uvicorn main:app --reload --host 0.0.0.0 --port 8000 > ../backend.log 2>&1 &
+source venv/bin/activate
+# Run from project root with backend module path
+nohup python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
 BACKEND_PID=$!
-echo $BACKEND_PID > ../backend.pid
-cd ..
+echo $BACKEND_PID > backend.pid
 
 # Wait for backend to start
 echo "   - Waiting for backend to initialize..."
