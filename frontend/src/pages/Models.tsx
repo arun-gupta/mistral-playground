@@ -47,6 +47,8 @@ const Models = () => {
   const [filterBy, setFilterBy] = useState<FilterOption>('all')
   const [showAdvanced, setShowAdvanced] = useState(true)  // Changed from false to true
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
+  const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
+  const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)  // Toggle for GPU recommended models
   const { toast } = useToast()
 
   // Model categorization and filtering logic
@@ -138,6 +140,16 @@ const Models = () => {
     // Apply loaded filter
     if (showLoadedOnly) {
       filteredModels = filteredModels.filter(model => model.is_loaded)
+    }
+
+    // Apply recommended filter
+    if (showRecommendedOnly) {
+      filteredModels = filteredModels.filter(model => isRecommended(model.name))
+    }
+
+    // Apply GPU recommended filter
+    if (showGPURecommendedOnly) {
+      filteredModels = filteredModels.filter(model => isGPURecommended(model.name))
     }
 
     // Apply advanced variants filter
@@ -945,26 +957,81 @@ const Models = () => {
               </select>
             </div>
 
-            {/* Loaded Models Toggle */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Loaded Models Filter</label>
-              <div className="flex items-center space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowLoadedOnly(!showLoadedOnly)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-                <span className="text-sm text-gray-700">
-                  {showLoadedOnly ? 'Show loaded models only' : 'Show all models'}
-                </span>
+            {/* Model Filters */}
+            <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Model Filters</label>
+                </div>
+                
+                {/* Loaded Models Toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Loaded Models Only</span>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowLoadedOnly(!showLoadedOnly)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      {showLoadedOnly ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Recommended Models Toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Recommended Models Only</span>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showRecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      {showRecommendedOnly ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* GPU Recommended Models Toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">GPU Recommended Only</span>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowGPURecommendedOnly(!showGPURecommendedOnly)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                        showGPURecommendedOnly ? 'bg-orange-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showGPURecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      {showGPURecommendedOnly ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
