@@ -84,13 +84,9 @@ if command -v node &> /dev/null && command -v npm &> /dev/null; then
     echo "   - npm: $(npm --version)"
     
     cd frontend
-    if [ ! -d "node_modules" ]; then
-        echo "   - Installing frontend dependencies..."
-        npm install
-        echo "   ✅ Frontend dependencies installed"
-    else
-        echo "   ✅ Frontend dependencies exist"
-    fi
+    echo "   - Installing frontend dependencies..."
+    chmod +x install-deps.sh
+    ./install-deps.sh
     cd ..
 else
     echo "   ⚠️  Node.js/npm not available"

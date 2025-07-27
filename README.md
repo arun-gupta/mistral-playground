@@ -209,6 +209,14 @@ This script will automatically:
 - **Tailwind CSS Error**: If you see "Can't resolve 'tailwindcss-animate'", run:
   ```bash
   cd frontend
+  chmod +x install-deps.sh
+  ./install-deps.sh
+  ```
+  
+  **Alternative fix:**
+  ```bash
+  cd frontend
+  rm -rf node_modules package-lock.json
   npm install
   npm install tailwindcss-animate
   ```
