@@ -1004,109 +1004,111 @@ const Models = () => {
 
             {/* Model Filters Section */}
             <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Model Filters</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Downloaded Models Toggle */}
-                <div className="flex items-center justify-between p-3 bg-teal-50 border border-teal-200 rounded-md">
-                  <div>
-                    <span className="text-sm font-medium text-teal-800">Downloaded Models Only</span>
-                    <p className="text-xs text-teal-600 mt-1">Show models already downloaded</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowDownloadedOnly(!showDownloadedOnly)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
-                        showDownloadedOnly ? 'bg-teal-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          showDownloadedOnly ? 'translate-x-6' : 'translate-x-1'
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
+                <h3 className="text-base font-semibold text-gray-700 mb-4">Model Filters</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Downloaded Models Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-teal-50 border border-teal-200 rounded-md">
+                    <div>
+                      <span className="text-sm font-medium text-teal-800">Downloaded Models Only</span>
+                      <p className="text-xs text-teal-600 mt-1">Show models already downloaded</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowDownloadedOnly(!showDownloadedOnly)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                          showDownloadedOnly ? 'bg-teal-600' : 'bg-gray-200'
                         }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-teal-800">
-                      {showDownloadedOnly ? 'ON' : 'OFF'}
-                    </span>
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            showDownloadedOnly ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-medium text-teal-800">
+                        {showDownloadedOnly ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Loaded Models Toggle */}
-                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
-                  <div>
-                    <span className="text-sm font-medium text-blue-800">Loaded Models Only</span>
-                    <p className="text-xs text-blue-600 mt-1">Show models ready to use</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowLoadedOnly(!showLoadedOnly)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                  {/* Loaded Models Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div>
+                      <span className="text-sm font-medium text-blue-800">Loaded Models Only</span>
+                      <p className="text-xs text-blue-600 mt-1">Show models ready to use</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowLoadedOnly(!showLoadedOnly)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
                         }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-blue-800">
-                      {showLoadedOnly ? 'ON' : 'OFF'}
-                    </span>
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-medium text-blue-800">
+                        {showLoadedOnly ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Recommended Models Toggle */}
-                <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-md">
-                  <div>
-                    <span className="text-sm font-medium text-purple-800">Recommended Models Only</span>
-                    <p className="text-xs text-purple-600 mt-1">Show curated best models</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          showRecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                  {/* Recommended Models Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-md">
+                    <div>
+                      <span className="text-sm font-medium text-purple-800">Recommended Models Only</span>
+                      <p className="text-xs text-purple-600 mt-1">Show curated best models</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                          showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
                         }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-purple-800">
-                      {showRecommendedOnly ? 'ON' : 'OFF'}
-                    </span>
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            showRecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-medium text-purple-800">
+                        {showRecommendedOnly ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* GPU Recommended Models Toggle */}
-                <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md">
-                  <div>
-                    <span className="text-sm font-medium text-orange-800">GPU Recommended Only</span>
-                    <p className="text-xs text-orange-600 mt-1">Show GPU-optimized models</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowGPURecommendedOnly(!showGPURecommendedOnly)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                        showGPURecommendedOnly ? 'bg-orange-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          showGPURecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                  {/* GPU Recommended Models Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md">
+                    <div>
+                      <span className="text-sm font-medium text-orange-800">GPU Recommended Only</span>
+                      <p className="text-xs text-orange-600 mt-1">Show GPU-optimized models</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowGPURecommendedOnly(!showGPURecommendedOnly)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                          showGPURecommendedOnly ? 'bg-orange-600' : 'bg-gray-200'
                         }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-orange-800">
-                      {showGPURecommendedOnly ? 'ON' : 'OFF'}
-                    </span>
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            showGPURecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-medium text-orange-800">
+                        {showGPURecommendedOnly ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1114,6 +1116,11 @@ const Models = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Available Models Section */}
+      <div className="mt-8">
+        <h3 className="text-base font-semibold text-gray-700 mb-4">Available Models</h3>
+      </div>
 
       {/* Model Groups */}
       <div className="space-y-6">
