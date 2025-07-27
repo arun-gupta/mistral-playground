@@ -164,7 +164,45 @@ class DownloadService:
         try:
             print(f"🔄 Starting actual download for {model_name}")
             
-            # For now, we'll simulate the download process
+            # Check if this is a gated model that requires authentication
+            gated_models = [
+                "meta-llama/Meta-Llama-3-8B-Instruct",
+                "meta-llama/Meta-Llama-3-8B", 
+                "meta-llama/Meta-Llama-3-14B-Instruct",
+                "meta-llama/Meta-Llama-3-14B",
+                "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",
+                "TheBloke/Meta-Llama-3-10B-Instruct-GGUF",
+                "TheBloke/Meta-Llama-3-14B-Instruct-GGUF"
+            ]
+            
+            if model_name in gated_models:
+                error_msg = f"""
+❌ Gated Model Access Required
+
+The model '{model_name}' requires authentication to download from Hugging Face.
+
+To access this model:
+1. Visit: https://huggingface.co/{model_name}
+2. Click "Access Request" and accept the license terms
+3. Wait for approval (usually instant for Llama 3)
+4. Set up your Hugging Face token in the environment
+
+Alternative models that don't require authentication:
+• TheBloke/Mistral-7B-Instruct-v0.2-GGUF (Recommended)
+• microsoft/DialoGPT-small (For testing)
+• google/gemma-2b-it (Google's open model)
+"""
+                print(error_msg)
+                
+                if model_name in self.download_status:
+                    self.download_status[model_name].update({
+                        "status": "failed",
+                        "message": f"Gated model access required. Visit https://huggingface.co/{model_name} to request access.",
+                        "progress": 0.0
+                    })
+                return
+            
+            # For now, we'll simulate the download process for non-gated models
             # In a real implementation, this would:
             # 1. Query Hugging Face API for model files
             # 2. Download each file with progress tracking

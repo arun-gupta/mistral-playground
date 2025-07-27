@@ -279,6 +279,33 @@ class ModelService:
                 print(f"🔄 DOWNLOADING & LOADING GGUF model: {model_name} (first time)")
                 print(f"   This may take several minutes for large GGUF models...")
                 
+                # Check if this is a gated model
+                gated_models = [
+                    "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",
+                    "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", 
+                    "TheBloke/Meta-Llama-3-14B-Instruct-GGUF"
+                ]
+                
+                if model_name in gated_models:
+                    error_msg = f"""
+❌ Gated Model Access Required
+
+The model '{model_name}' requires authentication to download from Hugging Face.
+
+To access this model:
+1. Visit: https://huggingface.co/{model_name}
+2. Click "Access Request" and accept the license terms
+3. Wait for approval (usually instant for Llama 3)
+4. Set up your Hugging Face token in the environment
+
+Alternative models that don't require authentication:
+• TheBloke/Mistral-7B-Instruct-v0.2-GGUF (Recommended)
+• microsoft/DialoGPT-small (For testing)
+• google/gemma-2b-it (Google's open model)
+"""
+                    print(error_msg)
+                    raise Exception(f"Gated model access required. Visit https://huggingface.co/{model_name} to request access.")
+                
                 # Load GGUF model with ctransformers
                 self.ct_models[model_name] = CTModelForCausalLM.from_pretrained(
                     model_name,
@@ -291,6 +318,13 @@ class ModelService:
                 print(f"⚡ Using cached GGUF model: {model_name} (already loaded)")
         except Exception as e:
             print(f"❌ Failed to load GGUF model {model_name}: {e}")
+            
+            # Check if it's a gated model error
+            if "401" in str(e) or "gated" in str(e).lower():
+                print(f"🔒 This is a gated model that requires authentication.")
+                print(f"💡 Try using an open model like 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF' instead.")
+                raise Exception(f"Gated model access required for {model_name}. Use an open model instead.")
+            
             # Fallback to a smaller model
             fallback_model = "microsoft/DialoGPT-small"
             print(f"🔄 Trying fallback model: {fallback_model}")
@@ -443,38 +477,38 @@ class ModelService:
     
     def get_available_models(self) -> List[str]:
         """Get list of available models"""
-        # CPU-friendly models ordered by size
+        # CPU-friendly models ordered by size (open models first)
         return [
-            # Tiny models (very CPU-friendly)
+            # Tiny models (very CPU-friendly, open)
             "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
             
-            # Quantized Mistral models (CPU-optimized)
+            # Quantized Mistral models (CPU-optimized, open)
             "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM (Recommended)
             
-            # Full Mistral models (require more RAM)
+            # Full Mistral models (require more RAM, open)
             "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
             "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
             
-            # Meta Llama models (2 and 3 together)
-            # Llama 2 models (legacy)
-            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
-            
-            # Llama 3 models (newer, better performance)
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
-            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
-            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
-            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
-            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
-            
-            # Google Gemma models
+            # Google Gemma models (open)
             "google/gemma-2b",                          # ~4GB RAM, small model
             "google/gemma-7b",                          # ~14GB RAM, medium model
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
             "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Legacy Llama 2 models (open)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Gated Llama 3 models (require authentication)
+            # Note: These require accepting license terms on Hugging Face
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct (GATED)
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base (GATED)
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct (GATED)
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option (GATED)
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance (GATED)
             
             # Mixtral models (high performance)
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
