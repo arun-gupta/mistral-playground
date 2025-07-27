@@ -31,19 +31,33 @@ echo "🔧 Activating virtual environment..."
 source venv/bin/activate
 echo "✅ Virtual environment activated"
 
-# Install backend dependencies if requirements files exist
-if [ -f "backend/requirements-minimal.txt" ]; then
-    echo "📦 Installing minimal backend dependencies..."
-    cd backend
-    echo "   - Upgrading pip..."
-    pip install --upgrade pip
-    echo "   - Installing requirements..."
-    pip install -r requirements-minimal.txt
-    echo "✅ Backend dependencies installed"
-    cd ..
+# Install backend dependencies
+echo ""
+echo "🔧 Installing backend dependencies..."
+cd backend
+echo "   - Upgrading pip..."
+pip install --upgrade pip
+
+# Choose dependency level
+echo "   - Choose dependency level:"
+echo "     1. Minimal (recommended for testing) - basic functionality"
+echo "     2. CPU (recommended for development) - CPU-optimized models"
+echo "     3. GPU (for production) - requires CUDA"
+read -p "     Enter choice (1, 2, or 3) [default: 1]: " choice
+choice=${choice:-1}
+
+if [ "$choice" = "3" ]; then
+    echo "   - Installing GPU dependencies..."
+    pip install -r requirements.txt
+elif [ "$choice" = "2" ]; then
+    echo "   - Installing CPU dependencies..."
+    pip install -r requirements-basic.txt
 else
-    echo "⚠️  requirements-minimal.txt not found, skipping backend setup"
+    echo "   - Installing minimal dependencies..."
+    pip install -r requirements-minimal.txt
 fi
+echo "   ✅ Backend dependencies installed"
+cd ..
 
 # Create .env file if it doesn't exist
 if [ ! -f ".env" ]; then

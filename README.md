@@ -118,7 +118,7 @@ The fastest way to get started is using GitHub Codespaces:
 - ✅ **Port forwarding** - Automatic access to all services
 - ✅ **VS Code extensions** - Python, TypeScript, and TailwindCSS support
 
-### Option 2: One-Command Setup (Local Development)
+### Option 2: One-Command Setup (Local Development) ⭐ **Recommended**
 
 The fastest way to get started is using our automated setup script:
 
@@ -127,18 +127,20 @@ The fastest way to get started is using our automated setup script:
 git clone https://github.com/arun-gupta/mistral-playground
 cd mistral-playground
 
-# Run the development setup script
+# Run the complete development setup script
 chmod +x start-dev.sh
 ./start-dev.sh
 ```
 
 This script will automatically:
+- ✅ Check prerequisites (Python, Node.js, npm)
 - ✅ Create a Python virtual environment
-- ✅ Install minimal backend dependencies (CPU-friendly)
+- ✅ Install backend dependencies (with choice of GPU/CPU/minimal)
+- ✅ Install frontend dependencies
 - ✅ Create a basic `.env` file with sensible defaults
-- ✅ Start the backend server
-- ✅ Install frontend dependencies (if Node.js is available)
-- ✅ Start the frontend development server
+- ✅ Start both backend and frontend servers
+
+**💡 This is now the single script for both setup and startup!**
 
 **Access the application:**
 - Frontend: http://localhost:5173
