@@ -1,5 +1,22 @@
 #!/bin/bash
 
+echo "🚀 Setting up Mistral Playground in Codespaces..."
+
+# Kill any existing processes on ports 8000 and 5173
+echo "🔧 Checking for existing processes..."
+if lsof -i :8000 > /dev/null 2>&1; then
+    echo "⚠️  Killing existing backend processes on port 8000..."
+    lsof -ti :8000 | xargs kill -9
+fi
+
+if lsof -i :5173 > /dev/null 2>&1; then
+    echo "⚠️  Killing existing frontend processes on port 5173..."
+    lsof -ti :5173 | xargs kill -9
+fi
+
+# Wait for processes to fully terminate
+sleep 2
+
 # Codespaces Setup Script - Shows real-time progress
 
 set -e
