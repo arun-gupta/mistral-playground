@@ -3,9 +3,9 @@ from typing import List
 import uuid
 import os
 
-from ..models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
-from ..models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
-from ..services.model_service import model_service
+from ...models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
+from ...models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
+from ...services.model_service import model_service
 
 router = APIRouter()
 
@@ -89,7 +89,7 @@ async def download_test():
 @router.get("/mock-status", response_model=dict)
 async def get_mock_status():
     """Get the current mock mode status"""
-    from ..core.config import settings
+    from ...core.config import settings
     return {
         "mock_mode": settings.MOCK_MODE,
         "message": "Mock mode is enabled" if settings.MOCK_MODE else "Mock mode is disabled - using real models"
@@ -98,7 +98,7 @@ async def get_mock_status():
 @router.get("/model-status", response_model=dict)
 async def get_model_status():
     """Get the current model loading status"""
-    from ..services.model_service import model_service
+    from ...services.model_service import model_service
     
     # Get loaded models
     loaded_models = list(model_service.transformers_models.keys())
@@ -126,7 +126,7 @@ async def toggle_mock_mode(request: dict):
         os.environ["MOCK_MODE"] = str(new_mode).lower()
         
         # Reload settings to pick up the change
-        from ..core.config import settings
+        from ...core.config import settings
         settings.MOCK_MODE = new_mode
         
         print(f"🎭 Mock mode {'enabled' if new_mode else 'disabled'}")
@@ -163,7 +163,7 @@ async def download_model(request: ModelDownloadRequest):
         
         # Check if model is already loaded
         try:
-            from ..services.model_service import model_service
+            from ...services.model_service import model_service
             loaded_models = (
                 list(model_service.transformers_models.keys()) +
                 list(model_service.vllm_models.keys()) +
@@ -260,7 +260,7 @@ async def get_download_status(model_name: str):
 async def get_available_models():
     """Get detailed status of all available models"""
     try:
-        from ..services.model_service import model_service
+        from ...services.model_service import model_service
         
         # Get loaded models
         loaded_models = (
@@ -409,7 +409,7 @@ async def get_available_models():
 async def get_model_list():
     """Get list of available model names"""
     try:
-        from ..services.model_service import model_service
+        from ...services.model_service import model_service
         return model_service.get_available_models()
     except Exception as e:
         print(f"❌ Error getting model list: {e}")
@@ -425,7 +425,7 @@ async def get_model_list():
 async def get_model_info():
     """Get detailed information about available models"""
     try:
-        from ..services.model_service import model_service
+        from ...services.model_service import model_service
         available_models = model_service.get_available_models()
         
         model_infos = []
