@@ -99,6 +99,12 @@ echo "🚀 Starting backend server..."
 echo "   - Starting uvicorn server on port 8000..."
 source venv/bin/activate
 
+# Ensure backend/__init__.py exists
+if [ ! -f "backend/__init__.py" ]; then
+    echo "   - Creating missing backend/__init__.py..."
+    echo "# Backend package initialization" > backend/__init__.py
+fi
+
 # Set PYTHONPATH explicitly for Codespaces
 export PYTHONPATH=$PWD
 echo "   - PYTHONPATH set to: $PYTHONPATH"
@@ -108,6 +114,11 @@ ls -la backend/ 2>/dev/null || echo "   ⚠️  backend directory not found"
 ls -la backend/app/ 2>/dev/null || echo "   ⚠️  backend/app directory not found"
 echo "   - Testing import:"
 python -c "import sys; print('Python path:', sys.path)" 2>/dev/null || echo "   ⚠️  Python path check failed"
+
+# Test the import directly
+echo "   - Testing backend import:"
+python -c "import backend; print('✅ backend import successful')" 2>/dev/null || echo "   ❌ backend import failed"
+python -c "from backend.app.models.requests import PromptRequest; print('✅ models import successful')" 2>/dev/null || echo "   ❌ models import failed"
 
 # Run from project root with backend module path and set PYTHONPATH
 echo "   - Backend logs will appear below:"
