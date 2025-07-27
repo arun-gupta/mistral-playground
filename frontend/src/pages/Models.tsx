@@ -824,6 +824,22 @@ const Models = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Loading</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {loadingModels.size}
+            </div>
+            {loadingModels.size > 0 && (
+              <div className="flex items-center mt-1">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-600 mr-1"></div>
+                <span className="text-xs text-orange-600">Loading into memory</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Loaded in Memory</CardTitle>
           </CardHeader>
           <CardContent>
@@ -1097,7 +1113,7 @@ const Models = () => {
                               onClick={() => loadModel(model.name)}
                               size="sm"
                               className="w-full bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100 text-xs"
-                              disabled={downloadingModels.size > 0 || loadingModels.size > 0}
+                              disabled={downloadingModels.has(model.name) || loadingModels.has(model.name)}
                             >
                               <span className="mr-1">⚡</span>
                               Load Model
@@ -1107,7 +1123,7 @@ const Models = () => {
                               onClick={() => downloadAndLoadModel(model.name)}
                               size="sm"
                               className="w-full bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 text-xs"
-                              disabled={downloadingModels.size > 0 || loadingModels.size > 0}
+                              disabled={downloadingModels.has(model.name) || loadingModels.has(model.name)}
                             >
                               <span className="mr-1">📥</span>
                               Download & Load
@@ -1187,6 +1203,7 @@ const Models = () => {
                 <li>• Download large models during off-peak hours</li>
                 <li>• Models are cached after first download</li>
                 <li>• You can use models while others download</li>
+                <li>• <strong>Parallel processing:</strong> Download/load multiple models simultaneously</li>
               </ul>
               <h4 className="font-medium mb-2 mt-4">💾 Storage & Performance</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
