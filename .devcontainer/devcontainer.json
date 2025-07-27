@@ -14,7 +14,10 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "remoteEnv": {
-    "PYTHONPATH": "${containerWorkspaceFolder}"
+    "PYTHONPATH": "/workspaces/mistral-playground"
+  },
+  "containerEnv": {
+    "PYTHONPATH": "/workspaces/mistral-playground"
   },
   "customizations": {
     "vscode": {

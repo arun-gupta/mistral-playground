@@ -103,6 +103,11 @@ source venv/bin/activate
 export PYTHONPATH=$PWD
 echo "   - PYTHONPATH set to: $PYTHONPATH"
 echo "   - Current directory: $PWD"
+echo "   - Checking if backend module exists:"
+ls -la backend/ 2>/dev/null || echo "   ⚠️  backend directory not found"
+ls -la backend/app/ 2>/dev/null || echo "   ⚠️  backend/app directory not found"
+echo "   - Testing import:"
+python -c "import sys; print('Python path:', sys.path)" 2>/dev/null || echo "   ⚠️  Python path check failed"
 
 # Run from project root with backend module path and set PYTHONPATH
 echo "   - Backend logs will appear below:"
