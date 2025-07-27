@@ -939,34 +939,140 @@ const Models = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
-            {/* Family Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Filter by Family</label>
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="all">All Families</option>
-                <option value="mistral">Mistral & Mixtral</option>
-                <option value="llama">Meta Llama 3</option>
-                <option value="gemma">Google Gemma</option>
-                <option value="dialogpt">Microsoft DialoGPT</option>
-                <option value="recommended">Recommended Only</option>
-              </select>
+          <div className="space-y-4">
+            {/* Unified Controls Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Family Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Filter by Family</label>
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Families</option>
+                  <option value="mistral">Mistral & Mixtral</option>
+                  <option value="llama">Meta Llama 3</option>
+                  <option value="gemma">Google Gemma</option>
+                  <option value="dialogpt">Microsoft DialoGPT</option>
+                  <option value="recommended">Recommended Only</option>
+                </select>
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Sort by</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="size">Size (Largest First)</option>
+                  <option value="name">Name (A-Z)</option>
+                  <option value="status">Status (Loaded First)</option>
+                </select>
+              </div>
+
+              {/* Advanced Variants Toggle */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Advanced Variants</label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                      showAdvanced ? 'bg-green-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        showAdvanced ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    {showAdvanced ? 'Show All' : 'Hide Advanced'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Test API Button */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">API Testing</label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      console.log('🧪 Testing Models API endpoints...')
+                      
+                      const endpoints = [
+                        '/api/v1/models/available',
+                        '/api/v1/models/list',
+                        '/api/v1/models/mock-status',
+                        '/health'
+                      ]
+                      
+                      const results: Record<string, any> = {}
+                      
+                      for (const endpoint of endpoints) {
+                        try {
+                          const response = await fetch(endpoint)
+                          const data = await response.json()
+                          results[endpoint] = {
+                            status: response.status,
+                            ok: response.ok,
+                            data: data
+                          }
+                          console.log(`✅ ${endpoint}:`, results[endpoint])
+                        } catch (error) {
+                          results[endpoint] = {
+                            status: 'error',
+                            ok: false,
+                            error: error instanceof Error ? error.message : String(error)
+                          }
+                          console.error(`❌ ${endpoint}:`, error)
+                        }
+                      }
+                      
+                      console.log('🧪 All Models API test results:', results)
+                      
+                      const workingEndpoints = Object.keys(results).filter(k => results[k].ok)
+                      const failedEndpoints = Object.keys(results).filter(k => !results[k].ok)
+                      
+                      let message = `Models API Test Results:\n\n`
+                      message += `✅ Working (${workingEndpoints.length}): ${workingEndpoints.join(', ')}\n\n`
+                      message += `❌ Failed (${failedEndpoints.length}): ${failedEndpoints.join(', ')}\n\n`
+                      
+                      if (results['/api/v1/models/available']?.ok) {
+                        const models = results['/api/v1/models/available'].data
+                        message += `📋 Models found: ${models.length}\n`
+                        message += `Models: ${models.map((m: any) => m.name).join(', ')}`
+                      }
+                      
+                      alert(message)
+                    } catch (error) {
+                      console.error('Comprehensive Models API test failed:', error)
+                      alert('Comprehensive Models API test failed: ' + error)
+                    }
+                  }}
+                  className="w-full"
+                >
+                  🐛 Test API
+                </Button>
+              </div>
             </div>
 
-            {/* Model Filters */}
-            <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">Model Filters</label>
-                </div>
-                
+            {/* Model Filters Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Model Filters</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Loaded Models Toggle */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Loaded Models Only</span>
+                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-blue-800">Loaded Models Only</span>
+                    <p className="text-xs text-blue-600 mt-1">Show models ready to use</p>
+                  </div>
                   <div className="flex items-center space-x-3">
                     <button
                       type="button"
@@ -981,15 +1087,18 @@ const Models = () => {
                         }`}
                       />
                     </button>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs font-medium text-blue-800">
                       {showLoadedOnly ? 'ON' : 'OFF'}
                     </span>
                   </div>
                 </div>
 
                 {/* Recommended Models Toggle */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Recommended Models Only</span>
+                <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-purple-800">Recommended Models Only</span>
+                    <p className="text-xs text-purple-600 mt-1">Show curated best models</p>
+                  </div>
                   <div className="flex items-center space-x-3">
                     <button
                       type="button"
@@ -1004,15 +1113,18 @@ const Models = () => {
                         }`}
                       />
                     </button>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs font-medium text-purple-800">
                       {showRecommendedOnly ? 'ON' : 'OFF'}
                     </span>
                   </div>
                 </div>
 
                 {/* GPU Recommended Models Toggle */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">GPU Recommended Only</span>
+                <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-orange-800">GPU Recommended Only</span>
+                    <p className="text-xs text-orange-600 mt-1">Show GPU-optimized models</p>
+                  </div>
                   <div className="flex items-center space-x-3">
                     <button
                       type="button"
@@ -1027,26 +1139,12 @@ const Models = () => {
                         }`}
                       />
                     </button>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs font-medium text-orange-800">
                       {showGPURecommendedOnly ? 'ON' : 'OFF'}
                     </span>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Sort Options */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Sort by</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="size">Size (Largest First)</option>
-                <option value="name">Name (A-Z)</option>
-                <option value="status">Status (Loaded First)</option>
-              </select>
             </div>
           </div>
         </CardContent>
