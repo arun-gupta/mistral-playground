@@ -183,7 +183,7 @@ class ModelService:
                 print(f"   This may take several minutes for large models...")
                 self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
                     model_name,
-                    torch_dtype=torch.float16,
+                    torch_dtype=torch.float32,  # PATCHED: Use float32 for CPU compatibility
                     device_map="auto",
                     trust_remote_code=True,
                     low_cpu_mem_usage=True
@@ -207,7 +207,7 @@ class ModelService:
                     print(f"🔄 DOWNLOADING & LOADING fallback model: {fallback_model}")
                     self.transformers_models[fallback_model] = AutoModelForCausalLM.from_pretrained(
                         fallback_model,
-                        torch_dtype=torch.float16,
+                        torch_dtype=torch.float32,  # PATCHED: Use float32 for CPU compatibility
                         device_map="auto",
                         trust_remote_code=True,
                         low_cpu_mem_usage=True
