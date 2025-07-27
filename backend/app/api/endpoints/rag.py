@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from typing import List
+from typing import List, Dict, Any, Optional
 import os
 import tempfile
 import json
 
-from ...models.requests import RAGRequest
-from ...models.responses import RAGResponse, CollectionInfo
-from ...services.rag_service import rag_service
+from backend.app.models.requests import RAGRequest
+from backend.app.models.responses import RAGResponse, CollectionInfo
+from backend.app.services.rag_service import rag_service
 
 router = APIRouter()
 
