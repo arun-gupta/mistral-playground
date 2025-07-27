@@ -288,21 +288,11 @@ const Comparison = () => {
       {/* Model Selection */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Select Models to Compare</CardTitle>
-              <CardDescription>
-                Choose 2 or more models to compare their responses
-              </CardDescription>
-            </div>
-            <Button
-              onClick={fetchModelStatuses}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              🔄 Refresh Models
-            </Button>
+          <div>
+            <CardTitle>Select Models to Compare</CardTitle>
+            <CardDescription>
+              Choose 2 or more models to compare their responses
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
