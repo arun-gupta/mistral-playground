@@ -7,6 +7,9 @@ python-multipart==0.0.6
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
+# NumPy compatibility (pin to avoid PyTorch conflicts)
+numpy<2.0.0
+
 # Model inference (CPU-only)
 transformers==4.37.0
 torch==2.2.2

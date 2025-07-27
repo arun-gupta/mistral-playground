@@ -7,6 +7,9 @@ python-multipart==0.0.6
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
+# NumPy compatibility (pin to avoid PyTorch conflicts)
+numpy<2.0.0
+
 # Model inference (CPU-only)
 transformers==4.37.0
 torch==2.2.2
@@ -14,16 +17,11 @@ accelerate==0.25.0
 ctransformers==0.2.27  # For GGUF model support
 huggingface-hub>=0.19.3
 
-# Vector database and embeddings (Codespaces compatible)
-# Using FAISS instead of ChromaDB for better SQLite compatibility
-faiss-cpu==1.7.4
-sentence-transformers==2.2.2
-
 # Document processing
 pymupdf==1.23.8  # For PDF text extraction
-langchain==0.2.0
-langchain-community==0.2.0
-langchain-text-splitters==0.2.0
+
+# Vector storage (FAISS for Codespaces)
+faiss-cpu==1.7.4  # CPU-only FAISS for vector similarity search
 
 # Utilities
 python-dotenv==1.0.0

@@ -2,29 +2,26 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
 
 # Data validation and serialization
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# Model inference (CPU-only, no vLLM)
+# NumPy compatibility (pin to avoid PyTorch conflicts)
+numpy<2.0.0
+
+# Model inference (CPU-only)
 transformers==4.37.0
 torch==2.2.2
 accelerate==0.25.0
 ctransformers==0.2.27  # For GGUF model support
 huggingface-hub>=0.19.3
 
-# Vector database and embeddings (for RAG)
-chromadb==0.4.22
-sentence-transformers==2.2.2
-
 # Document processing
-pymupdf==1.23.8
-langchain==0.2.0
-langchain-community==0.2.0
-langchain-text-splitters==0.2.0
+pymupdf==1.23.8  # For PDF text extraction
+
+# Vector storage (ChromaDB for local development)
+chromadb==0.4.22  # Vector database for RAG functionality
 
 # Utilities
 python-dotenv==1.0.0
@@ -37,7 +34,4 @@ requests==2.31.0
 
 # Development and testing
 pytest==7.4.3
-pytest-asyncio==0.21.1
-black==23.11.0
-isort==5.12.0
-mypy==1.7.1 
+pytest-asyncio==0.21.1 
