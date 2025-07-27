@@ -38,24 +38,9 @@ cd backend
 echo "   - Upgrading pip..."
 pip install --upgrade pip
 
-# Choose dependency level
-echo "   - Choose dependency level:"
-echo "     1. Minimal (recommended for testing) - basic functionality"
-echo "     2. CPU (recommended for development) - CPU-optimized models"
-echo "     3. GPU (for production) - requires CUDA"
-read -p "     Enter choice (1, 2, or 3) [default: 2]: " choice
-choice=${choice:-2}
-
-if [ "$choice" = "3" ]; then
-    echo "   - Installing GPU dependencies..."
-    pip install -r requirements.txt
-elif [ "$choice" = "2" ]; then
-    echo "   - Installing CPU dependencies..."
-    pip install -r requirements-basic.txt
-else
-    echo "   - Installing minimal dependencies..."
-    pip install -r requirements-minimal.txt
-fi
+# Install CPU dependencies automatically (recommended for development)
+echo "   - Installing CPU dependencies (recommended for development)..."
+pip install -r requirements-basic.txt
 echo "   ✅ Backend dependencies installed"
 cd ..
 
