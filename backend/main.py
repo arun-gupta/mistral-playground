@@ -39,6 +39,11 @@ with SuppressTelemetry():
             chromadb.telemetry.capture = lambda *args, **kwargs: None
     except ImportError:
         pass
+    except RuntimeError as e:
+        if "sqlite3" in str(e):
+            print(f"⚠️  ChromaDB not available due to SQLite version: {e}")
+        else:
+            raise
     
     try:
         import posthog
