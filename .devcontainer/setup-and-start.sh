@@ -35,8 +35,8 @@ echo "🔧 Installing backend dependencies..."
 cd backend
 echo "   - Upgrading pip..."
 pip install --upgrade pip
-echo "   - Installing minimal requirements..."
-pip install -r requirements-minimal.txt
+echo "   - Installing CPU dependencies (recommended for Codespaces)..."
+pip install -r requirements-basic.txt
 echo "   ✅ Backend dependencies installed"
 cd ..
 

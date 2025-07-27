@@ -43,8 +43,8 @@ echo "   - Choose dependency level:"
 echo "     1. Minimal (recommended for testing) - basic functionality"
 echo "     2. CPU (recommended for development) - CPU-optimized models"
 echo "     3. GPU (for production) - requires CUDA"
-read -p "     Enter choice (1, 2, or 3) [default: 1]: " choice
-choice=${choice:-1}
+read -p "     Enter choice (1, 2, or 3) [default: 2]: " choice
+choice=${choice:-2}
 
 if [ "$choice" = "3" ]; then
     echo "   - Installing GPU dependencies..."
