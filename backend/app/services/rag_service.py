@@ -16,7 +16,7 @@ except ImportError as e:
 
 from backend.app.core.config import settings
 from backend.app.models.requests import RAGRequest
-from backend.app.models.responses import RAGResponse, DocumentChunk, CollectionInfo
+from backend.app.models.responses import RAGResponse, DocumentChunk, CollectionInfo, ModelResponse
 from backend.app.services.model_service import model_service
 
 # Conditional import for ChromaDB to avoid SQLite version issues
@@ -246,11 +246,16 @@ A:"""
             query=request.query,
             answer=answer,
             retrieved_documents=retrieved_docs,
-            model_response={
-                "text": answer,
-                "tokens_used": model_response.usage.get('total_tokens', 0) if model_response.usage else 0,
-                "latency_ms": int(model_response.latency * 1000) if model_response.latency else 0
-            }
+            model_response=ModelResponse(
+                text=answer,
+                model_name=request.model_name or "unknown",
+                provider=request.provider or "huggingface",
+                tokens_used=model_response.tokens_used,
+                input_tokens=model_response.input_tokens,
+                output_tokens=model_response.output_tokens,
+                latency_ms=model_response.latency_ms,
+                finish_reason=model_response.finish_reason
+            )
         )
     
     async def _extract_text(self, file_path: str) -> str:

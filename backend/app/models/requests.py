@@ -49,6 +49,8 @@ class RAGRequest(BaseModel):
     """Request model for RAG-based inference"""
     query: str = Field(..., description="The query for RAG")
     collection_name: str = Field(..., description="ChromaDB collection name")
+    model_name: Optional[str] = Field(None, description="Model name to use for generation")
+    provider: Optional[str] = Field("huggingface", description="Model provider")
     top_k: int = Field(5, ge=1, le=20, description="Number of documents to retrieve")
     temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: int = Field(1024, ge=1, le=8192, description="Maximum tokens to generate")
