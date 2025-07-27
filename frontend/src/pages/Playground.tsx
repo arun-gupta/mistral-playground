@@ -464,12 +464,25 @@ const Playground = () => {
                       description = 'Full model (~14GB RAM)'
                     }
                     
+                    // Status indicator based on new three-state design
+                    let statusIcon = '⏳' // Not Downloaded
+                    let statusText = ''
+                    
+                    if (isLoaded) {
+                      statusIcon = '✅' // Ready
+                      statusText = ' - Ready'
+                    } else {
+                      // For now, we'll assume if not loaded, it's not downloaded
+                      // In a real implementation, we'd check download status
+                      statusIcon = '⏳' // Not Downloaded
+                      statusText = ' - Not Downloaded'
+                    }
+                    
                     return (
                       <option key={modelName} value={modelName}>
-                        {isLoaded ? '✅ ' : '⏳ '}
-                        {modelName} - {description}
+                        {statusIcon} {modelName} - {description}
                         {isRecommended && ' ⭐ Recommended'}
-                        {isLoaded && ' - Loaded'}
+                        {statusText}
                       </option>
                     )
                   })
@@ -489,21 +502,25 @@ const Playground = () => {
               {/* Model Status Info */}
               <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-md">
                 <p className="text-sm text-gray-700">
-                  <span className="font-medium">Model Status:</span>
+                  <span className="font-medium">Model Status Guide:</span>
                 </p>
                 <div className="text-xs text-gray-600 mt-1 space-y-1">
                   <div className="flex items-center">
-                    <span className="mr-2">✅</span>
-                    <span>Loaded models (in memory)</span>
+                    <span className="mr-2">⏳</span>
+                    <span>Not Downloaded - Click "Download" on Models page</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="mr-2">⏳</span>
-                    <span>Not loaded models (need to be loaded)</span>
+                    <span className="mr-2">📦</span>
+                    <span>Downloaded - On disk, ready to load</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">✅</span>
+                    <span>Ready - Loaded in memory, ready to use</span>
                   </div>
                 </div>
                 {modelStatuses.filter(m => m.is_loaded).length > 0 && (
                   <p className="text-xs text-green-600 mt-2">
-                    <span className="font-medium">Loaded models:</span> {modelStatuses.filter(m => m.is_loaded).map(m => m.name).join(', ')}
+                    <span className="font-medium">Ready models:</span> {modelStatuses.filter(m => m.is_loaded).map(m => m.name).join(', ')}
                   </p>
                 )}
                 
@@ -518,7 +535,7 @@ const Playground = () => {
                     >
                       Models page
                     </a>{' '}
-                    to download models proactively and manage their status.
+                    to download and load models proactively for better performance.
                   </p>
                 </div>
               </div>
@@ -526,17 +543,17 @@ const Playground = () => {
               {selectedModel.includes('Mistral-7B') && !isModelLoaded(selectedModel) && (
                 <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
                   <p className="text-sm text-amber-800">
-                    <span className="font-medium">⚠️ Large Model:</span> This model may take 5-10 minutes to download on first use.
+                    <span className="font-medium">⚠️ Model Not Ready:</span> This model needs to be downloaded and loaded before use.
                   </p>
                   <p className="text-xs text-amber-600 mt-1">
-                    Please be patient - the download will only happen once, then the model will be cached for faster subsequent use.
+                    Large models may take 5-10 minutes to download on first use. Visit the Models page to download proactively.
                   </p>
                   <p className="text-xs text-blue-600 mt-2">
-                    <span className="font-medium">💡 Pro tip:</span> Download large models from the{' '}
+                    <span className="font-medium">💡 Pro tip:</span> Download and load models from the{' '}
                     <a 
                       href="/models" 
                       className="underline hover:text-blue-800 font-medium"
-                      title="Go to Models page to download models proactively"
+                      title="Go to Models page to download and load models proactively"
                     >
                       Models page
                     </a>{' '}
@@ -548,10 +565,10 @@ const Playground = () => {
               {selectedModel.includes('Mistral-7B') && isModelLoaded(selectedModel) && (
                 <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-800">
-                    <span className="font-medium">✅ Large Model Loaded:</span> This model is already loaded and ready for fast inference.
+                    <span className="font-medium">✅ Model Ready:</span> This model is loaded in memory and ready to use.
                   </p>
                   <p className="text-xs text-green-600 mt-1">
-                    No download time needed - the model is cached in memory for immediate use.
+                    You can start generating responses immediately. The model will respond quickly since it's already loaded.
                   </p>
                 </div>
               )}
