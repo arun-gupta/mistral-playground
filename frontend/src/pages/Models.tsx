@@ -44,7 +44,7 @@ const Models = () => {
   const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({})
   const [sortBy, setSortBy] = useState<SortOption>('size')
   const [filterBy, setFilterBy] = useState<FilterOption>('all')
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(true)  // Changed from false to true
   const { toast } = useToast()
 
   // Model categorization and filtering logic
