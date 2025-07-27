@@ -1,3 +1,9 @@
+import warnings
+
+# Suppress warnings early
+warnings.filterwarnings("ignore", message="Failed to send telemetry event")
+warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,10 +13,6 @@ from dotenv import load_dotenv
 
 from .app.core.config import settings
 from .app.api.routes import api_router
-import warnings
-
-# Suppress telemetry warnings
-warnings.filterwarnings("ignore", message="Failed to send telemetry event")
 
 # Monkey patch telemetry to prevent errors
 import sys
