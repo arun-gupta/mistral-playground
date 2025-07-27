@@ -792,7 +792,7 @@ const Models = () => {
             <div className="text-2xl font-bold text-gray-600">
               {models.filter(m => !m.is_loaded && m.download_progress !== 100 && !downloadingModels.has(m.name)).length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Ready to download</p>
+            <p className="text-xs text-muted-foreground mt-1">Available to download</p>
           </CardContent>
         </Card>
         <Card>
@@ -1026,8 +1026,8 @@ const Models = () => {
                               </Badge>
                             ) : (
                               <Badge variant="outline" className="text-muted-foreground border-gray-300 text-xs">
-                                <span className="mr-1">⏳</span>
-                                Not Downloaded
+                                <span className="mr-1">📋</span>
+                                Available
                               </Badge>
                             )}
                           </div>
@@ -1168,10 +1168,10 @@ const Models = () => {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 text-xs">
-                    <span className="mr-1">⏳</span>
-                    Not Downloaded
+                    <span className="mr-1">📋</span>
+                    Available
                   </Badge>
-                  <span className="text-sm text-muted-foreground">Click "Download" to get started</span>
+                  <span className="text-sm text-muted-foreground">Click "Download & Load" to get started</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
