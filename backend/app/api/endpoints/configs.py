@@ -3,8 +3,8 @@ from typing import List
 import uuid
 from datetime import datetime
 
-from app.models.requests import PromptConfigSaveRequest
-from app.models.responses import PromptConfig
+from ...models.requests import PromptConfigSaveRequest
+from ...models.responses import PromptConfig
 
 router = APIRouter()
 

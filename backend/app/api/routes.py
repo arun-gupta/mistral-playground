@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.endpoints import models, rag, configs, health
+from .endpoints import models, rag, configs, health
 
 api_router = APIRouter()
 

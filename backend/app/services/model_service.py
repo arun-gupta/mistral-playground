@@ -6,9 +6,9 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import httpx
 import asyncio
 
-from app.core.config import settings
-from app.models.requests import PromptRequest, ModelProvider
-from app.models.responses import ModelResponse, ModelComparison
+from ..core.config import settings
+from ..models.requests import PromptRequest, ModelProvider
+from ..models.responses import ModelResponse, ModelComparison
 
 # Try to import vLLM, but don't fail if it's not available
 try:
