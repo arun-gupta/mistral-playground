@@ -2,10 +2,17 @@ import os
 import uuid
 import re
 from typing import List, Dict, Any, Optional
-import fitz  # PyMuPDF
 import asyncio
 import json
 from datetime import datetime
+
+# Conditional import for PyMuPDF
+try:
+    import fitz  # PyMuPDF
+    PYMUPDF_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️  PyMuPDF not available: {e}")
+    PYMUPDF_AVAILABLE = False
 
 from backend.app.core.config import settings
 from backend.app.models.requests import RAGRequest
@@ -259,6 +266,9 @@ A:"""
     
     async def _extract_pdf_text(self, file_path: str) -> str:
         """Extract text from PDF file"""
+        if not PYMUPDF_AVAILABLE:
+            raise ValueError("PDF processing not available - PyMuPDF not installed")
+        
         try:
             doc = fitz.open(file_path)
             text = ""
