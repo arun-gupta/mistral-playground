@@ -95,6 +95,7 @@ const Models = () => {
     return recommended.includes(modelName)
   }
 
+  // Check if model is GPU recommended
   const isGPURecommended = (modelName: string): boolean => {
     // Models that would perform significantly better with GPU
     // Only include models that are actually in our system AND need GPU
@@ -104,6 +105,20 @@ const Models = () => {
       'mistralai/CodeMistral-7B-Instruct-v0.1' // CodeMistral (~14GB RAM, specialized)
     ]
     return gpuRecommended.includes(modelName)
+  }
+
+  // Check if model requires authentication (gated)
+  const isGatedModel = (modelName: string): boolean => {
+    const gatedModels = [
+      'meta-llama/Meta-Llama-3-8B-Instruct',
+      'meta-llama/Meta-Llama-3-8B',
+      'meta-llama/Meta-Llama-3-14B-Instruct',
+      'meta-llama/Meta-Llama-3-14B',
+      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF'
+    ]
+    return gatedModels.includes(modelName)
   }
 
   // Group and filter models
@@ -1011,6 +1026,11 @@ const Models = () => {
                                 🚀 GPU Recommended
                               </Badge>
                             )}
+                            {isGatedModel(model.name) && (
+                              <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
+                                🔒 Requires Access
+                              </Badge>
+                            )}
                             {model.is_loaded ? (
                               <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
                                 <span className="mr-1">✅</span>
@@ -1153,6 +1173,23 @@ const Models = () => {
                             </p>
                           </div>
                         )}
+
+                        {/* Gated Model Warning */}
+                        {isGatedModel(model.name) && (
+                          <div className="p-2 bg-red-50 border border-red-200 rounded-md">
+                            <p className="text-xs text-red-800 text-center mb-2">
+                              <span className="font-medium">🔒 Authentication Required:</span> This model requires Hugging Face access.
+                            </p>
+                            <a 
+                              href={`https://huggingface.co/${model.name}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:text-blue-800 underline block text-center"
+                            >
+                              Click here to request access →
+                            </a>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   )
@@ -1219,6 +1256,68 @@ const Models = () => {
                 <li>• GGUF models: ~4-8GB (CPU optimized)</li>
                 <li>• Loaded models use RAM, not disk space</li>
               </ul>
+            </div>
+          </div>
+          
+          {/* Gated Models Section */}
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+            <h4 className="font-medium mb-3 text-red-800">🔒 Gated Models (Require Authentication)</h4>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
+                  🔒 Requires Access
+                </Badge>
+                <span className="text-sm text-red-700">Models that need Hugging Face authentication</span>
+              </div>
+              <div className="text-sm text-red-700 space-y-2">
+                <p><strong>Why some models require authentication:</strong></p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Llama 3 models require accepting Meta's license terms</li>
+                  <li>Some models have usage restrictions or commercial licenses</li>
+                  <li>Hugging Face requires explicit permission for certain models</li>
+                </ul>
+                <p><strong>How to get access:</strong></p>
+                <ol className="list-decimal list-inside space-y-1 ml-4">
+                  <li>Visit the model page on Hugging Face</li>
+                  <li>Click "Access Request" and accept the license terms</li>
+                  <li>Wait for approval (usually instant for Llama 3)</li>
+                  <li>Set up your Hugging Face token in the environment</li>
+                </ol>
+                <div className="mt-3 p-3 bg-white border border-red-300 rounded-md">
+                  <p className="text-sm font-medium text-red-800 mb-2">🔗 Quick Access Links:</p>
+                  <div className="space-y-1 text-sm">
+                    <a 
+                      href="https://huggingface.co/TheBloke/Meta-Llama-3-14B-Instruct-GGUF" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline block"
+                    >
+                      • Meta Llama 3 14B Instruct GGUF
+                    </a>
+                    <a 
+                      href="https://huggingface.co/TheBloke/Meta-Llama-3-8B-Instruct-GGUF" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline block"
+                    >
+                      • Meta Llama 3 8B Instruct GGUF
+                    </a>
+                    <a 
+                      href="https://huggingface.co/TheBloke/Meta-Llama-3-10B-Instruct-GGUF" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline block"
+                    >
+                      • Meta Llama 3 10B Instruct GGUF
+                    </a>
+                  </div>
+                </div>
+                <p className="text-sm mt-3">
+                  <strong>💡 Alternative:</strong> Use open models like{' '}
+                  <span className="font-mono text-xs bg-gray-100 px-1 rounded">TheBloke/Mistral-7B-Instruct-v0.2-GGUF</span>{' '}
+                  that don't require authentication.
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
