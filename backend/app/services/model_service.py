@@ -65,17 +65,11 @@ class ModelService:
                 text=response["text"],
                 model_name=response["model_name"],
                 provider=request.provider,
-                prompt=request.prompt,
-                parameters={
-                    "temperature": request.temperature,
-                    "max_tokens": request.max_tokens,
-                    "top_p": request.top_p,
-                    "system_prompt": request.system_prompt
-                },
-                usage=response.get("usage"),
-                latency=latency_ms / 1000.0,  # Convert to seconds
-                fallback_used=response.get("fallback_used", False),
-                original_model=response.get("original_model")
+                tokens_used=response.get("tokens_used", 0),
+                input_tokens=response.get("input_tokens", 0),
+                output_tokens=response.get("output_tokens", 0),
+                latency_ms=latency_ms,
+                finish_reason=response.get("finish_reason", "stop")
             )
         except Exception as e:
             print(f"❌ Generation failed: {str(e)}")
@@ -87,17 +81,11 @@ class ModelService:
                 text=f"Sorry, I encountered an error while generating a response: {str(e)}. Please try a different model or check your configuration.",
                 model_name=request.model_name or "error",
                 provider=request.provider,
-                prompt=request.prompt,
-                parameters={
-                    "temperature": request.temperature,
-                    "max_tokens": request.max_tokens,
-                    "top_p": request.top_p,
-                    "system_prompt": request.system_prompt
-                },
-                usage=None,
-                latency=latency_ms / 1000.0,  # Convert to seconds
-                fallback_used=False,
-                original_model=None
+                tokens_used=0,
+                input_tokens=0,
+                output_tokens=0,
+                latency_ms=latency_ms,
+                finish_reason="error"
             )
     
     async def _generate_vllm(self, request: PromptRequest) -> Dict[str, Any]:
@@ -112,7 +100,8 @@ class ModelService:
                 "model_name": model_name,
                 "tokens_used": 50,
                 "input_tokens": 10,
-                "output_tokens": 40
+                "output_tokens": 40,
+                "finish_reason": "stop"
             }
         
         if model_name not in self.vllm_models:
@@ -172,7 +161,8 @@ class ModelService:
                 "model_name": model_name,
                 "tokens_used": 50,
                 "input_tokens": 10,
-                "output_tokens": 40
+                "output_tokens": 40,
+                "finish_reason": "stop"
             }
         
         # Check if this is a GGUF model
@@ -275,6 +265,7 @@ class ModelService:
             "tokens_used": tokens_used,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "finish_reason": "stop",
             "fallback_used": "original_model" in locals(),
             "original_model": locals().get("original_model")
         }
@@ -341,7 +332,8 @@ class ModelService:
             "model_name": model_name,
             "tokens_used": tokens_used,
             "input_tokens": input_tokens,
-            "output_tokens": output_tokens
+            "output_tokens": output_tokens,
+            "finish_reason": "stop"
         }
     
     async def _generate_ollama(self, request: PromptRequest) -> Dict[str, Any]:
@@ -356,7 +348,8 @@ class ModelService:
                 "model_name": model_name,
                 "tokens_used": 50,
                 "input_tokens": 10,
-                "output_tokens": 40
+                "output_tokens": 40,
+                "finish_reason": "stop"
             }
         
         # Prepare request payload
@@ -394,7 +387,8 @@ class ModelService:
             "model_name": model_name,
             "tokens_used": tokens_used,
             "input_tokens": int(estimated_input_tokens),
-            "output_tokens": int(estimated_output_tokens)
+            "output_tokens": int(estimated_output_tokens),
+            "finish_reason": "stop"
         }
     
     async def compare_models(self, prompt: str, models: List[str], 
