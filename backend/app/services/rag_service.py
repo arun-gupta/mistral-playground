@@ -2,8 +2,6 @@ import os
 import uuid
 import re
 from typing import List, Dict, Any, Optional
-import chromadb
-from chromadb.config import Settings
 import fitz  # PyMuPDF
 import asyncio
 import json
@@ -14,6 +12,21 @@ from backend.app.models.requests import RAGRequest
 from backend.app.models.responses import RAGResponse, DocumentChunk, CollectionInfo
 from backend.app.services.model_service import model_service
 
+# Conditional import for ChromaDB to avoid SQLite version issues
+try:
+    import chromadb
+    from chromadb.config import Settings
+    CHROMADB_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️  ChromaDB not available: {e}")
+    CHROMADB_AVAILABLE = False
+except RuntimeError as e:
+    if "sqlite3" in str(e):
+        print(f"⚠️  ChromaDB not available due to SQLite version: {e}")
+        CHROMADB_AVAILABLE = False
+    else:
+        raise
+
 # Lazy import for sentence_transformers to avoid startup issues
 SentenceTransformer = None
 
@@ -21,29 +34,34 @@ class RAGService:
     """Service for RAG (Retrieval-Augmented Generation) functionality"""
     
     def __init__(self):
-        # Disable all telemetry for ChromaDB
-        chroma_settings = Settings(
-            anonymized_telemetry=False,
-            is_persistent=True,
-            allow_reset=True
-        )
-        
-        # Suppress telemetry warnings during client creation
-        import sys
-        import os
-        original_stderr = sys.stderr
-        sys.stderr = open(os.devnull, 'w')
-        
-        try:
-            self.chroma_client = chromadb.PersistentClient(
-                path=settings.CHROMA_PERSIST_DIRECTORY,
-                settings=chroma_settings
-            )
-        finally:
-            sys.stderr.close()
-            sys.stderr = original_stderr
+        self.chroma_client = None
         self.embedding_model = None
         self._embedding_model_loaded = False
+        
+        if CHROMADB_AVAILABLE:
+            # Disable all telemetry for ChromaDB
+            chroma_settings = Settings(
+                anonymized_telemetry=False,
+                is_persistent=True,
+                allow_reset=True
+            )
+            
+            # Suppress telemetry warnings during client creation
+            import sys
+            import os
+            original_stderr = sys.stderr
+            sys.stderr = open(os.devnull, 'w')
+            
+            try:
+                self.chroma_client = chromadb.PersistentClient(
+                    path=settings.CHROMA_PERSIST_DIRECTORY,
+                    settings=chroma_settings
+                )
+            finally:
+                sys.stderr.close()
+                sys.stderr = original_stderr
+        else:
+            print("⚠️  RAG functionality disabled - ChromaDB not available")
     
     def _load_embedding_model(self):
         """Lazy load the embedding model"""
