@@ -781,40 +781,14 @@ const Models = () => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Models</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{models.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Not Downloaded</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">
-              {models.filter(m => !m.is_loaded && m.download_progress !== 100 && !downloadingModels.has(m.name)).length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Available to download</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Downloading</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {downloadingModels.size}
-            </div>
-            {downloadingModels.size > 0 && (
-              <div className="flex items-center mt-1">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
-                <span className="text-xs text-blue-600">Active downloads</span>
-              </div>
-            )}
+            <div className="text-2xl font-bold text-gray-800">{models.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Available models</p>
           </CardContent>
         </Card>
         <Card>
@@ -823,30 +797,14 @@ const Models = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {models.filter(m => !m.is_loaded && m.download_progress === 100).length}
+              {models.filter(m => m.download_progress === 100 || m.size_on_disk).length}
             </div>
             <p className="text-xs text-muted-foreground mt-1">On disk, ready to load</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Loading</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {loadingModels.size}
-            </div>
-            {loadingModels.size > 0 && (
-              <div className="flex items-center mt-1">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-600 mr-1"></div>
-                <span className="text-xs text-orange-600">Loading into memory</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Loaded in Memory</CardTitle>
+            <CardTitle className="text-sm font-medium">Loaded</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -856,6 +814,26 @@ const Models = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Active Operations Indicator */}
+      {(downloadingModels.size > 0 || loadingModels.size > 0) && (
+        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center justify-center space-x-4 text-sm text-blue-700">
+            {downloadingModels.size > 0 && (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                <span>{downloadingModels.size} downloading</span>
+              </div>
+            )}
+            {loadingModels.size > 0 && (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-600 mr-1"></div>
+                <span>{loadingModels.size} loading</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Filters and Controls */}
       <Card>
