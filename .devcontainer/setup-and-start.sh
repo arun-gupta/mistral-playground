@@ -29,17 +29,22 @@ echo "   - Activating virtual environment..."
 source venv/bin/activate
 echo "   ✅ Virtual environment activated"
 
-# Install backend dependencies
-echo ""
-echo "🔧 Installing backend dependencies..."
-echo "   - AUTOMATIC: Using CPU dependencies (no user input required)"
-cd backend
-echo "   - Upgrading pip..."
-pip install --upgrade pip
-echo "   - Installing CPU dependencies (recommended for Codespaces)..."
-pip install -r requirements-basic.txt
-echo "   ✅ Backend dependencies installed"
-cd ..
+# Install Python dependencies
+echo "📦 Installing Python dependencies..."
+echo "   - Installing basic requirements for Codespaces..."
+
+# Try the minimal requirements first to avoid SQLite issues
+if pip install -r backend/requirements-minimal-codespaces.txt; then
+    echo "   ✅ Minimal requirements installed successfully"
+else
+    echo "   ⚠️  Minimal requirements failed, trying basic requirements..."
+    if pip install -r backend/requirements-basic.txt; then
+        echo "   ✅ Basic requirements installed successfully"
+    else
+        echo "   ❌ Basic requirements failed, trying minimal requirements with --no-deps..."
+        pip install --no-deps -r backend/requirements-minimal-codespaces.txt || echo "   ⚠️  Installation had issues but continuing..."
+    fi
+fi
 
 # Create .env file
 echo ""
