@@ -15,6 +15,17 @@ class ModelResponse(BaseModel):
     latency_ms: float = Field(..., description="Response latency in milliseconds")
     finish_reason: str = Field(..., description="Reason for generation finish")
 
+class ModelComparison(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
+    """Response model for model comparison results"""
+    model_name: str = Field(..., description="Model name")
+    provider: str = Field(..., description="Model provider")
+    text: str = Field(..., description="Generated text")
+    parameters: Dict[str, Any] = Field(..., description="Generation parameters")
+    usage: Dict[str, int] = Field(..., description="Token usage")
+    latency: float = Field(..., description="Response latency in seconds")
+
 class ComparisonResponse(BaseModel):
     """Response model for model comparison"""
     prompt: str = Field(..., description="Original prompt")
@@ -103,15 +114,4 @@ class ModelDownloadResponse(BaseModel):
     message: str = Field(..., description="Status message")
     download_size: Optional[str] = Field(None, description="Size of download")
     estimated_time: Optional[str] = Field(None, description="Estimated time remaining")
-    timestamp: str = Field(..., description="Timestamp of the response")
-
-class ModelComparison(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
-    
-    """Response model for model comparison results"""
-    model_name: str = Field(..., description="Model name")
-    provider: str = Field(..., description="Model provider")
-    text: str = Field(..., description="Generated text")
-    parameters: Dict[str, Any] = Field(..., description="Generation parameters")
-    usage: Dict[str, int] = Field(..., description="Token usage")
-    latency: float = Field(..., description="Response latency in seconds") 
+    timestamp: str = Field(..., description="Timestamp of the response") 
