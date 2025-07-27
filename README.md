@@ -2,76 +2,78 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/arun-gupta/mistral-playground)
 
-A modern, developer-friendly full-stack application for exploring and experimenting with Mistral's powerful open models (Mistral-7B, Mixtral) to understand their capabilities and performance. The platform also enables comprehensive comparison with other leading open source language models including Meta's Llama 2/3, Google's Gemma, and Microsoft's DialoGPT.
+A modern, developer-friendly full-stack application specifically designed for exploring and experimenting with **Mistral AI's powerful open models**. This playground is optimized for **Mistral-7B** and **Mixtral-8x7B** models, providing comprehensive tools to understand their capabilities, performance characteristics, and real-world applications.
 
-## 🎯 Key Features
+## 🎯 **Mistral-Focused Features**
 
-### Main Playground Features
-- **Single Model Playground**: Interact with any loaded model in a conversational playground (Mistral/Mixtral models prioritized)
-- **Models Tab**: Proactively download, manage, and monitor the status of all available models with organized grouping and filtering
-- **Comparison Tab**: Compare responses from multiple models side-by-side with performance metrics and prepared test combinations
-- **RAG Mode**: Upload documents (PDF, TXT, MD) and generate grounded answers using Retrieval-Augmented Generation
-- **Mock Mode**: Enable a mock backend for UI testing and demos without running real models
-- **Advanced Parameter Tuning**: Edit temperature, max tokens, system prompt, top_p, and other generation parameters
-- **Performance Metrics**: Show token usage and latency per request
-- **Model Management**: Download, load, and manage different models with real-time status tracking
-- **Rich Output Rendering**: Markdown rendering of outputs with syntax highlighting
-- **API-Driven Model Lists**: Dynamic model fetching ensures all pages stay in sync
+### **Core Mistral Model Support**
+- **Mistral-7B Models**: Full support for all Mistral-7B variants (Instruct, Base, GGUF quantized)
+- **Mixtral-8x7B Models**: High-performance mixture-of-experts models with optimized inference
+- **Mistral Model Comparison**: Side-by-side testing of different Mistral model versions and quantizations
+- **Mistral-Specific Optimizations**: Tailored parameter tuning for Mistral's architecture and training
 
-### User Interface Features
-- **Dedicated Tabs**: Playground, Models, Comparison, RAG, Configs for clear workflow
-- **Model Status Indicators**: Visual badges for Not Downloaded, Downloading, On Disk, Loaded
-- **Tooltips and Legends**: Helpful tooltips (e.g., Mock Mode) and legends for model status
-- **Intuitive Navigation**: Logical tab order for seamless workflow
-- **Model Organization**: Grouped by family (Mistral, Llama, Gemma) with filtering and sorting
-- **Visual Feedback**: Upload progress indicators, processing status, and success/error states
-- **Collection Management**: Metadata support (description, tags, visibility) for RAG collections
+### **Mistral Playground Features**
+- **Single Model Playground**: Interact with any Mistral model in a conversational interface optimized for Mistral's instruction-following capabilities
+- **Mistral Model Manager**: Proactively download, manage, and monitor all available Mistral and Mixtral models with real-time status tracking
+- **Mistral Comparison Engine**: Compare responses from multiple Mistral models side-by-side with performance metrics and prepared test scenarios
+- **Mistral RAG Mode**: Upload documents and generate grounded answers using Mistral models with Retrieval-Augmented Generation
+- **Mistral Parameter Tuning**: Advanced control over Mistral-specific parameters (temperature, max tokens, system prompts, top_p)
+- **Mistral Performance Analytics**: Detailed metrics for Mistral model performance, token usage, and latency analysis
 
-### 🚀 Future Roadmap
+### **Mistral-Specific UI Features**
+- **Mistral Model Prioritization**: Mistral and Mixtral models are prominently featured and prioritized in the interface
+- **Mistral Status Indicators**: Visual badges showing download, loading, and inference status for Mistral models
+- **Mistral Model Organization**: Grouped by Mistral family with filtering and sorting optimized for Mistral workflows
+- **Mistral Performance Metrics**: Real-time monitoring of Mistral model performance and resource usage
+- **Intuitive Navigation**: Logical tab order optimized for Mistral workflows
+- **Visual Feedback**: Upload progress indicators, processing status, and success/error states for Mistral operations
+- **Collection Management**: Metadata support for RAG collections optimized for Mistral model performance
 
-#### Phase 1: Enhanced User Experience
-- **🎭 Multi-Modal Capabilities**: Image + text analysis, OCR, visual question answering
-- **🔄 Conversation Memory & Context**: Persistent chat sessions, context window management, conversation export
-- **📊 Model Performance Analytics**: Detailed metrics dashboard, response time comparisons, token usage analysis, cost estimation
+### 🚀 **Mistral Model Roadmap**
 
-#### Phase 2: Advanced AI Features  
-- **🎯 Advanced Prompt Engineering**: Pre-built templates (Chain-of-Thought, Few-shot), A/B testing, prompt performance metrics
-- **🌐 API Integration Hub**: External service integration, function calling demonstrations, real-time data processing
-- **🎨 Creative Generation Studio**: Story generation, poetry creation, code generation with language selection, art prompt generation
+#### Phase 1: Enhanced Mistral Experience
+- **🎭 Mistral Multi-Modal**: Image + text analysis using Mistral's multimodal capabilities
+- **🔄 Mistral Conversation Memory**: Persistent chat sessions optimized for Mistral's context window
+- **📊 Mistral Performance Dashboard**: Detailed analytics specific to Mistral model performance
 
-#### Phase 3: Enterprise Features
-- **🔧 Fine-tuning Interface**: Custom model training, training progress monitoring, model comparison
-- **📝 Advanced Document Processing**: Multi-format support, document summarization, table extraction, citation generation
-- **🤖 Agent Framework**: Multi-agent systems, task delegation, workflow automation
+#### Phase 2: Advanced Mistral Features  
+- **🎯 Mistral Prompt Engineering**: Pre-built templates optimized for Mistral's instruction-following capabilities
+- **🌐 Mistral API Integration**: External service integration using Mistral's function calling abilities
+- **🎨 Mistral Creative Studio**: Story generation, code generation, and creative tasks optimized for Mistral models
 
-## 🖥️ Application Navigation
+#### Phase 3: Enterprise Mistral Features
+- **🔧 Mistral Fine-tuning Interface**: Custom Mistral model training and optimization
+- **📝 Advanced Mistral Document Processing**: Document analysis and summarization using Mistral's capabilities
+- **🤖 Mistral Agent Framework**: Multi-agent systems built on Mistral models
 
-The main navigation bar includes:
-- **Playground**: Single model interaction and testing (Mistral/Mixtral models only)
-- **Models**: Manage, download, and monitor all models with organized grouping and real-time status
-- **Comparison**: Compare responses from multiple models side-by-side with prepared test combinations
-- **RAG**: Retrieval-Augmented Generation with document upload, collection management, and grounded Q&A
-- **Configs**: Manage prompt and system configurations
+## 🖥️ **Mistral Application Navigation**
 
-## 🚦 Model Status Workflow
+The main navigation is optimized for Mistral workflows:
+- **Playground**: Single Mistral model interaction and testing (Mistral/Mixtral models prioritized)
+- **Models**: Manage, download, and monitor all Mistral models with organized grouping and real-time status
+- **Comparison**: Compare responses from multiple Mistral models side-by-side with prepared test combinations
+- **RAG**: Retrieval-Augmented Generation using Mistral models for grounded Q&A
+- **Configs**: Manage Mistral-specific prompt and system configurations
 
-Models can be in one of four states:
-- **⏳ Not Downloaded**: Model is available but not yet downloaded
-- **🔄 Downloading**: Model is currently being downloaded
-- **📦 On Disk**: Model is downloaded and ready to load
-- **✅ Loaded**: Model is loaded in memory and ready for inference
+## 🚦 **Mistral Model Status Workflow**
 
-The Models tab provides proactive management and real-time status tracking for all models. Models are organized by family (Mistral & Mixtral, Meta Llama, Google Gemma, DialoGPT) with filtering and sorting options. Recommended models are highlighted with badges.
+Mistral models can be in one of four states:
+- **⏳ Not Downloaded**: Mistral model is available but not yet downloaded
+- **🔄 Downloading**: Mistral model is currently being downloaded
+- **📦 On Disk**: Mistral model is downloaded and ready to load
+- **✅ Loaded**: Mistral model is loaded in memory and ready for inference
 
-## 🎭 Mock Mode
+The Models tab provides proactive management and real-time status tracking for all Mistral models. Models are organized by family (Mistral-7B, Mixtral-8x7B, Quantized Variants) with filtering and sorting options. Recommended Mistral models are highlighted with badges.
 
-**Mock Mode** allows you to use the frontend UI without running real models on the backend. This is useful for:
-- UI/UX demos and presentations
-- Testing the interface without heavy downloads or compute requirements
-- Development when backend resources are unavailable
-- Quick feature exploration without model loading delays
+## 🎭 **Mistral Mock Mode**
 
-When enabled, all model responses are simulated, and no real inference is performed. A helpful tooltip explains this feature in the UI.
+**Mock Mode** allows you to use the Mistral-focused frontend UI without running real Mistral models on the backend. This is useful for:
+- UI/UX demos and presentations of Mistral capabilities
+- Testing the Mistral interface without heavy downloads or compute requirements
+- Development when Mistral backend resources are unavailable
+- Quick Mistral feature exploration without model loading delays
+
+When enabled, all Mistral model responses are simulated, and no real inference is performed. A helpful tooltip explains this feature in the UI.
 
 ## 🏗️ Architecture
 
