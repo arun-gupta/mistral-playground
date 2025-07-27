@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # Development/Testing
     MOCK_MODE: bool = False  # Set to True to use mock responses instead of real models
     
+    # Telemetry/Privacy
+    DISABLE_TELEMETRY: bool = True  # Disable all telemetry collection
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

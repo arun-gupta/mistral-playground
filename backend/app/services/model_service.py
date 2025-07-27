@@ -8,7 +8,7 @@ import asyncio
 
 from app.core.config import settings
 from app.models.requests import PromptRequest, ModelProvider
-from app.models.responses import ModelResponse
+from app.models.responses import ModelResponse, ModelComparison
 
 # Try to import vLLM, but don't fail if it's not available
 try:
@@ -45,15 +45,15 @@ class ModelService:
         print(f"   Prompt: {request.prompt[:50]}...")
         
         try:
-            if request.provider == ModelProvider.VLLM:
+            if request.provider == ModelProvider.VLLM.value:
                 if VLLM_AVAILABLE:
                     response = await self._generate_vllm(request)
                 else:
                     print("⚠️  vLLM not available, falling back to Hugging Face")
                     response = await self._generate_huggingface(request)
-            elif request.provider == ModelProvider.HUGGINGFACE:
+            elif request.provider == ModelProvider.HUGGINGFACE.value:
                 response = await self._generate_huggingface(request)
-            elif request.provider == ModelProvider.OLLAMA:
+            elif request.provider == ModelProvider.OLLAMA.value:
                 response = await self._generate_ollama(request)
             else:
                 raise ValueError(f"Unsupported provider: {request.provider}")
@@ -64,12 +64,18 @@ class ModelService:
             return ModelResponse(
                 text=response["text"],
                 model_name=response["model_name"],
-                provider=request.provider.value,
-                tokens_used=response["tokens_used"],
-                input_tokens=response["input_tokens"],
-                output_tokens=response["output_tokens"],
-                latency_ms=latency_ms,
-                finish_reason=response.get("finish_reason", "length")
+                provider=request.provider,
+                prompt=request.prompt,
+                parameters={
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                    "top_p": request.top_p,
+                    "system_prompt": request.system_prompt
+                },
+                usage=response.get("usage"),
+                latency=latency_ms / 1000.0,  # Convert to seconds
+                fallback_used=response.get("fallback_used", False),
+                original_model=response.get("original_model")
             )
         except Exception as e:
             print(f"❌ Generation failed: {str(e)}")
@@ -80,12 +86,18 @@ class ModelService:
             return ModelResponse(
                 text=f"Sorry, I encountered an error while generating a response: {str(e)}. Please try a different model or check your configuration.",
                 model_name=request.model_name or "error",
-                provider=request.provider.value,
-                tokens_used=0,
-                input_tokens=0,
-                output_tokens=0,
-                latency_ms=latency_ms,
-                finish_reason="error"
+                provider=request.provider,
+                prompt=request.prompt,
+                parameters={
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                    "top_p": request.top_p,
+                    "system_prompt": request.system_prompt
+                },
+                usage=None,
+                latency=latency_ms / 1000.0,  # Convert to seconds
+                fallback_used=False,
+                original_model=None
             )
     
     async def _generate_vllm(self, request: PromptRequest) -> Dict[str, Any]:
@@ -198,6 +210,7 @@ class ModelService:
             # Fallback to a smaller model
             fallback_model = "microsoft/DialoGPT-small"
             print(f"🔄 Trying fallback model: {fallback_model}")
+            original_model = model_name
             
             try:
                 if fallback_model not in self.transformers_models:
@@ -261,7 +274,9 @@ class ModelService:
             "model_name": model_name,
             "tokens_used": tokens_used,
             "input_tokens": input_tokens,
-            "output_tokens": output_tokens
+            "output_tokens": output_tokens,
+            "fallback_used": "original_model" in locals(),
+            "original_model": locals().get("original_model")
         }
     
     async def _generate_gguf(self, request: PromptRequest) -> Dict[str, Any]:
@@ -278,7 +293,7 @@ class ModelService:
                     model_name,
                     model_type="mistral",  # or "llama" depending on the model
                     gpu_layers=0,  # CPU only for now
-                    lib="avx2"  # Use AVX2 instructions for better performance
+                    # Don't specify lib on Apple Silicon - let it auto-detect
                 )
                 print(f"✅ GGUF model downloaded and loaded successfully: {model_name}")
             else:
@@ -288,8 +303,12 @@ class ModelService:
             # Fallback to a smaller model
             fallback_model = "microsoft/DialoGPT-small"
             print(f"🔄 Trying fallback model: {fallback_model}")
+            original_model = request.model_name
             request.model_name = fallback_model
-            return await self._generate_huggingface(request)
+            response = await self._generate_huggingface(request)
+            response["fallback_used"] = True
+            response["original_model"] = original_model
+            return response
         
         model = self.ct_models[model_name]
         
@@ -379,8 +398,9 @@ class ModelService:
         }
     
     async def compare_models(self, prompt: str, models: List[str], 
-                           parameters: Dict[str, Any]) -> List[ModelResponse]:
+                           parameters: Dict[str, Any]) -> List[ModelComparison]:
         """Compare responses from multiple models"""
+        
         tasks = []
         
         for model_name in models:
@@ -391,29 +411,35 @@ class ModelService:
                 max_tokens=parameters.get("max_tokens", 1024),
                 top_p=parameters.get("top_p", 0.9),
                 model_name=model_name,
-                provider=ModelProvider.VLLM
+                provider=ModelProvider.VLLM.value
             )
             tasks.append(self.generate_response(request))
         
         responses = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Filter out exceptions and return valid responses
+        # Filter out exceptions and convert to ModelComparison objects
         valid_responses = []
         for i, response in enumerate(responses):
             if isinstance(response, Exception):
-                # Create error response
-                valid_responses.append(ModelResponse(
-                    text=f"Error: {str(response)}",
+                # Create error response as ModelComparison
+                valid_responses.append(ModelComparison(
                     model_name=models[i],
                     provider="vllm",
-                    tokens_used=0,
-                    input_tokens=0,
-                    output_tokens=0,
-                    latency_ms=0,
-                    finish_reason="error"
+                    text=f"Error: {str(response)}",
+                    parameters=parameters,
+                    usage={"total_tokens": 0, "input_tokens": 0, "output_tokens": 0},
+                    latency=0.0
                 ))
             else:
-                valid_responses.append(response)
+                # Convert ModelResponse to ModelComparison
+                valid_responses.append(ModelComparison(
+                    model_name=response.model_name,
+                    provider=response.provider,
+                    text=response.text,
+                    parameters=parameters,
+                    usage=response.usage,
+                    latency=response.latency
+                ))
         
         return valid_responses
     
@@ -435,8 +461,28 @@ class ModelService:
             "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
             
-            # GPU-only models (for reference)
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
             "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
 

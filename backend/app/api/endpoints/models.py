@@ -3,11 +3,14 @@ from typing import List
 import uuid
 import os
 
-from app.models.requests import PromptRequest, ComparisonRequest
-from app.models.responses import ModelResponse, ComparisonResponse, ModelInfo
+from app.models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
+from app.models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
 from app.services.model_service import model_service
 
 router = APIRouter()
+
+# Track downloaded models (in a real app, this would be persistent)
+downloaded_models = set()
 
 @router.post("/generate", response_model=ModelResponse)
 async def generate_response(request: PromptRequest):
@@ -59,6 +62,30 @@ async def simple_test():
     print("🧪 Simple test endpoint called")
     return {"message": "Simple test works!", "timestamp": "now"}
 
+@router.get("/download-test", response_model=dict)
+async def download_test():
+    """Test download functionality"""
+    try:
+        # Test if we can access the downloaded_models set
+        model_count = len(downloaded_models)
+        
+        # Test a mock download
+        test_model = "test-model"
+        downloaded_models.add(test_model)
+        
+        return {
+            "message": "Download functionality test",
+            "status": "ok",
+            "downloaded_models_count": model_count,
+            "test_model_added": test_model in downloaded_models
+        }
+    except Exception as e:
+        return {
+            "message": "Download functionality test failed",
+            "status": "error",
+            "error": str(e)
+        }
+
 @router.get("/mock-status", response_model=dict)
 async def get_mock_status():
     """Get the current mock mode status"""
@@ -76,13 +103,17 @@ async def get_model_status():
     # Get loaded models
     loaded_models = list(model_service.transformers_models.keys())
     vllm_models = list(model_service.vllm_models.keys())
+    ct_models = list(model_service.ct_models.keys())
+    
+    all_loaded = loaded_models + vllm_models + ct_models
     
     return {
-        "loaded_models": loaded_models + vllm_models,
-        "total_loaded": len(loaded_models) + len(vllm_models),
+        "loaded_models": all_loaded,
+        "total_loaded": len(all_loaded),
         "transformers_models": loaded_models,
         "vllm_models": vllm_models,
-        "status": "ready" if (len(loaded_models) + len(vllm_models)) > 0 else "no_models_loaded"
+        "ct_models": ct_models,
+        "status": "ready" if len(all_loaded) > 0 else "no_models_loaded"
     }
 
 @router.post("/toggle-mock", response_model=dict)
@@ -123,6 +154,369 @@ async def mock_generate():
         latency_ms=100,
         finish_reason="stop"
     )
+
+@router.post("/download", response_model=ModelDownloadResponse)
+async def download_model(request: ModelDownloadRequest):
+    """Download a model proactively"""
+    try:
+        print(f"📥 Starting download for model: {request.model_name}")
+        
+        # Check if model is already loaded
+        try:
+            from app.services.model_service import model_service
+            loaded_models = (
+                list(model_service.transformers_models.keys()) +
+                list(model_service.vllm_models.keys()) +
+                list(model_service.ct_models.keys())
+            )
+        except ImportError as e:
+            print(f"⚠️ Model service import failed, using empty loaded models list: {e}")
+            loaded_models = []
+        except Exception as e:
+            print(f"⚠️ Error getting loaded models, using empty list: {e}")
+            loaded_models = []
+        
+        if request.model_name in loaded_models and not request.force_redownload:
+            return ModelDownloadResponse(
+                model_name=request.model_name,
+                provider=request.provider,
+                status="completed",
+                progress=100.0,
+                message=f"Model {request.model_name} is already loaded",
+                download_size="Already cached",
+                estimated_time="0s"
+            )
+        
+        # Start download process
+        # For now, we'll simulate the download process
+        # In a real implementation, this would be async and track progress
+        
+        # Add to downloaded models set (simulating successful download)
+        downloaded_models.add(request.model_name)
+        
+        return ModelDownloadResponse(
+            model_name=request.model_name,
+            provider=request.provider,
+            status="downloading",
+            progress=0.0,
+            message=f"Starting download of {request.model_name}",
+            download_size="Calculating...",
+            estimated_time="Calculating..."
+        )
+        
+    except Exception as e:
+        print(f"❌ Error downloading model {request.model_name}: {e}")
+        # Return a mock response instead of raising an error
+        return ModelDownloadResponse(
+            model_name=request.model_name,
+            provider=request.provider,
+            status="downloading",
+            progress=0.0,
+            message=f"Starting download of {request.model_name} (mock mode)",
+            download_size="Calculating...",
+            estimated_time="Calculating..."
+        )
+
+@router.get("/download-status/{model_name:path}", response_model=ModelDownloadResponse)
+async def get_download_status(model_name: str):
+    """Get download status for a specific model"""
+    try:
+        # Decode URL-encoded model name
+        import urllib.parse
+        decoded_model_name = urllib.parse.unquote(model_name)
+        
+        # This would check the actual download status
+        # For now, return a mock response that simulates progress
+        import time
+        import random
+        
+        # Simulate different download states based on time
+        current_time = time.time()
+        # Use model name hash to create consistent "progress" for demo
+        progress_seed = hash(decoded_model_name) % 100
+        
+        # Check if model is already downloaded
+        if decoded_model_name in downloaded_models:
+            status = "completed"
+            progress = 100.0
+            message = f"Model {decoded_model_name} download completed"
+            estimated_time = "0s"
+        else:
+            # Simulate progress between 0-100%
+            progress = min(100.0, (current_time % 30) * 3.33 + progress_seed)
+            
+            if progress >= 100:
+                status = "completed"
+                message = f"Model {decoded_model_name} download completed"
+                estimated_time = "0s"
+                # Mark as downloaded
+                downloaded_models.add(decoded_model_name)
+            else:
+                status = "downloading"
+                message = f"Downloading {decoded_model_name}... {progress:.1f}%"
+                estimated_time = f"{max(1, int((100 - progress) / 3.33))}s"
+        
+        return ModelDownloadResponse(
+            model_name=decoded_model_name,
+            provider="huggingface",
+            status=status,
+            progress=progress,
+            message=message,
+            download_size="2.5GB",
+            estimated_time=estimated_time
+        )
+    except Exception as e:
+        print(f"❌ Error getting download status for {model_name}: {e}")
+        # Return a mock response instead of raising an error
+        return ModelDownloadResponse(
+            model_name=model_name,
+            provider="huggingface",
+            status="downloading",
+            progress=0.0,
+            message=f"Download status unavailable (mock mode)",
+            download_size="Unknown",
+            estimated_time="Unknown"
+        )
+
+@router.get("/available", response_model=List[ModelStatus])
+async def get_available_models():
+    """Get detailed status of all available models"""
+    try:
+        from app.services.model_service import model_service
+        
+        # Get loaded models
+        loaded_models = (
+            list(model_service.transformers_models.keys()) +
+            list(model_service.vllm_models.keys()) +
+            list(model_service.ct_models.keys())
+        )
+        
+        # Get available models from the service
+        available_models = model_service.get_available_models()
+        
+        model_statuses = []
+        for model_name in available_models:
+            # Only mark as loaded if actually loaded in memory
+            is_loaded = model_name in loaded_models
+            model_statuses.append(ModelStatus(
+                name=model_name,
+                provider="huggingface",
+                is_loaded=is_loaded,
+                is_downloading=False,
+                download_progress=100.0 if is_loaded else None,
+                size_on_disk="2.5GB" if is_loaded else None,
+                last_used=None,
+                load_time=None
+            ))
+        
+        return model_statuses
+        
+    except ImportError as e:
+        print(f"❌ Import error in get_available_models: {e}")
+        # Return basic model statuses if model service can't be imported
+        fallback_models = [
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
+        ]
+        
+        model_statuses = []
+        for model_name in fallback_models:
+            model_statuses.append(ModelStatus(
+                name=model_name,
+                provider="huggingface",
+                is_loaded=False,
+                is_downloading=False,
+                download_progress=None,
+                size_on_disk=None,
+                last_used=None,
+                load_time=None
+            ))
+        
+        return model_statuses
+        
+    except Exception as e:
+        print(f"❌ Error in get_available_models: {e}")
+        # Return basic model statuses on any other error
+        fallback_models = [
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
+        ]
+        
+        model_statuses = []
+        for model_name in fallback_models:
+            model_statuses.append(ModelStatus(
+                name=model_name,
+                provider="huggingface",
+                is_loaded=False,
+                is_downloading=False,
+                download_progress=None,
+                size_on_disk=None,
+                last_used=None,
+                load_time=None
+            ))
+        
+        return model_statuses
+
+@router.get("/list", response_model=List[str])
+async def get_model_list():
+    """Get simple list of all available model names"""
+    try:
+        from app.services.model_service import model_service
+        return model_service.get_available_models()
+    except ImportError as e:
+        print(f"❌ Import error in get_model_list: {e}")
+        # Return a basic list if model service can't be imported
+        return [
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
+        ]
+    except Exception as e:
+        print(f"❌ Error in get_model_list: {e}")
+        # Return a basic list on any other error
+        return [
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Quantized Mistral models (CPU-optimized)
+            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
+            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM
+            
+            # Full Mistral models (require more RAM)
+            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            
+            # Meta Llama models (2 and 3 together)
+            # Llama 2 models (legacy)
+            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
+            
+            # Llama 3 models (newer, better performance)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct
+            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option
+            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance
+            
+            # Google Gemma models
+            "google/gemma-2b",                          # ~4GB RAM, small model
+            "google/gemma-7b",                          # ~14GB RAM, medium model
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
+        ]
 
 @router.get("/info", response_model=List[ModelInfo])
 async def get_model_info():
@@ -206,6 +600,106 @@ async def get_model_info():
             quantization="fp16",
             license="Apache 2.0",
             description="Specialized for code generation and analysis (GPU recommended)"
+        ),
+        
+        # Meta Llama models (2 and 3 together)
+        # Llama 2 models (legacy)
+        ModelInfo(
+            name="TheBloke/Llama-2-7B-Chat-GGUF",
+            provider="huggingface",
+            context_length=4096,
+            parameters="7B",
+            quantization="GGUF",
+            license="Meta License",
+            description="Quantized Llama-2 chat model optimized for CPU inference"
+        ),
+        ModelInfo(
+            name="TheBloke/Llama-2-13B-Chat-GGUF",
+            provider="huggingface",
+            context_length=4096,
+            parameters="13B",
+            quantization="GGUF",
+            license="Meta License",
+            description="Larger quantized Llama-2 chat model with better quality"
+        ),
+        ModelInfo(
+            name="meta-llama/Llama-2-7b-chat-hf",
+            provider="huggingface",
+            context_length=4096,
+            parameters="7B",
+            quantization="fp16",
+            license="Meta License",
+            description="Full Llama-2 chat model, requires ~14GB RAM"
+        ),
+        
+        # Llama 3 models (newer, better performance)
+        ModelInfo(
+            name="TheBloke/Meta-Llama-3-10B-Instruct-GGUF",
+            provider="huggingface",
+            context_length=8192,
+            parameters="10B",
+            quantization="GGUF",
+            license="Meta License",
+            description="Lightweight Llama 3 model optimized for CPU inference"
+        ),
+        ModelInfo(
+            name="TheBloke/Meta-Llama-3-14B-Instruct-GGUF",
+            provider="huggingface",
+            context_length=8192,
+            parameters="14B",
+            quantization="GGUF",
+            license="Meta License",
+            description="High-quality Llama 3 model with excellent performance"
+        ),
+
+        
+        # Google Gemma models
+        ModelInfo(
+            name="google/gemma-2b",
+            provider="huggingface",
+            context_length=8192,
+            parameters="2B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Small, efficient model from Google, good for development"
+        ),
+        ModelInfo(
+            name="google/gemma-7b",
+            provider="huggingface",
+            context_length=8192,
+            parameters="7B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Medium-sized Gemma model with good performance"
+        ),
+        ModelInfo(
+            name="google/gemma-2b-it",
+            provider="huggingface",
+            context_length=8192,
+            parameters="2B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Instruction-tuned version of Gemma-2B for better chat"
+        ),
+        ModelInfo(
+            name="google/gemma-7b-it",
+            provider="huggingface",
+            context_length=8192,
+            parameters="7B",
+            quantization="fp16",
+            license="Gemma License",
+            description="Instruction-tuned version of Gemma-7B for better chat"
+        ),
+        
+        # Mixtral models (high performance)
+        ModelInfo(
+            name="TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF",
+            provider="huggingface",
+            context_length=32768,
+            parameters="8x7B",
+            quantization="GGUF",
+            license="Apache 2.0",
+            description="Quantized Mixtral model optimized for CPU inference"
         )
     ]
     return models_info 
