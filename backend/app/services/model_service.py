@@ -431,8 +431,12 @@ class ModelService:
                     provider=response.provider,
                     text=response.text,
                     parameters=parameters,
-                    usage=response.usage,
-                    latency=response.latency
+                    usage={
+                        "total_tokens": response.tokens_used,
+                        "input_tokens": response.input_tokens,
+                        "output_tokens": response.output_tokens
+                    },
+                    latency=response.latency_ms / 1000.0  # Convert milliseconds to seconds
                 ))
         
         return valid_responses
