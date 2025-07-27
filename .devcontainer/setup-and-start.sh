@@ -98,6 +98,12 @@ echo ""
 echo "🚀 Starting backend server..."
 echo "   - Starting uvicorn server on port 8000..."
 source venv/bin/activate
+
+# Set PYTHONPATH explicitly for Codespaces
+export PYTHONPATH=$PWD
+echo "   - PYTHONPATH set to: $PYTHONPATH"
+echo "   - Current directory: $PWD"
+
 # Run from project root with backend module path and set PYTHONPATH
 echo "   - Backend logs will appear below:"
 echo "   ==================================="
