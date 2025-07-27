@@ -41,6 +41,7 @@ const Models = () => {
   const [models, setModels] = useState<ModelStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [downloadingModels, setDownloadingModels] = useState<Set<string>>(new Set())
+  const [loadingModels, setLoadingModels] = useState<Set<string>>(new Set())
   const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({})
   const [sortBy, setSortBy] = useState<SortOption>('size')
   const [filterBy, setFilterBy] = useState<FilterOption>('all')
@@ -396,7 +397,7 @@ const Models = () => {
       console.log(`⚡ Loading model ${modelName} into memory`)
       
       // Add to loading set (we'll need to track this)
-      setDownloadingModels(prev => new Set(prev).add(modelName))
+      setLoadingModels(prev => new Set(prev).add(modelName))
       
       // For now, we'll simulate loading by making a test request
       // In a real implementation, this would call a load endpoint
@@ -423,7 +424,7 @@ const Models = () => {
       console.log(`⚡ Load response for ${modelName}:`, result)
 
       // Remove from loading set
-      setDownloadingModels(prev => {
+      setLoadingModels(prev => {
         const newSet = new Set(prev)
         newSet.delete(modelName)
         return newSet
@@ -440,7 +441,7 @@ const Models = () => {
       console.error(`Error loading model ${modelName}:`, error)
       
       // Remove from loading set
-      setDownloadingModels(prev => {
+      setLoadingModels(prev => {
         const newSet = new Set(prev)
         newSet.delete(modelName)
         return newSet
@@ -449,6 +450,110 @@ const Models = () => {
       toast({
         title: "Load Failed",
         description: `Failed to load ${modelName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const downloadAndLoadModel = async (modelName: string) => {
+    try {
+      console.log(`⚡⚡ Starting download and load for ${modelName}`)
+      setDownloadingModels(prev => new Set(prev).add(modelName))
+      setLoadingModels(prev => new Set(prev).add(modelName))
+
+      const downloadResponse = await fetch('/api/v1/models/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_name: modelName,
+          provider: 'huggingface'
+        }),
+      })
+
+      if (!downloadResponse.ok) {
+        throw new Error(`Download request failed: ${downloadResponse.status}`)
+      }
+
+      const downloadResult = await downloadResponse.json()
+      console.log(`📥 Download response for ${modelName}:`, downloadResult)
+
+      if (downloadResult.status === 'downloading') {
+        pollDownloadProgress(modelName)
+        toast({
+          title: "Download Started",
+          description: `Started downloading ${modelName}. This may take several minutes.`,
+        })
+      } else if (downloadResult.status === 'completed') {
+        setDownloadingModels(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(modelName)
+          return newSet
+        })
+        setLoadingModels(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(modelName)
+          return newSet
+        })
+        toast({
+          title: "Download Complete",
+          description: `Model ${modelName} has been downloaded successfully!`,
+        })
+        fetchModels()
+      } else {
+        throw new Error(`Download failed: ${downloadResult.message}`)
+      }
+
+      // Simulate loading after download
+      const loadResponse = await fetch('/api/v1/models/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: "Hello, this is a test to load the model.",
+          model_name: modelName,
+          provider: 'huggingface',
+          temperature: 0.7,
+          max_tokens: 10,
+          top_p: 0.9
+        }),
+      })
+
+      if (!loadResponse.ok) {
+        throw new Error(`Load request failed: ${loadResponse.status}`)
+      }
+
+      const loadResult = await loadResponse.json()
+      console.log(`⚡ Load response for ${modelName}:`, loadResult)
+
+      setLoadingModels(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(modelName)
+        return newSet
+      })
+      toast({
+        title: "Model Loaded",
+        description: `Model ${modelName} has been loaded into memory and is ready to use!`,
+      })
+      fetchModels()
+
+    } catch (error) {
+      console.error(`Error downloading and loading model ${modelName}:`, error)
+      setDownloadingModels(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(modelName)
+        return newSet
+      })
+      setLoadingModels(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(modelName)
+        return newSet
+      })
+      toast({
+        title: "Download and Load Failed",
+        description: `Failed to download and load ${modelName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       })
     }
@@ -548,6 +653,7 @@ const Models = () => {
 
   useEffect(() => {
     setDownloadingModels(new Set())
+    setLoadingModels(new Set())
     setDownloadProgress({})
   }, [])
 
@@ -806,10 +912,15 @@ const Models = () => {
                                 <span className="mr-1">✅</span>
                                 Ready
                               </Badge>
-                            ) : isDownloading ? (
+                            ) : downloadingModels.has(model.name) ? (
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
                                 Downloading
+                              </Badge>
+                            ) : loadingModels.has(model.name) ? (
+                              <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-600 mr-1"></div>
+                                Loading
                               </Badge>
                             ) : model.download_progress === 100 || model.size_on_disk ? (
                               <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
@@ -844,13 +955,24 @@ const Models = () => {
                         </div>
 
                         {/* Download Progress */}
-                        {isDownloading && (
+                        {downloadingModels.has(model.name) && (
                           <div className="space-y-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-medium text-blue-800">Downloading...</span>
-                              <span className="text-xs font-bold text-blue-800">{Math.round(progress)}%</span>
+                              <span className="text-xs font-bold text-blue-800">{Math.round(downloadProgress[model.name] || 0)}%</span>
                             </div>
-                            <Progress value={progress} className="h-1 bg-blue-100" />
+                            <Progress value={downloadProgress[model.name] || 0} className="h-1 bg-blue-100" />
+                          </div>
+                        )}
+
+                        {/* Loading Progress */}
+                        {loadingModels.has(model.name) && (
+                          <div className="space-y-2 p-2 bg-orange-50 border border-orange-200 rounded-md">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-orange-800">Loading model into memory...</span>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-600"></div>
+                            </div>
+                            <p className="text-xs text-orange-700">This may take a few minutes for large models</p>
                           </div>
                         )}
 
@@ -869,7 +991,7 @@ const Models = () => {
                               <span className="mr-1">✅</span>
                               Use Now
                             </Button>
-                          ) : isDownloading ? (
+                          ) : downloadingModels.has(model.name) ? (
                             <Button 
                               variant="outline" 
                               size="sm"
@@ -877,27 +999,37 @@ const Models = () => {
                               disabled
                             >
                               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
-                              {Math.round(progress)}%
+                              Downloading {Math.round(downloadProgress[model.name] || 0)}%
+                            </Button>
+                          ) : loadingModels.has(model.name) ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="w-full bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100 text-xs" 
+                              disabled
+                            >
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-orange-600 mr-1"></div>
+                              Loading...
                             </Button>
                           ) : model.download_progress === 100 || model.size_on_disk ? (
                             <Button 
                               onClick={() => loadModel(model.name)}
                               size="sm"
                               className="w-full bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100 text-xs"
-                              disabled={downloadingModels.size > 0}
+                              disabled={downloadingModels.size > 0 || loadingModels.size > 0}
                             >
                               <span className="mr-1">⚡</span>
                               Load Model
                             </Button>
                           ) : (
                             <Button 
-                              onClick={() => downloadModel(model.name)}
+                              onClick={() => downloadAndLoadModel(model.name)}
                               size="sm"
                               className="w-full bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 text-xs"
-                              disabled={downloadingModels.size > 0}
+                              disabled={downloadingModels.size > 0 || loadingModels.size > 0}
                             >
                               <span className="mr-1">📥</span>
-                              Download
+                              Download & Load
                             </Button>
                           )}
                         </div>
