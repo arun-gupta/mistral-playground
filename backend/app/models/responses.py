@@ -51,9 +51,17 @@ class DocumentChunk(BaseModel):
 class CollectionInfo(BaseModel):
     """Model for collection information"""
     name: str = Field(..., description="Collection name")
+    description: Optional[str] = Field(None, description="Collection description")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Collection tags")
     document_count: int = Field(..., description="Number of documents")
-    embedding_dimension: int = Field(..., description="Embedding dimension")
-    created_at: datetime = Field(..., description="Creation timestamp")
+    chunk_count: int = Field(..., description="Number of chunks")
+    total_size_mb: Optional[float] = Field(None, description="Total size in MB")
+    created_at: str = Field(..., description="Creation timestamp")
+    last_updated: str = Field(..., description="Last update timestamp")
+    last_queried: Optional[str] = Field(None, description="Last query timestamp")
+    is_public: bool = Field(default=False, description="Whether collection is public")
+    owner: Optional[str] = Field(None, description="Collection owner")
+    embedding_dimension: Optional[int] = Field(None, description="Embedding dimension")
 
 class PromptConfig(BaseModel):
     """Model for saved prompt configurations"""

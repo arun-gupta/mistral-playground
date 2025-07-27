@@ -289,33 +289,41 @@ A:"""
     
     def list_collections(self) -> List[CollectionInfo]:
         """List all collections"""
-        collections = []
-        for collection in self.chroma_client.list_collections():
-            # Get collection metadata
-            metadata = collection.metadata or {}
-            
-            # Parse tags from JSON string
-            tags = []
-            if metadata.get("tags"):
-                try:
-                    tags = json.loads(metadata.get("tags"))
-                except (json.JSONDecodeError, TypeError):
-                    tags = []
-            
-            collections.append(CollectionInfo(
-                name=collection.name,
-                description=metadata.get("description"),
-                tags=tags,
-                document_count=1,  # Simplified - assume 1 document per collection
-                chunk_count=collection.count(),
-                total_size_mb=None,  # TODO: Calculate actual size
-                created_at=metadata.get("created_at", datetime.now().isoformat()),
-                last_updated=metadata.get("last_updated", datetime.now().isoformat()),
-                last_queried=None,  # TODO: Track query timestamps
-                is_public=metadata.get("is_public", False),
-                owner=None  # TODO: Add user management
-            ))
-        return collections
+        if not CHROMADB_AVAILABLE or self.chroma_client is None:
+            print("⚠️  ChromaDB not available - returning empty collections list")
+            return []
+        
+        try:
+            collections = []
+            for collection in self.chroma_client.list_collections():
+                # Get collection metadata
+                metadata = collection.metadata or {}
+                
+                # Parse tags from JSON string
+                tags = []
+                if metadata.get("tags"):
+                    try:
+                        tags = json.loads(metadata.get("tags"))
+                    except (json.JSONDecodeError, TypeError):
+                        tags = []
+                
+                collections.append(CollectionInfo(
+                    name=collection.name,
+                    description=metadata.get("description"),
+                    tags=tags,
+                    document_count=1,  # Simplified - assume 1 document per collection
+                    chunk_count=collection.count(),
+                    total_size_mb=None,  # TODO: Calculate actual size
+                    created_at=metadata.get("created_at", datetime.now().isoformat()),
+                    last_updated=metadata.get("last_updated", datetime.now().isoformat()),
+                    last_queried=None,  # TODO: Track query timestamps
+                    is_public=metadata.get("is_public", False),
+                    owner=None  # TODO: Add user management
+                ))
+            return collections
+        except Exception as e:
+            print(f"❌ Error listing collections: {e}")
+            return []
     
     def delete_collection(self, collection_name: str) -> bool:
         """Delete a collection"""
