@@ -43,6 +43,7 @@ const Comparison = () => {
   const [comparison, setComparison] = useState<ComparisonResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
   const { toast } = useToast()
 
   // Common parameters for all models
@@ -80,6 +81,14 @@ const Comparison = () => {
   // Check if model is loaded
   const isModelLoaded = (modelName: string) => {
     return modelStatuses.some(m => m.name === modelName && m.is_loaded)
+  }
+
+  // Get filtered available models based on toggle state
+  const getFilteredAvailableModels = () => {
+    if (showLoadedOnly) {
+      return availableModels.filter(modelName => isModelLoaded(modelName))
+    }
+    return availableModels
   }
 
   // Handle model selection
@@ -190,8 +199,32 @@ const Comparison = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Loaded Models Toggle */}
+          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Loaded Models Filter</label>
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLoadedOnly(!showLoadedOnly)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm text-gray-700">
+                  {showLoadedOnly ? 'Show loaded models only' : 'Show all models'}
+                </span>
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {availableModels.map((modelName) => {
+            {getFilteredAvailableModels().map((modelName) => {
               const isSelected = selectedModels.includes(modelName)
               const isLoaded = isModelLoaded(modelName)
               
