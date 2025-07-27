@@ -98,7 +98,9 @@ echo "🚀 Starting backend server..."
 echo "   - Starting uvicorn server on port 8000..."
 source venv/bin/activate
 # Run from project root with backend module path
-nohup python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+echo "   - Backend logs will appear below:"
+echo "   ==================================="
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 echo $BACKEND_PID > backend.pid
 
@@ -119,7 +121,9 @@ echo "🎨 Starting frontend server..."
 if command -v node &> /dev/null && command -v npm &> /dev/null; then
     cd frontend
     echo "   - Starting frontend development server..."
-    nohup npm run dev > ../frontend.log 2>&1 &
+    echo "   - Frontend logs will appear below:"
+    echo "   ==================================="
+    npm run dev &
     FRONTEND_PID=$!
     echo $FRONTEND_PID > ../frontend.pid
     cd ..
@@ -140,12 +144,7 @@ echo ""
 echo "📋 Model Manager now shows all 25+ available models!"
 echo "🔍 Check the Models tab to see the full selection."
 echo ""
-echo "📝 Logs:"
-echo "   - Backend: tail -f backend.log"
-echo "   - Frontend: tail -f frontend.log"
-echo ""
-echo "🛑 To stop services:"
-echo "   - Backend: kill \$(cat backend.pid)"
-echo "   - Frontend: kill \$(cat frontend.pid)"
+echo "📝 Real-time logs are displayed in this terminal!"
+echo "🛑 To stop services: Ctrl+C or close this terminal"
 echo ""
 echo "🚀 Ready to explore!" 
