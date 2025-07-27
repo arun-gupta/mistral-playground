@@ -42,7 +42,68 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 
 ## 🚀 Quick Start
 
-### Option 1: Local Development (Recommended)
+### Troubleshooting
+
+#### Common Issues
+
+**Frontend Issues:**
+- **Tailwind CSS Error**: If you see "Can't resolve 'tailwindcss-animate'", run:
+  ```bash
+  cd frontend
+  npm install
+  npm install tailwindcss-animate
+  ```
+- **Port Issues**: Make sure ports 5173 (frontend) and 8000 (backend) are forwarded in Codespaces
+
+**Backend Issues:**
+- **Model Loading**: First-time model loading may take several minutes
+- **Memory Issues**: Use smaller models like `microsoft/DialoGPT-small` for testing
+- **GGUF Models**: Ensure `ctransformers` is installed for GGUF support
+
+**General:**
+- **Dependencies**: If you encounter missing dependencies, run:
+  ```bash
+  # Backend
+  cd backend
+  source venv/bin/activate
+  pip install -r requirements.txt
+  
+  # Frontend
+  cd frontend
+  npm install
+  ```
+
+### Option 1: GitHub Codespaces (Recommended for Cloud Development)
+
+**Perfect for cloud-based development without local setup!**
+
+1. **Open in Codespaces**
+   - Click the green "Code" button on GitHub
+   - Select "Codespaces" tab
+   - Click "Create codespace on main"
+
+2. **Automatic Setup**
+   - Codespaces will automatically install dependencies
+   - Backend and frontend will be configured automatically
+
+3. **Start Development**
+   ```bash
+   # Backend (Terminal 1)
+   cd backend
+   source venv/bin/activate
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   
+   # Frontend (Terminal 2)
+   cd frontend
+   npm install  # Ensure dependencies are installed
+   npm run dev
+   ```
+
+4. **Access Application**
+   - Frontend: Use the "Open in Browser" button for port 5173
+   - Backend API: Available on port 8000
+
+### Option 2: Local Development
 
 **Setup Options:**
 - **GPU Setup**: Use `requirements.txt` for full vLLM support (requires CUDA)
