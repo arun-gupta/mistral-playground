@@ -3,9 +3,9 @@ from typing import List
 import uuid
 import os
 
-from ..models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
-from ..models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
-from ..services.model_service import model_service
+from ...models.requests import PromptRequest, ComparisonRequest, ModelDownloadRequest
+from ...models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
+from ...services.model_service import model_service
 
 router = APIRouter()
 

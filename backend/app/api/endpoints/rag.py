@@ -4,9 +4,9 @@ import os
 import tempfile
 import json
 
-from ..models.requests import RAGRequest
-from ..models.responses import RAGResponse, CollectionInfo
-from ..services.rag_service import rag_service
+from ...models.requests import RAGRequest
+from ...models.responses import RAGResponse, CollectionInfo
+from ...services.rag_service import rag_service
 
 router = APIRouter()
 
