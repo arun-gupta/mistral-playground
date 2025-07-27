@@ -14,7 +14,7 @@ transformers==4.37.0
 torch==2.2.2
 accelerate==0.25.0
 ctransformers==0.2.27  # For GGUF model support
-huggingface-hub==0.16.4
+huggingface-hub>=0.19.3
 
 # Vector database and embeddings
 chromadb==0.4.18
@@ -28,7 +28,8 @@ langchain-text-splitters==0.2.0
 
 # Utilities
 python-dotenv==1.0.0
-httpx==0.25.2
+httpx==0.27.0
+urllib3==2.2.0
 aiofiles==23.2.1
 tenacity==8.2.3
 
