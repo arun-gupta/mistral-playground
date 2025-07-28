@@ -544,14 +544,27 @@ class RAGService:
     async def query_rag(self, request: RAGRequest) -> RAGResponse:
         """Query RAG system with document retrieval and generation"""
         print(f"🔍 RAG Service Debug: Starting query_rag method")
+        print(f"🔍 query_rag: chroma_client is None: {self.chroma_client is None}")
+        print(f"🔍 query_rag: FAISS_AVAILABLE={FAISS_AVAILABLE}")
+        print(f"🔍 query_rag: use_simple_fallback={self.use_simple_fallback}")
         
         # Check if ChromaDB is available, if not use FAISS fallback
         if self.chroma_client is None:
+            print("🔍 query_rag: ChromaDB is None, checking FAISS availability...")
             if not FAISS_AVAILABLE:
-                raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
+                print("🔍 query_rag: FAISS not available, checking simple fallback...")
+                if self.use_simple_fallback:
+                    print("🔍 query_rag: Using simple in-memory fallback")
+                    return await self._query_rag_simple(request)
+                else:
+                    print("❌ query_rag: Neither ChromaDB nor FAISS is available")
+                    raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
             else:
+                print("🔍 query_rag: Using FAISS fallback")
                 # Use FAISS fallback
                 return await self._query_rag_faiss(request)
+        
+        print("🔍 query_rag: Using ChromaDB")
         
         # Get collection
         try:
@@ -717,6 +730,149 @@ A:"""
             print(f"🔍 RAG Service Debug: Prepared {len(retrieved_docs)} documents")
         except Exception as e:
             print(f"❌ RAG Service Error: Failed to prepare documents: {e}")
+            raise e
+        
+        # Create context from retrieved documents (limit to ~300 tokens to leave room for prompt)
+        try:
+            print(f"🔍 RAG Service Debug: Creating context from documents")
+            context_parts = []
+            total_chars = 0
+            max_chars = 1200  # Roughly 300 tokens
+            
+            for doc in retrieved_docs:
+                if total_chars + len(doc["text"]) <= max_chars:
+                    context_parts.append(doc["text"])
+                    total_chars += len(doc["text"])
+                else:
+                    # Truncate this document to fit
+                    remaining_chars = max_chars - total_chars
+                    if remaining_chars > 50:  # Only add if we have meaningful space
+                        context_parts.append(doc["text"][:remaining_chars] + "...")
+                    break
+            
+            context = "\n\n".join(context_parts)
+            print(f"🔍 RAG Service Debug: Context created with {len(context)} characters")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to create context: {e}")
+            raise e
+        
+        # Generate response using model
+        try:
+            print(f"🔍 RAG Service Debug: Creating prompt for model")
+            prompt = f"""Context: {context}
+
+Q: {request.query}
+A:"""
+
+            model_request = type('obj', (object,), {
+                'prompt': prompt,
+                'system_prompt': "Answer based on the context provided.",
+                'temperature': request.temperature,
+                'max_tokens': request.max_tokens,
+                'top_p': 0.9,
+                'model_name': request.model_name,
+                'provider': request.provider
+            })()
+            print(f"🔍 RAG Service Debug: Calling model service with model: {request.model_name}")
+            
+            model_response = await model_service.generate_response(model_request)
+            print(f"🔍 RAG Service Debug: Model response received successfully")
+            answer = model_response.text if model_response.text.strip() else "I found relevant information in the document, but I'm having trouble generating a detailed response. Please try rephrasing your question."
+        except Exception as e:
+            print(f"❌ RAG Service Error: Model generation failed: {e}")
+            import traceback
+            traceback.print_exc()
+            answer = "I found relevant information in the document, but encountered an error while generating the response. Please try again."
+        
+        # Create RAGResponse
+        try:
+            print(f"🔍 RAG Service Debug: Creating RAGResponse object")
+            rag_response = RAGResponse(
+                query=request.query,
+                answer=answer,
+                retrieved_documents=retrieved_docs,
+                model_response=ModelResponse(
+                    text=answer,
+                    model_name=request.model_name or "unknown",
+                    provider=request.provider or "huggingface",
+                    tokens_used=model_response.tokens_used,
+                    input_tokens=model_response.input_tokens,
+                    output_tokens=model_response.output_tokens,
+                    latency_ms=model_response.latency_ms,
+                    finish_reason=model_response.finish_reason
+                )
+            )
+            print(f"🔍 RAG Service Debug: RAGResponse created successfully")
+            return rag_response
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to create RAGResponse: {e}")
+            import traceback
+            traceback.print_exc()
+            raise e
+    
+    async def _query_rag_simple(self, request: RAGRequest) -> RAGResponse:
+        """Query RAG system using simple in-memory fallback"""
+        print(f"🔍 RAG Service Debug: Starting _query_rag_simple method")
+        
+        # Get collection
+        if request.collection_name not in self.simple_collections:
+            raise ValueError(f"Collection '{request.collection_name}' not found in simple collections.")
+        
+        collection = self.simple_collections[request.collection_name]
+        
+        # Query collection
+        try:
+            print(f"🔍 RAG Service Debug: Loading embedding model")
+            self._load_embedding_model()
+            print(f"🔍 RAG Service Debug: Generating query embedding")
+            query_embedding = self.embedding_model.encode([request.query])
+            print(f"🔍 RAG Service Debug: Querying simple collection with {request.top_k} results")
+            
+            # Search in simple collection (no vector similarity, just text matching)
+            # This is a placeholder. In a real system, you'd need a more sophisticated search
+            # For example, using Levenshtein distance or keyword matching.
+            # For now, we'll just return all documents as retrieved.
+            retrieved_docs = []
+            
+            # Simple keyword-based search
+            query_terms = request.query.lower().split()
+            scored_docs = []
+            
+            for i, doc in enumerate(collection['documents']):
+                doc_lower = doc.lower()
+                score = 0
+                for term in query_terms:
+                    if term in doc_lower:
+                        score += 1
+                if score > 0:  # Only include documents that match at least one term
+                    scored_docs.append((i, score, doc))
+            
+            # Sort by score (highest first) and take top_k
+            scored_docs.sort(key=lambda x: x[1], reverse=True)
+            top_docs = scored_docs[:request.top_k]
+            
+            for rank, (doc_idx, score, doc) in enumerate(top_docs):
+                retrieved_docs.append({
+                    "text": doc,
+                    "metadata": collection['metadatas'][doc_idx] if doc_idx < len(collection['metadatas']) else {},
+                    "similarity_score": score / len(query_terms),  # Normalize score
+                    "rank": rank + 1
+                })
+            
+            # If no matches found, return first few documents
+            if not retrieved_docs:
+                print("🔍 RAG Service Debug: No keyword matches found, returning first few documents")
+                for i in range(min(request.top_k, len(collection['documents']))):
+                    retrieved_docs.append({
+                        "text": collection['documents'][i],
+                        "metadata": collection['metadatas'][i] if i < len(collection['metadatas']) else {},
+                        "similarity_score": 0.1,  # Low score for non-matching docs
+                        "rank": i + 1
+                    })
+            
+            print(f"🔍 RAG Service Debug: Simple collection query successful, found {len(retrieved_docs)} documents")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to query simple collection: {e}")
             raise e
         
         # Create context from retrieved documents (limit to ~300 tokens to leave room for prompt)
