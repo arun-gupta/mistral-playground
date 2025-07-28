@@ -617,21 +617,30 @@ class RAGService:
             print(f"🔍 RAG Service Debug: Creating context from documents")
             context_parts = []
             total_chars = 0
-            max_chars = 1200  # Roughly 300 tokens
+            max_chars = 800  # Reduced from 1200 to fit within token limits
             
             for doc in retrieved_docs:
                 if total_chars + len(doc["text"]) <= max_chars:
                     context_parts.append(doc["text"])
                     total_chars += len(doc["text"])
+                    print(f"🔍 RAG Service Debug: Added document {doc['rank']} ({len(doc['text'])} chars), total: {total_chars}")
                 else:
                     # Truncate this document to fit
                     remaining_chars = max_chars - total_chars
                     if remaining_chars > 50:  # Only add if we have meaningful space
-                        context_parts.append(doc["text"][:remaining_chars] + "...")
+                        truncated_text = doc["text"][:remaining_chars] + "..."
+                        context_parts.append(truncated_text)
+                        total_chars += len(truncated_text)
+                        print(f"🔍 RAG Service Debug: Added truncated document {doc['rank']} ({len(truncated_text)} chars), total: {total_chars}")
                     break
             
             context = "\n\n".join(context_parts)
             print(f"🔍 RAG Service Debug: Context created with {len(context)} characters")
+            
+            # Estimate token count (rough approximation: 1 token ≈ 4 characters)
+            estimated_tokens = len(context) // 4
+            print(f"🔍 RAG Service Debug: Estimated tokens in context: {estimated_tokens}")
+            
         except Exception as e:
             print(f"❌ RAG Service Error: Failed to create context: {e}")
             raise e
@@ -737,21 +746,30 @@ A:"""
             print(f"🔍 RAG Service Debug: Creating context from documents")
             context_parts = []
             total_chars = 0
-            max_chars = 1200  # Roughly 300 tokens
+            max_chars = 800  # Reduced from 1200 to fit within token limits
             
             for doc in retrieved_docs:
                 if total_chars + len(doc["text"]) <= max_chars:
                     context_parts.append(doc["text"])
                     total_chars += len(doc["text"])
+                    print(f"🔍 RAG Service Debug: Added document {doc['rank']} ({len(doc['text'])} chars), total: {total_chars}")
                 else:
                     # Truncate this document to fit
                     remaining_chars = max_chars - total_chars
                     if remaining_chars > 50:  # Only add if we have meaningful space
-                        context_parts.append(doc["text"][:remaining_chars] + "...")
+                        truncated_text = doc["text"][:remaining_chars] + "..."
+                        context_parts.append(truncated_text)
+                        total_chars += len(truncated_text)
+                        print(f"🔍 RAG Service Debug: Added truncated document {doc['rank']} ({len(truncated_text)} chars), total: {total_chars}")
                     break
             
             context = "\n\n".join(context_parts)
             print(f"🔍 RAG Service Debug: Context created with {len(context)} characters")
+            
+            # Estimate token count (rough approximation: 1 token ≈ 4 characters)
+            estimated_tokens = len(context) // 4
+            print(f"🔍 RAG Service Debug: Estimated tokens in context: {estimated_tokens}")
+            
         except Exception as e:
             print(f"❌ RAG Service Error: Failed to create context: {e}")
             raise e
@@ -822,7 +840,7 @@ A:"""
         
         # Query collection
         try:
-            print(f"�� RAG Service Debug: Using keyword-based search (no embedding model needed)")
+            print(f"🔍 RAG Service Debug: Using keyword-based search (no embedding model needed)")
             print(f"🔍 RAG Service Debug: Querying simple collection with {request.top_k} results")
             
             # Simple keyword-based search
@@ -872,21 +890,30 @@ A:"""
             print(f"🔍 RAG Service Debug: Creating context from documents")
             context_parts = []
             total_chars = 0
-            max_chars = 1200  # Roughly 300 tokens
+            max_chars = 800  # Reduced from 1200 to fit within token limits
             
             for doc in retrieved_docs:
                 if total_chars + len(doc["text"]) <= max_chars:
                     context_parts.append(doc["text"])
                     total_chars += len(doc["text"])
+                    print(f"🔍 RAG Service Debug: Added document {doc['rank']} ({len(doc['text'])} chars), total: {total_chars}")
                 else:
                     # Truncate this document to fit
                     remaining_chars = max_chars - total_chars
                     if remaining_chars > 50:  # Only add if we have meaningful space
-                        context_parts.append(doc["text"][:remaining_chars] + "...")
+                        truncated_text = doc["text"][:remaining_chars] + "..."
+                        context_parts.append(truncated_text)
+                        total_chars += len(truncated_text)
+                        print(f"🔍 RAG Service Debug: Added truncated document {doc['rank']} ({len(truncated_text)} chars), total: {total_chars}")
                     break
             
             context = "\n\n".join(context_parts)
             print(f"🔍 RAG Service Debug: Context created with {len(context)} characters")
+            
+            # Estimate token count (rough approximation: 1 token ≈ 4 characters)
+            estimated_tokens = len(context) // 4
+            print(f"🔍 RAG Service Debug: Estimated tokens in context: {estimated_tokens}")
+            
         except Exception as e:
             print(f"❌ RAG Service Error: Failed to create context: {e}")
             raise e
