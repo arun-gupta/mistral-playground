@@ -27,7 +27,7 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-bold">
                 <a 
-                  href="http://localhost:5173" 
+                  href="/" 
                   className="hover:text-primary transition-colors cursor-pointer"
                   title="Go to main page"
                 >
