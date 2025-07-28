@@ -16,6 +16,11 @@ A modern, developer-friendly full-stack application for exploring and experiment
 
 ### **Advanced Capabilities**
 - **RAG Mode**: Upload documents and generate grounded answers using Retrieval-Augmented Generation
+  - **Multi-Format Support**: PDF, TXT, and Markdown files with intelligent chunking
+  - **Robust Fallback System**: Works reliably in any environment (ChromaDB → FAISS → Simple In-Memory)
+  - **Codespaces Optimized**: Fully functional RAG in GitHub Codespaces without complex setup
+  - **Keyword-Based Search**: Intelligent document retrieval with relevance scoring
+  - **Collection Management**: Organize, search, and manage document collections
 - **Parameter Tuning**: Advanced control over generation parameters (temperature, max tokens, system prompts)
 - **Conversational Interface**: Natural chat experience optimized for instruction-following models
 - **Document Processing**: Support for PDF, TXT, and Markdown files with intelligent chunking
@@ -25,6 +30,7 @@ A modern, developer-friendly full-stack application for exploring and experiment
 - **Real-time Status**: Visual indicators for download, loading, and inference status
 - **Organized Workflow**: Intuitive model organization with filtering and sorting
 - **Mock Mode**: Test the interface without heavy downloads or compute requirements
+- **Environment Agnostic**: Works seamlessly in local development, Docker, and GitHub Codespaces
 
 ## 🚀 **Quick Start**
 
@@ -35,6 +41,8 @@ A modern, developer-friendly full-stack application for exploring and experiment
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:8000
    - API Docs: http://localhost:8000/docs
+
+**💡 RAG functionality works out-of-the-box in Codespaces with automatic fallback!**
 
 ### **Option 2: Local Development**
 ```bash
@@ -104,6 +112,49 @@ Models follow a streamlined three-state workflow:
 - **Smart Caching**: Downloaded models persist on disk for faster subsequent loads
 - **Real-Time Status**: Live progress tracking for both download and loading operations
 
+## 🔍 **RAG (Retrieval-Augmented Generation)**
+
+The RAG system provides powerful document-based question answering with intelligent fallback mechanisms for maximum reliability.
+
+### **How RAG Works**
+1. **Document Upload**: Upload PDF, TXT, or Markdown files
+2. **Intelligent Chunking**: Documents are automatically split into optimal chunks
+3. **Smart Retrieval**: Relevant document sections are retrieved based on your question
+4. **Contextual Answers**: AI generates answers using retrieved document content
+
+### **Robust Fallback System**
+The RAG system automatically adapts to your environment:
+
+#### **Primary: ChromaDB** 🏆
+- **When**: Full vector database environment available
+- **Features**: High-performance vector similarity search
+- **Best for**: Production environments with persistent storage
+
+#### **Secondary: FAISS** ⚡
+- **When**: ChromaDB unavailable (e.g., SQLite conflicts)
+- **Features**: Fast in-memory vector search
+- **Best for**: Development and testing environments
+
+#### **Fallback: Simple In-Memory** 🛡️
+- **When**: Neither ChromaDB nor FAISS available
+- **Features**: Keyword-based search with relevance scoring
+- **Best for**: GitHub Codespaces, minimal environments, quick demos
+
+### **RAG Features**
+- **Multi-Format Support**: PDF, TXT, Markdown files
+- **Collection Management**: Organize documents into named collections
+- **Smart Search**: Keyword-based retrieval with relevance scoring
+- **Context Optimization**: Automatic token limit management
+- **Real-time Processing**: Immediate document upload and querying
+- **Environment Agnostic**: Works in any setup without configuration
+
+### **Perfect for Codespaces**
+The RAG system is specifically optimized for GitHub Codespaces:
+- **No Complex Setup**: Works out-of-the-box
+- **Automatic Fallback**: Handles missing dependencies gracefully
+- **Fast Performance**: Optimized for Codespaces environment
+- **Reliable Operation**: Comprehensive error handling and logging
+
 ## 🎭 **Mock Mode**
 
 **Mock Mode** allows you to use the frontend UI without running real models on the backend. This is useful for:
@@ -117,7 +168,9 @@ Models follow a streamlined three-state workflow:
 ```
 Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
                                     ↓
-                            Vector DB (ChromaDB)
+                            RAG System (Multi-Fallback)
+                                    ↓
+                    ChromaDB → FAISS → Simple In-Memory
                                     ↓
                             Document Processing
                                     ↓
@@ -128,8 +181,12 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 - **Frontend**: React 18 + Vite + TypeScript + TailwindCSS + shadcn/ui
 - **Backend**: Python 3.11+ + FastAPI + Pydantic
 - **Models**: vLLM for local inference, Hugging Face Transformers, Ollama
-- **Vector DB**: ChromaDB for RAG functionality
-- **Embeddings**: SentenceTransformers
+- **RAG System**: 
+  - **Primary**: ChromaDB for vector storage
+  - **Secondary**: FAISS for in-memory vector search
+  - **Fallback**: Simple in-memory with keyword search
+- **Embeddings**: SentenceTransformers (with graceful fallback)
+- **Document Processing**: PyMuPDF, intelligent chunking
 
 For detailed architecture information, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
