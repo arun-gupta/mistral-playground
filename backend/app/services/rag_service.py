@@ -83,6 +83,7 @@ class RAGService:
     """Service for RAG (Retrieval-Augmented Generation) functionality"""
     
     def __init__(self):
+        print("🔍 RAGService.__init__: Starting initialization...")
         self.chroma_client = None
         self.embedding_model = None
         self._embedding_model_loaded = False
@@ -93,7 +94,10 @@ class RAGService:
         self.faiss_collection_metadata = {}  # Store collection metadata
         self.faiss_collection_path = None  # Will be set after imports are handled
         
+        print(f"🔍 RAGService.__init__: CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}")
+        
         if CHROMADB_AVAILABLE:
+            print("🔍 RAGService.__init__: Attempting ChromaDB initialization...")
             # Disable all telemetry for ChromaDB
             chroma_settings = Settings(
                 anonymized_telemetry=False,
@@ -108,47 +112,73 @@ class RAGService:
             sys.stderr = open(os.devnull, 'w')
             
             try:
+                print(f"🔍 RAGService.__init__: Creating ChromaDB client with path: {settings.CHROMA_PERSIST_DIRECTORY}")
                 self.chroma_client = chromadb.PersistentClient(
                     path=settings.CHROMA_PERSIST_DIRECTORY,
                     settings=chroma_settings
                 )
-                print("✅ Using ChromaDB for vector storage")
+                print("✅ RAGService.__init__: ChromaDB client created successfully")
             except Exception as e:
-                print(f"⚠️  ChromaDB initialization failed: {e}")
+                print(f"⚠️  RAGService.__init__: ChromaDB initialization failed: {e}")
+                import traceback
+                traceback.print_exc()
                 self.chroma_client = None
             finally:
                 sys.stderr.close()
                 sys.stderr = original_stderr
         
+        print(f"🔍 RAGService.__init__: After ChromaDB attempt - chroma_client is None: {self.chroma_client is None}")
+        print(f"🔍 RAGService.__init__: FAISS_AVAILABLE={FAISS_AVAILABLE}")
+        
         # If ChromaDB failed, try FAISS
         if self.chroma_client is None and FAISS_AVAILABLE:
             try:
-                print(f"🔍 Attempting FAISS initialization...")
+                print(f"🔍 RAGService.__init__: Attempting FAISS initialization...")
                 # Set FAISS collection path now that os is available
                 self.faiss_collection_path = os.path.join(settings.CHROMA_PERSIST_DIRECTORY, "faiss_collections.pkl")
-                print(f"🔍 FAISS collection path: {self.faiss_collection_path}")
+                print(f"🔍 RAGService.__init__: FAISS collection path: {self.faiss_collection_path}")
                 self._load_faiss_collections()
-                print("✅ Using FAISS for vector storage (fallback)")
+                print("✅ RAGService.__init__: FAISS initialization completed successfully")
             except Exception as e:
-                print(f"⚠️  FAISS initialization failed: {e}")
+                print(f"⚠️  RAGService.__init__: FAISS initialization failed: {e}")
                 import traceback
                 traceback.print_exc()
         elif self.chroma_client is None:
-            print("⚠️  No vector database available - RAG functionality will be disabled")
-            print(f"🔍 Debug: CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}, FAISS_AVAILABLE={FAISS_AVAILABLE}")
+            print("⚠️  RAGService.__init__: No vector database available - RAG functionality will be disabled")
+            print(f"🔍 RAGService.__init__: Debug - CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}, FAISS_AVAILABLE={FAISS_AVAILABLE}")
+        
+        print(f"🔍 RAGService.__init__: Final state - chroma_client is None: {self.chroma_client is None}")
+        print(f"🔍 RAGService.__init__: Final state - faiss_collections count: {len(self.faiss_collections)}")
+        print("🔍 RAGService.__init__: Initialization completed")
     
     def _load_embedding_model(self):
         """Lazy load the embedding model"""
+        print(f"🔍 _load_embedding_model: Starting, _embedding_model_loaded={self._embedding_model_loaded}")
         if not self._embedding_model_loaded:
+            print("🔍 _load_embedding_model: Model not loaded, loading now...")
             global SentenceTransformer
             if SentenceTransformer is None:
+                print("🔍 _load_embedding_model: SentenceTransformer is None, importing...")
                 try:
                     from sentence_transformers import SentenceTransformer
+                    print("✅ _load_embedding_model: SentenceTransformer imported successfully")
                 except ImportError as e:
+                    print(f"❌ _load_embedding_model: Failed to import SentenceTransformer: {e}")
                     raise ImportError(f"sentence-transformers not available: {e}")
             
-            self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
-            self._embedding_model_loaded = True
+            print(f"🔍 _load_embedding_model: Creating SentenceTransformer with model: {settings.EMBEDDING_MODEL}")
+            try:
+                self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
+                print("✅ _load_embedding_model: SentenceTransformer created successfully")
+                self._embedding_model_loaded = True
+                print("✅ _load_embedding_model: Model loaded and ready")
+            except Exception as e:
+                print(f"❌ _load_embedding_model: Failed to create SentenceTransformer: {e}")
+                import traceback
+                traceback.print_exc()
+                raise
+        else:
+            print("🔍 _load_embedding_model: Model already loaded, skipping")
     
     def _load_faiss_collections(self):
         """Load FAISS collections from disk"""
@@ -229,21 +259,36 @@ class RAGService:
                              description: str = None, tags: List[str] = None, 
                              is_public: bool = False) -> Dict[str, Any]:
         """Process and embed a document"""
+        print(f"🔍 process_document: Starting with file_path={file_path}, collection_name={collection_name}")
+        print(f"🔍 process_document: chroma_client is None: {self.chroma_client is None}")
+        print(f"🔍 process_document: FAISS_AVAILABLE={FAISS_AVAILABLE}")
+        print(f"🔍 process_document: faiss_collections count: {len(self.faiss_collections)}")
+        
         # Check if ChromaDB is available, if not use FAISS fallback
         if self.chroma_client is None:
+            print("🔍 process_document: ChromaDB is None, checking FAISS availability...")
             if not FAISS_AVAILABLE:
+                print("❌ process_document: Neither ChromaDB nor FAISS is available")
                 raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
             else:
+                print("🔍 process_document: Using FAISS fallback")
                 # Use FAISS fallback
                 return await self._process_document_faiss(file_path, collection_name, chunk_size, chunk_overlap, description, tags, is_public)
         
+        print("🔍 process_document: Using ChromaDB")
+        
         # Extract text from document
+        print("🔍 process_document: Extracting text from document...")
         text = await self._extract_text(file_path)
+        print(f"🔍 process_document: Extracted text length: {len(text)}")
         
         # Split text into chunks
+        print("🔍 process_document: Splitting text into chunks...")
         chunks = self._split_text(text, chunk_size, chunk_overlap)
+        print(f"🔍 process_document: Created {len(chunks)} chunks")
         
         # Create or get collection with metadata
+        print("🔍 process_document: Creating collection metadata...")
         collection_metadata = {
             "description": description or f"Collection for {os.path.basename(file_path)}",
             "tags": json.dumps(tags or []),  # Convert list to JSON string
@@ -252,16 +297,22 @@ class RAGService:
             "last_updated": datetime.now().isoformat()
         }
         
+        print(f"🔍 process_document: Getting or creating collection '{collection_name}'...")
         collection = self.chroma_client.get_or_create_collection(
             name=collection_name,
             metadata=collection_metadata
         )
+        print("🔍 process_document: Collection retrieved successfully")
         
         # Generate embeddings and add to collection
+        print("🔍 process_document: Loading embedding model...")
         self._load_embedding_model()
+        print("🔍 process_document: Generating embeddings...")
         embeddings = self.embedding_model.encode(chunks)
+        print(f"🔍 process_document: Generated embeddings shape: {embeddings.shape}")
         
         # Prepare documents for insertion
+        print("🔍 process_document: Preparing documents for insertion...")
         documents = []
         metadatas = []
         ids = []
@@ -277,38 +328,54 @@ class RAGService:
             ids.append(doc_id)
         
         # Add to collection
+        print("🔍 process_document: Adding documents to collection...")
         collection.add(
             documents=documents,
             embeddings=embeddings.tolist(),
             metadatas=metadatas,
             ids=ids
         )
+        print("🔍 process_document: Documents added successfully")
         
-        return {
+        result = {
             "collection_name": collection_name,
             "document_name": os.path.basename(file_path),
             "chunks_processed": len(chunks),
             "collection_size": collection.count()
         }
+        print(f"🔍 process_document: Returning result: {result}")
+        return result
     
     async def _process_document_faiss(self, file_path: str, collection_name: str, 
                                      chunk_size: int = 1000, chunk_overlap: int = 200,
                                      description: str = None, tags: List[str] = None, 
                                      is_public: bool = False) -> Dict[str, Any]:
         """Process document using FAISS fallback"""
+        print(f"🔍 _process_document_faiss: Starting with file_path={file_path}, collection_name={collection_name}")
+        
         # Extract text from document
+        print("🔍 _process_document_faiss: Extracting text from document...")
         text = await self._extract_text(file_path)
+        print(f"🔍 _process_document_faiss: Extracted text length: {len(text)}")
         
         # Split text into chunks
+        print("🔍 _process_document_faiss: Splitting text into chunks...")
         chunks = self._split_text(text, chunk_size, chunk_overlap)
+        print(f"🔍 _process_document_faiss: Created {len(chunks)} chunks")
         
         # Load embedding model
+        print("🔍 _process_document_faiss: Loading embedding model...")
         self._load_embedding_model()
+        print("🔍 _process_document_faiss: Generating embeddings...")
         embeddings = self.embedding_model.encode(chunks)
+        print(f"🔍 _process_document_faiss: Generated embeddings shape: {embeddings.shape}")
         
         # Initialize collection if it doesn't exist
+        print(f"🔍 _process_document_faiss: Checking if collection '{collection_name}' exists...")
         if collection_name not in self.faiss_collections:
+            print(f"🔍 _process_document_faiss: Collection '{collection_name}' does not exist, creating new collection...")
             dimension = embeddings.shape[1]
+            print(f"🔍 _process_document_faiss: Creating FAISS index with dimension {dimension}")
             self.faiss_collections[collection_name] = {
                 'index': self._create_faiss_index(dimension),
                 'documents': [],
@@ -322,10 +389,15 @@ class RAGService:
                 "created_at": datetime.now().isoformat(),
                 "last_updated": datetime.now().isoformat()
             }
+            print(f"🔍 _process_document_faiss: Created new collection '{collection_name}'")
+        else:
+            print(f"🔍 _process_document_faiss: Collection '{collection_name}' already exists")
         
         # Add documents to collection
+        print("🔍 _process_document_faiss: Adding documents to collection...")
         collection = self.faiss_collections[collection_name]
         start_idx = len(collection['documents'])
+        print(f"🔍 _process_document_faiss: Starting at index {start_idx}")
         
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
             doc_id = str(uuid.uuid4())
@@ -337,21 +409,30 @@ class RAGService:
             })
             collection['ids'].append(doc_id)
         
+        print(f"🔍 _process_document_faiss: Added {len(chunks)} documents to collection")
+        
         # Add embeddings to FAISS index
+        print("🔍 _process_document_faiss: Adding embeddings to FAISS index...")
         collection['index'].add(embeddings.astype('float32'))
+        print("🔍 _process_document_faiss: Embeddings added to FAISS index")
         
         # Update metadata
+        print("🔍 _process_document_faiss: Updating collection metadata...")
         self.faiss_collection_metadata[collection_name]["last_updated"] = datetime.now().isoformat()
         
         # Save collections
+        print("🔍 _process_document_faiss: Saving collections to disk...")
         self._save_faiss_collections()
+        print("🔍 _process_document_faiss: Collections saved successfully")
         
-        return {
+        result = {
             "collection_name": collection_name,
             "document_name": os.path.basename(file_path),
             "chunks_processed": len(chunks),
             "collection_size": len(collection['documents'])
         }
+        print(f"🔍 _process_document_faiss: Returning result: {result}")
+        return result
     
     async def query_rag(self, request: RAGRequest) -> RAGResponse:
         """Query RAG system with document retrieval and generation"""
@@ -611,13 +692,18 @@ A:"""
     
     async def _extract_text(self, file_path: str) -> str:
         """Extract text from various document formats"""
+        print(f"🔍 _extract_text: Starting extraction from {file_path}")
         file_ext = os.path.splitext(file_path)[1].lower()
+        print(f"🔍 _extract_text: File extension: {file_ext}")
         
         if file_ext == '.pdf':
+            print("🔍 _extract_text: Processing PDF file...")
             return await self._extract_pdf_text(file_path)
         elif file_ext in ['.txt', '.md']:
+            print("🔍 _extract_text: Processing text file...")
             return await self._extract_text_file(file_path)
         else:
+            print(f"❌ _extract_text: Unsupported file format: {file_ext}")
             raise ValueError(f"Unsupported file format: {file_ext}")
     
     async def _extract_pdf_text(self, file_path: str) -> str:
@@ -636,24 +722,35 @@ A:"""
             raise ValueError(f"Error extracting text from PDF: {str(e)}")
     
     async def _extract_text_file(self, file_path: str) -> str:
-        """Extract text from text file"""
+        """Extract text from text files"""
+        print(f"🔍 _extract_text_file: Reading text file: {file_path}")
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                return f.read()
+                text = f.read()
+                print(f"🔍 _extract_text_file: Successfully read {len(text)} characters")
+                return text
         except Exception as e:
-            raise ValueError(f"Error reading text file: {str(e)}")
+            print(f"❌ _extract_text_file: Failed to read file: {e}")
+            raise
     
     def list_collections(self) -> List[CollectionInfo]:
         """List all collections"""
+        print("🔍 list_collections: Starting...")
+        print(f"🔍 list_collections: chroma_client is None: {self.chroma_client is None}")
+        print(f"🔍 list_collections: FAISS_AVAILABLE={FAISS_AVAILABLE}")
+        
         # Check if ChromaDB is available, if not use FAISS fallback
         if self.chroma_client is None:
+            print("🔍 list_collections: ChromaDB is None, checking FAISS availability...")
             if not FAISS_AVAILABLE:
-                print("⚠️  Neither ChromaDB nor FAISS available - returning empty collections list")
+                print("⚠️  list_collections: Neither ChromaDB nor FAISS available - returning empty collections list")
                 return []
             else:
+                print("🔍 list_collections: Using FAISS fallback")
                 # Use FAISS fallback
                 return self._list_collections_faiss()
         
+        print("🔍 list_collections: Using ChromaDB")
         try:
             collections = []
             for collection in self.chroma_client.list_collections():
@@ -681,9 +778,12 @@ A:"""
                     is_public=metadata.get("is_public", False),
                     owner=None  # TODO: Add user management
                 ))
+            print(f"🔍 list_collections: Found {len(collections)} ChromaDB collections")
             return collections
         except Exception as e:
-            print(f"❌ Error listing collections: {e}")
+            print(f"❌ list_collections: Error listing collections: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def _list_collections_faiss(self) -> List[CollectionInfo]:
