@@ -6,6 +6,7 @@ import RAG from './pages/RAG'
 import Configs from './pages/Configs'
 import Models from './pages/Models'
 import Comparison from './pages/Comparison'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/configs" element={<Configs />} />
           <Route path="/models" element={<Models />} />
           <Route path="/comparison" element={<Comparison />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </Layout>
       <Toaster />

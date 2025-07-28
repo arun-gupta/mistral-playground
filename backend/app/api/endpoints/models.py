@@ -8,6 +8,7 @@ from backend.app.models.requests import PromptRequest, ComparisonRequest, ModelD
 from backend.app.models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
 from backend.app.services.model_service import model_service
 from backend.app.services.download_service import download_service
+from .dashboard import record_performance_data, record_comparison_data
 
 router = APIRouter()
 
@@ -30,9 +31,16 @@ async def generate_response(request: PromptRequest):
         print("🔄 Calling model service...")
         response = await model_service.generate_response(request)
         print(f"✅ Model service returned: {response.text[:100]}...")
+        
+        # Record performance data for dashboard
+        record_performance_data(response, success=True)
+        
         return response
     except Exception as e:
         print(f"❌ Error in generate endpoint: {e}")
+        # Record failed request
+        if 'response' in locals():
+            record_performance_data(response, success=False)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/compare", response_model=ComparisonResponse)
@@ -44,12 +52,21 @@ async def compare_models(request: ComparisonRequest):
             request.models,
             request.parameters
         )
+        
+        # Record performance data for each model in comparison
+        for response in responses:
+            record_comparison_data(response, success=True)
+        
         return ComparisonResponse(
             prompt=request.prompt,
             responses=responses,
             comparison_id=str(uuid.uuid4())
         )
     except Exception as e:
+        # Record failed comparisons
+        if 'responses' in locals():
+            for response in responses:
+                record_comparison_data(response, success=False)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/test", response_model=dict)

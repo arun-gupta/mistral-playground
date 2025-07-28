@@ -14,6 +14,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Models', href: '/models', icon: '🤖' },
     { name: 'Comparison', href: '/comparison', icon: '🔍' },
     { name: 'RAG', href: '/rag', icon: '📚' },
+    { name: 'Dashboard', href: '/dashboard', icon: '📊' },
     { name: 'Configs', href: '/configs', icon: '⚙️' },
   ]
 
