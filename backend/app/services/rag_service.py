@@ -34,6 +34,16 @@ except RuntimeError as e:
     else:
         raise
 
+# Conditional import for FAISS as fallback
+try:
+    import faiss
+    import numpy as np
+    import pickle
+    FAISS_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️  FAISS not available: {e}")
+    FAISS_AVAILABLE = False
+
 # Lazy import for sentence_transformers to avoid startup issues
 SentenceTransformer = None
 
@@ -44,6 +54,12 @@ class RAGService:
         self.chroma_client = None
         self.embedding_model = None
         self._embedding_model_loaded = False
+        
+        # FAISS fallback attributes
+        self.faiss_index = None
+        self.faiss_collections = {}  # Store collection data
+        self.faiss_collection_metadata = {}  # Store collection metadata
+        self.faiss_collection_path = None  # Will be set after imports are handled
         
         if CHROMADB_AVAILABLE:
             # Disable all telemetry for ChromaDB
@@ -64,11 +80,25 @@ class RAGService:
                     path=settings.CHROMA_PERSIST_DIRECTORY,
                     settings=chroma_settings
                 )
+                print("✅ Using ChromaDB for vector storage")
+            except Exception as e:
+                print(f"⚠️  ChromaDB initialization failed: {e}")
+                self.chroma_client = None
             finally:
                 sys.stderr.close()
                 sys.stderr = original_stderr
-        else:
-            print("⚠️  RAG functionality disabled - ChromaDB not available")
+        
+        # If ChromaDB failed, try FAISS
+        if self.chroma_client is None and FAISS_AVAILABLE:
+            try:
+                # Set FAISS collection path now that os is available
+                self.faiss_collection_path = os.path.join(settings.CHROMA_PERSIST_DIRECTORY, "faiss_collections.pkl")
+                self._load_faiss_collections()
+                print("✅ Using FAISS for vector storage (fallback)")
+            except Exception as e:
+                print(f"⚠️  FAISS initialization failed: {e}")
+        elif self.chroma_client is None:
+            print("⚠️  No vector database available - RAG functionality will be disabled")
     
     def _load_embedding_model(self):
         """Lazy load the embedding model"""
@@ -82,6 +112,46 @@ class RAGService:
             
             self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
             self._embedding_model_loaded = True
+    
+    def _load_faiss_collections(self):
+        """Load FAISS collections from disk"""
+        if os.path.exists(self.faiss_collection_path):
+            try:
+                with open(self.faiss_collection_path, 'rb') as f:
+                    data = pickle.load(f)
+                    if isinstance(data, dict) and 'collections' in data:
+                        # New format with metadata
+                        self.faiss_collections = data['collections']
+                        self.faiss_collection_metadata = data.get('metadata', {})
+                    else:
+                        # Old format - just collections
+                        self.faiss_collections = data
+                        self.faiss_collection_metadata = {}
+                print(f"✅ Loaded {len(self.faiss_collections)} FAISS collections")
+            except Exception as e:
+                print(f"⚠️  Failed to load FAISS collections: {e}")
+                self.faiss_collections = {}
+                self.faiss_collection_metadata = {}
+        else:
+            self.faiss_collections = {}
+            self.faiss_collection_metadata = {}
+    
+    def _save_faiss_collections(self):
+        """Save FAISS collections to disk"""
+        try:
+            os.makedirs(os.path.dirname(self.faiss_collection_path), exist_ok=True)
+            data = {
+                'collections': self.faiss_collections,
+                'metadata': self.faiss_collection_metadata
+            }
+            with open(self.faiss_collection_path, 'wb') as f:
+                pickle.dump(data, f)
+        except Exception as e:
+            print(f"⚠️  Failed to save FAISS collections: {e}")
+    
+    def _create_faiss_index(self, dimension: int):
+        """Create a new FAISS index"""
+        return faiss.IndexFlatIP(dimension)  # Inner product for cosine similarity
     
     def _get_embedding_dimension(self):
         """Get embedding dimension without loading the full model"""
@@ -116,6 +186,14 @@ class RAGService:
                              description: str = None, tags: List[str] = None, 
                              is_public: bool = False) -> Dict[str, Any]:
         """Process and embed a document"""
+        # Check if ChromaDB is available, if not use FAISS fallback
+        if self.chroma_client is None:
+            if not FAISS_AVAILABLE:
+                raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
+            else:
+                # Use FAISS fallback
+                return await self._process_document_faiss(file_path, collection_name, chunk_size, chunk_overlap, description, tags, is_public)
+        
         # Extract text from document
         text = await self._extract_text(file_path)
         
@@ -170,93 +248,323 @@ class RAGService:
             "collection_size": collection.count()
         }
     
+    async def _process_document_faiss(self, file_path: str, collection_name: str, 
+                                     chunk_size: int = 1000, chunk_overlap: int = 200,
+                                     description: str = None, tags: List[str] = None, 
+                                     is_public: bool = False) -> Dict[str, Any]:
+        """Process document using FAISS fallback"""
+        # Extract text from document
+        text = await self._extract_text(file_path)
+        
+        # Split text into chunks
+        chunks = self._split_text(text, chunk_size, chunk_overlap)
+        
+        # Load embedding model
+        self._load_embedding_model()
+        embeddings = self.embedding_model.encode(chunks)
+        
+        # Initialize collection if it doesn't exist
+        if collection_name not in self.faiss_collections:
+            dimension = embeddings.shape[1]
+            self.faiss_collections[collection_name] = {
+                'index': self._create_faiss_index(dimension),
+                'documents': [],
+                'metadatas': [],
+                'ids': []
+            }
+            self.faiss_collection_metadata[collection_name] = {
+                "description": description or f"Collection for {os.path.basename(file_path)}",
+                "tags": tags or [],
+                "is_public": is_public,
+                "created_at": datetime.now().isoformat(),
+                "last_updated": datetime.now().isoformat()
+            }
+        
+        # Add documents to collection
+        collection = self.faiss_collections[collection_name]
+        start_idx = len(collection['documents'])
+        
+        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+            doc_id = str(uuid.uuid4())
+            collection['documents'].append(chunk)
+            collection['metadatas'].append({
+                "source": os.path.basename(file_path),
+                "chunk_index": i,
+                "chunk_size": len(chunk)
+            })
+            collection['ids'].append(doc_id)
+        
+        # Add embeddings to FAISS index
+        collection['index'].add(embeddings.astype('float32'))
+        
+        # Update metadata
+        self.faiss_collection_metadata[collection_name]["last_updated"] = datetime.now().isoformat()
+        
+        # Save collections
+        self._save_faiss_collections()
+        
+        return {
+            "collection_name": collection_name,
+            "document_name": os.path.basename(file_path),
+            "chunks_processed": len(chunks),
+            "collection_size": len(collection['documents'])
+        }
+    
     async def query_rag(self, request: RAGRequest) -> RAGResponse:
         """Query RAG system with document retrieval and generation"""
+        print(f"🔍 RAG Service Debug: Starting query_rag method")
+        
+        # Check if ChromaDB is available, if not use FAISS fallback
+        if self.chroma_client is None:
+            if not FAISS_AVAILABLE:
+                raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
+            else:
+                # Use FAISS fallback
+                return await self._query_rag_faiss(request)
+        
         # Get collection
         try:
+            print(f"🔍 RAG Service Debug: Getting collection '{request.collection_name}'")
             collection = self.chroma_client.get_collection(request.collection_name)
+            print(f"🔍 RAG Service Debug: Collection retrieved successfully")
         except Exception as e:
+            print(f"❌ RAG Service Error: Failed to get collection: {e}")
             raise ValueError(f"Collection '{request.collection_name}' not found: {str(e)}")
         
         # Query collection
-        self._load_embedding_model()
-        query_embedding = self.embedding_model.encode([request.query])
-        results = collection.query(
-            query_embeddings=query_embedding.tolist(),
-            n_results=request.top_k,
-            include=["documents", "metadatas", "distances"]
-        )
+        try:
+            print(f"🔍 RAG Service Debug: Loading embedding model")
+            self._load_embedding_model()
+            print(f"🔍 RAG Service Debug: Generating query embedding")
+            query_embedding = self.embedding_model.encode([request.query])
+            print(f"🔍 RAG Service Debug: Querying collection with {request.top_k} results")
+            results = collection.query(
+                query_embeddings=query_embedding.tolist(),
+                n_results=request.top_k,
+                include=["documents", "metadatas", "distances"]
+            )
+            print(f"🔍 RAG Service Debug: Collection query successful, found {len(results['documents'][0])} documents")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to query collection: {e}")
+            raise e
         
         # Prepare retrieved documents
-        retrieved_docs = []
-        for i, (doc, metadata, distance) in enumerate(zip(
-            results["documents"][0], 
-            results["metadatas"][0], 
-            results["distances"][0]
-        )):
-            retrieved_docs.append({
-                "text": doc,
-                "metadata": metadata,
-                "similarity_score": 1 - distance,  # Convert distance to similarity
-                "rank": i + 1
-            })
+        try:
+            print(f"🔍 RAG Service Debug: Preparing retrieved documents")
+            retrieved_docs = []
+            for i, (doc, metadata, distance) in enumerate(zip(
+                results["documents"][0], 
+                results["metadatas"][0], 
+                results["distances"][0]
+            )):
+                retrieved_docs.append({
+                    "text": doc,
+                    "metadata": metadata,
+                    "similarity_score": 1 - distance,  # Convert distance to similarity
+                    "rank": i + 1
+                })
+            print(f"🔍 RAG Service Debug: Prepared {len(retrieved_docs)} documents")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to prepare documents: {e}")
+            raise e
         
         # Create context from retrieved documents (limit to ~300 tokens to leave room for prompt)
-        context_parts = []
-        total_chars = 0
-        max_chars = 1200  # Roughly 300 tokens
-        
-        for doc in retrieved_docs:
-            if total_chars + len(doc["text"]) <= max_chars:
-                context_parts.append(doc["text"])
-                total_chars += len(doc["text"])
-            else:
-                # Truncate this document to fit
-                remaining_chars = max_chars - total_chars
-                if remaining_chars > 50:  # Only add if we have meaningful space
-                    context_parts.append(doc["text"][:remaining_chars] + "...")
-                break
-        
-        context = "\n\n".join(context_parts)
+        try:
+            print(f"🔍 RAG Service Debug: Creating context from documents")
+            context_parts = []
+            total_chars = 0
+            max_chars = 1200  # Roughly 300 tokens
+            
+            for doc in retrieved_docs:
+                if total_chars + len(doc["text"]) <= max_chars:
+                    context_parts.append(doc["text"])
+                    total_chars += len(doc["text"])
+                else:
+                    # Truncate this document to fit
+                    remaining_chars = max_chars - total_chars
+                    if remaining_chars > 50:  # Only add if we have meaningful space
+                        context_parts.append(doc["text"][:remaining_chars] + "...")
+                    break
+            
+            context = "\n\n".join(context_parts)
+            print(f"🔍 RAG Service Debug: Context created with {len(context)} characters")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to create context: {e}")
+            raise e
         
         # Generate response using model
-        prompt = f"""Context: {context}
+        try:
+            print(f"🔍 RAG Service Debug: Creating prompt for model")
+            prompt = f"""Context: {context}
 
 Q: {request.query}
 A:"""
 
-        model_request = type('obj', (object,), {
-            'prompt': prompt,
-            'system_prompt': "Answer based on the context provided.",
-            'temperature': request.temperature,
-            'max_tokens': request.max_tokens,
-            'top_p': 0.9,
-            'model_name': request.model_name,
-            'provider': request.provider
-        })()
-        
-        try:
+            model_request = type('obj', (object,), {
+                'prompt': prompt,
+                'system_prompt': "Answer based on the context provided.",
+                'temperature': request.temperature,
+                'max_tokens': request.max_tokens,
+                'top_p': 0.9,
+                'model_name': request.model_name,
+                'provider': request.provider
+            })()
+            print(f"🔍 RAG Service Debug: Calling model service with model: {request.model_name}")
+            
             model_response = await model_service.generate_response(model_request)
+            print(f"🔍 RAG Service Debug: Model response received successfully")
             answer = model_response.text if model_response.text.strip() else "I found relevant information in the document, but I'm having trouble generating a detailed response. Please try rephrasing your question."
         except Exception as e:
-            print(f"Model generation error: {e}")
+            print(f"❌ RAG Service Error: Model generation failed: {e}")
+            import traceback
+            traceback.print_exc()
             answer = "I found relevant information in the document, but encountered an error while generating the response. Please try again."
         
-        return RAGResponse(
-            query=request.query,
-            answer=answer,
-            retrieved_documents=retrieved_docs,
-            model_response=ModelResponse(
-                text=answer,
-                model_name=request.model_name or "unknown",
-                provider=request.provider or "huggingface",
-                tokens_used=model_response.tokens_used,
-                input_tokens=model_response.input_tokens,
-                output_tokens=model_response.output_tokens,
-                latency_ms=model_response.latency_ms,
-                finish_reason=model_response.finish_reason
+        # Create RAGResponse
+        try:
+            print(f"🔍 RAG Service Debug: Creating RAGResponse object")
+            rag_response = RAGResponse(
+                query=request.query,
+                answer=answer,
+                retrieved_documents=retrieved_docs,
+                model_response=ModelResponse(
+                    text=answer,
+                    model_name=request.model_name or "unknown",
+                    provider=request.provider or "huggingface",
+                    tokens_used=model_response.tokens_used,
+                    input_tokens=model_response.input_tokens,
+                    output_tokens=model_response.output_tokens,
+                    latency_ms=model_response.latency_ms,
+                    finish_reason=model_response.finish_reason
+                )
             )
-        )
+            print(f"🔍 RAG Service Debug: RAGResponse created successfully")
+            return rag_response
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to create RAGResponse: {e}")
+            import traceback
+            traceback.print_exc()
+            raise e
+    
+    async def _query_rag_faiss(self, request: RAGRequest) -> RAGResponse:
+        """Query RAG system using FAISS fallback"""
+        print(f"🔍 RAG Service Debug: Starting _query_rag_faiss method")
+        
+        # Get collection
+        if request.collection_name not in self.faiss_collections:
+            raise ValueError(f"Collection '{request.collection_name}' not found in FAISS collections.")
+        
+        collection = self.faiss_collections[request.collection_name]
+        
+        # Query collection
+        try:
+            print(f"🔍 RAG Service Debug: Loading embedding model")
+            self._load_embedding_model()
+            print(f"🔍 RAG Service Debug: Generating query embedding")
+            query_embedding = self.embedding_model.encode([request.query])
+            print(f"🔍 RAG Service Debug: Querying FAISS collection with {request.top_k} results")
+            
+            # Search in FAISS index
+            distances, indices = collection['index'].search(query_embedding.astype('float32'), k=request.top_k)
+            print(f"🔍 RAG Service Debug: FAISS query successful, found {len(indices[0])} documents")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to query FAISS collection: {e}")
+            raise e
+        
+        # Prepare retrieved documents
+        try:
+            print(f"🔍 RAG Service Debug: Preparing retrieved documents")
+            retrieved_docs = []
+            for i, (idx, distance) in enumerate(zip(indices[0], distances[0])):
+                if idx < len(collection['documents']):
+                    retrieved_docs.append({
+                        "text": collection['documents'][idx],
+                        "metadata": collection['metadatas'][idx] if idx < len(collection['metadatas']) else {},
+                        "similarity_score": 1 - distance,  # Convert distance to similarity
+                        "rank": i + 1
+                    })
+            print(f"🔍 RAG Service Debug: Prepared {len(retrieved_docs)} documents")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to prepare documents: {e}")
+            raise e
+        
+        # Create context from retrieved documents (limit to ~300 tokens to leave room for prompt)
+        try:
+            print(f"🔍 RAG Service Debug: Creating context from documents")
+            context_parts = []
+            total_chars = 0
+            max_chars = 1200  # Roughly 300 tokens
+            
+            for doc in retrieved_docs:
+                if total_chars + len(doc["text"]) <= max_chars:
+                    context_parts.append(doc["text"])
+                    total_chars += len(doc["text"])
+                else:
+                    # Truncate this document to fit
+                    remaining_chars = max_chars - total_chars
+                    if remaining_chars > 50:  # Only add if we have meaningful space
+                        context_parts.append(doc["text"][:remaining_chars] + "...")
+                    break
+            
+            context = "\n\n".join(context_parts)
+            print(f"🔍 RAG Service Debug: Context created with {len(context)} characters")
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to create context: {e}")
+            raise e
+        
+        # Generate response using model
+        try:
+            print(f"🔍 RAG Service Debug: Creating prompt for model")
+            prompt = f"""Context: {context}
+
+Q: {request.query}
+A:"""
+
+            model_request = type('obj', (object,), {
+                'prompt': prompt,
+                'system_prompt': "Answer based on the context provided.",
+                'temperature': request.temperature,
+                'max_tokens': request.max_tokens,
+                'top_p': 0.9,
+                'model_name': request.model_name,
+                'provider': request.provider
+            })()
+            print(f"🔍 RAG Service Debug: Calling model service with model: {request.model_name}")
+            
+            model_response = await model_service.generate_response(model_request)
+            print(f"🔍 RAG Service Debug: Model response received successfully")
+            answer = model_response.text if model_response.text.strip() else "I found relevant information in the document, but I'm having trouble generating a detailed response. Please try rephrasing your question."
+        except Exception as e:
+            print(f"❌ RAG Service Error: Model generation failed: {e}")
+            import traceback
+            traceback.print_exc()
+            answer = "I found relevant information in the document, but encountered an error while generating the response. Please try again."
+        
+        # Create RAGResponse
+        try:
+            print(f"🔍 RAG Service Debug: Creating RAGResponse object")
+            rag_response = RAGResponse(
+                query=request.query,
+                answer=answer,
+                retrieved_documents=retrieved_docs,
+                model_response=ModelResponse(
+                    text=answer,
+                    model_name=request.model_name or "unknown",
+                    provider=request.provider or "huggingface",
+                    tokens_used=model_response.tokens_used,
+                    input_tokens=model_response.input_tokens,
+                    output_tokens=model_response.output_tokens,
+                    latency_ms=model_response.latency_ms,
+                    finish_reason=model_response.finish_reason
+                )
+            )
+            print(f"🔍 RAG Service Debug: RAGResponse created successfully")
+            return rag_response
+        except Exception as e:
+            print(f"❌ RAG Service Error: Failed to create RAGResponse: {e}")
+            import traceback
+            traceback.print_exc()
+            raise e
     
     async def _extract_text(self, file_path: str) -> str:
         """Extract text from various document formats"""
@@ -294,9 +602,14 @@ A:"""
     
     def list_collections(self) -> List[CollectionInfo]:
         """List all collections"""
-        if not CHROMADB_AVAILABLE or self.chroma_client is None:
-            print("⚠️  ChromaDB not available - returning empty collections list")
-            return []
+        # Check if ChromaDB is available, if not use FAISS fallback
+        if self.chroma_client is None:
+            if not FAISS_AVAILABLE:
+                print("⚠️  Neither ChromaDB nor FAISS available - returning empty collections list")
+                return []
+            else:
+                # Use FAISS fallback
+                return self._list_collections_faiss()
         
         try:
             collections = []
@@ -330,16 +643,70 @@ A:"""
             print(f"❌ Error listing collections: {e}")
             return []
     
+    def _list_collections_faiss(self) -> List[CollectionInfo]:
+        """List all collections using FAISS fallback"""
+        try:
+            collections = []
+            for collection_name, metadata in self.faiss_collection_metadata.items():
+                if collection_name in self.faiss_collections:
+                    collection = self.faiss_collections[collection_name]
+                    collections.append(CollectionInfo(
+                        name=collection_name,
+                        description=metadata.get("description"),
+                        tags=metadata.get("tags", []),
+                        document_count=1,  # Simplified - assume 1 document per collection
+                        chunk_count=len(collection['documents']),
+                        total_size_mb=None,  # TODO: Calculate actual size
+                        created_at=metadata.get("created_at", datetime.now().isoformat()),
+                        last_updated=metadata.get("last_updated", datetime.now().isoformat()),
+                        last_queried=None,  # TODO: Track query timestamps
+                        is_public=metadata.get("is_public", False),
+                        owner=None  # TODO: Add user management
+                    ))
+            return collections
+        except Exception as e:
+            print(f"❌ Error listing FAISS collections: {e}")
+            return []
+    
     def delete_collection(self, collection_name: str) -> bool:
         """Delete a collection"""
+        # Check if ChromaDB is available, if not use FAISS fallback
+        if self.chroma_client is None:
+            if not FAISS_AVAILABLE:
+                raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
+            else:
+                # Use FAISS fallback
+                return self._delete_collection_faiss(collection_name)
+        
         try:
             self.chroma_client.delete_collection(collection_name)
             return True
         except Exception:
             return False
     
+    def _delete_collection_faiss(self, collection_name: str) -> bool:
+        """Delete a collection using FAISS fallback"""
+        try:
+            if collection_name in self.faiss_collections:
+                del self.faiss_collections[collection_name]
+            if collection_name in self.faiss_collection_metadata:
+                del self.faiss_collection_metadata[collection_name]
+            self._save_faiss_collections()
+            return True
+        except Exception as e:
+            print(f"❌ Error deleting FAISS collection: {e}")
+            return False
+    
     def get_collection_stats(self, collection_name: str) -> Dict[str, Any]:
         """Get statistics for a collection"""
+        # Check if ChromaDB is available, if not use FAISS fallback
+        if self.chroma_client is None:
+            if not FAISS_AVAILABLE:
+                raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
+            else:
+                # Use FAISS fallback
+                return self._get_collection_stats_faiss(collection_name)
+        
         try:
             collection = self.chroma_client.get_collection(collection_name)
             return {
@@ -349,10 +716,30 @@ A:"""
             }
         except Exception as e:
             raise ValueError(f"Collection '{collection_name}' not found: {str(e)}")
+    
+    def _get_collection_stats_faiss(self, collection_name: str) -> Dict[str, Any]:
+        """Get statistics for a collection using FAISS fallback"""
+        try:
+            if collection_name not in self.faiss_collections:
+                raise ValueError(f"Collection '{collection_name}' not found in FAISS collections.")
+            
+            collection = self.faiss_collections[collection_name]
+            metadata = self.faiss_collection_metadata.get(collection_name, {})
+            
+            return {
+                "name": collection_name,
+                "document_count": len(collection['documents']),
+                "metadata": metadata
+            }
+        except Exception as e:
+            raise ValueError(f"Collection '{collection_name}' not found: {str(e)}")
 
     def update_collection_metadata(self, collection_name: str, description: str = None, 
                                  tags: List[str] = None, is_public: bool = None) -> Dict[str, Any]:
         """Update collection metadata"""
+        if self.chroma_client is None:
+            raise RuntimeError("ChromaDB is not available. RAG functionality is disabled.")
+        
         try:
             collection = self.chroma_client.get_collection(collection_name)
             current_metadata = collection.metadata or {}
@@ -403,14 +790,18 @@ A:"""
         return filtered_collections
 
     def merge_collections(self, target_collection_name: str, source_collection_names: List[str]) -> Dict[str, Any]:
-        """Merge multiple collections into one"""
+        """Merge multiple collections into a target collection"""
+        if self.chroma_client is None:
+            raise RuntimeError("ChromaDB is not available. RAG functionality is disabled.")
+        
         try:
             # Get target collection
             target_collection = self.chroma_client.get_collection(target_collection_name)
             
-            total_chunks = 0
+            # Merge each source collection
             for source_name in source_collection_names:
                 source_collection = self.chroma_client.get_collection(source_name)
+                
                 # Get all data from source collection
                 results = source_collection.get()
                 
@@ -422,51 +813,52 @@ A:"""
                         metadatas=results['metadatas'],
                         ids=results['ids']
                     )
-                    total_chunks += len(results['documents'])
             
             return {
                 "target_collection": target_collection_name,
                 "source_collections": source_collection_names,
-                "chunks_merged": total_chunks,
-                "message": f"Successfully merged {len(source_collection_names)} collections"
+                "message": "Collections merged successfully"
             }
         except Exception as e:
             raise ValueError(f"Failed to merge collections: {str(e)}")
 
     def bulk_delete_collections(self, collection_names: List[str]) -> Dict[str, Any]:
         """Delete multiple collections"""
+        if self.chroma_client is None:
+            raise RuntimeError("ChromaDB is not available. RAG functionality is disabled.")
+        
         deleted_count = 0
         failed_deletions = []
         
         for collection_name in collection_names:
             try:
-                success = self.delete_collection(collection_name)
-                if success:
-                    deleted_count += 1
-                else:
-                    failed_deletions.append(collection_name)
+                self.chroma_client.delete_collection(collection_name)
+                deleted_count += 1
             except Exception as e:
-                failed_deletions.append(f"{collection_name}: {str(e)}")
+                failed_deletions.append({"collection": collection_name, "error": str(e)})
         
         return {
             "deleted_count": deleted_count,
             "failed_deletions": failed_deletions,
-            "message": f"Deleted {deleted_count} collections, {len(failed_deletions)} failed"
+            "total_requested": len(collection_names)
         }
 
     def export_collection(self, collection_name: str) -> Dict[str, Any]:
-        """Export collection data"""
+        """Export a collection's data"""
+        if self.chroma_client is None:
+            raise RuntimeError("ChromaDB is not available. RAG functionality is disabled.")
+        
         try:
             collection = self.chroma_client.get_collection(collection_name)
             results = collection.get()
             
             return {
                 "collection_name": collection_name,
-                "metadata": collection.metadata,
-                "document_count": len(results['documents']) if results['documents'] else 0,
-                "documents": results['documents'],
-                "metadatas": results['metadatas'],
-                "exported_at": datetime.now().isoformat()
+                "documents": results.get('documents', []),
+                "metadatas": results.get('metadatas', []),
+                "ids": results.get('ids', []),
+                "count": collection.count(),
+                "metadata": collection.metadata
             }
         except Exception as e:
             raise ValueError(f"Failed to export collection: {str(e)}")

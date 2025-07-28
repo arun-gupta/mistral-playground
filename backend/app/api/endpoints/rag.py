@@ -14,10 +14,20 @@ router = APIRouter()
 async def query_rag(request: RAGRequest):
     """Query RAG system with document retrieval and generation"""
     try:
+        print(f"🔍 RAG Query Debug: Starting query for collection '{request.collection_name}'")
+        print(f"🔍 RAG Query Debug: Request details: {request}")
+        
         response = await rag_service.query_rag(request)
+        print(f"🔍 RAG Query Debug: Response generated successfully")
         return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        print(f"❌ RAG Query Error: {str(e)}")
+        print(f"❌ RAG Query Error Traceback:")
+        traceback.print_exc()
+        print(f"❌ RAG Query Error Type: {type(e).__name__}")
+        print(f"❌ RAG Query Error Args: {e.args}")
+        raise HTTPException(status_code=500, detail=f"RAG Query failed: {str(e)}")
 
 @router.post("/upload")
 async def upload_document(

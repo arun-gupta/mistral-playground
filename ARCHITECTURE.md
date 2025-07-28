@@ -39,9 +39,11 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 - **Quantized Models**: ctransformers for GGUF model support
 
 ### **Vector Database**
-- **Engine**: ChromaDB for document storage and retrieval
+- **Primary Engine**: ChromaDB for document storage and retrieval
+- **Fallback Engine**: FAISS for environments with ChromaDB compatibility issues (e.g., Codespaces)
 - **Embeddings**: SentenceTransformers for text embedding
 - **Persistence**: Local file-based storage with configurable directory
+- **Automatic Fallback**: System automatically switches to FAISS when ChromaDB fails to initialize
 
 ### **Document Processing**
 - **Formats**: PDF, TXT, MD support
@@ -133,10 +135,15 @@ mistral-playground/
 1. **Document Upload**: User uploads document via frontend
 2. **Document Processing**: Backend processes and chunks document
 3. **Embedding Generation**: Text chunks are converted to embeddings
-4. **Vector Storage**: Embeddings stored in ChromaDB
+4. **Vector Storage**: Embeddings stored in ChromaDB (or FAISS fallback)
 5. **Query Processing**: User query converted to embedding
-6. **Similarity Search**: ChromaDB finds relevant document chunks
+6. **Similarity Search**: Vector database finds relevant document chunks
 7. **Response Generation**: Model generates response using retrieved context
+
+**Vector Database Selection**:
+- **Primary**: ChromaDB with full metadata support
+- **Fallback**: FAISS with basic similarity search
+- **Automatic**: System chooses based on environment compatibility
 
 ### **Model Management Flow**
 1. **Model Discovery**: Backend fetches available models from providers
@@ -241,3 +248,37 @@ mistral-playground/
 - **Model Caching**: Intelligent model caching strategies
 - **Request Queuing**: Queue-based request processing
 - **Resource Management**: Dynamic resource allocation 
+
+## 🔄 **Fallback Strategies**
+
+### **Vector Database Fallback**
+The system implements intelligent fallback strategies to ensure reliability across different environments:
+
+#### **Primary: ChromaDB**
+- **Use Case**: Production environments, local development with full dependencies
+- **Features**: Full-featured vector database with metadata support
+- **Persistence**: Built-in persistent storage
+- **Query Capabilities**: Advanced filtering and metadata queries
+
+#### **Fallback: FAISS**
+- **Use Case**: Codespaces, environments with SQLite version conflicts, minimal dependency setups
+- **Features**: Lightweight, fast similarity search
+- **Persistence**: Custom pickle-based storage
+- **Compatibility**: Works reliably in restricted environments
+
+#### **Automatic Detection**
+- **Initialization**: System attempts ChromaDB first
+- **Failure Handling**: Graceful fallback to FAISS if ChromaDB fails
+- **User Notification**: Clear messaging about which vector database is being used
+- **Feature Parity**: Both systems provide the same core RAG functionality
+
+### **Model Inference Fallback**
+- **Primary**: vLLM for GPU acceleration
+- **Fallback**: Hugging Face Transformers for CPU inference
+- **Alternative**: Ollama for easy local model management
+- **Quantized**: ctransformers for GGUF models
+
+### **Document Processing Fallback**
+- **Primary**: PyMuPDF for PDF processing
+- **Fallback**: Basic text extraction for unsupported formats
+- **Error Handling**: Graceful degradation with user feedback 

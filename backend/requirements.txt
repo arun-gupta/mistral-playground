@@ -12,6 +12,7 @@ ctransformers==0.2.27  # For GGUF model support
 
 # Vector database and embeddings
 chromadb==0.4.22
+faiss-cpu==1.7.4  # Alternative vector database for Codespaces
 sentence-transformers==2.2.2
 
 # Document processing

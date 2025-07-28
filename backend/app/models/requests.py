@@ -46,6 +46,8 @@ class ComparisonRequest(BaseModel):
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Generation parameters")
 
 class RAGRequest(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
     """Request model for RAG-based inference"""
     query: str = Field(..., description="The query for RAG")
     collection_name: str = Field(..., description="ChromaDB collection name")
