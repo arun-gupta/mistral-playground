@@ -7,24 +7,50 @@ import asyncio
 import json
 from datetime import datetime
 
+print("🔍 RAG Service: Starting module import...")
+
 # Conditional import for PyMuPDF
 try:
     import fitz  # PyMuPDF
     PYMUPDF_AVAILABLE = True
+    print("✅ PyMuPDF imported successfully")
 except ImportError as e:
     print(f"⚠️  PyMuPDF not available: {e}")
     PYMUPDF_AVAILABLE = False
 
-from backend.app.core.config import settings
-from backend.app.models.requests import RAGRequest
-from backend.app.models.responses import RAGResponse, DocumentChunk, CollectionInfo, ModelResponse
-from backend.app.services.model_service import model_service
+print("🔍 RAG Service: Importing config and models...")
+
+try:
+    from backend.app.core.config import settings
+    print("✅ Config imported successfully")
+except Exception as e:
+    print(f"❌ Failed to import config: {e}")
+    raise
+
+try:
+    from backend.app.models.requests import RAGRequest
+    from backend.app.models.responses import RAGResponse, DocumentChunk, CollectionInfo, ModelResponse
+    print("✅ Models imported successfully")
+except Exception as e:
+    print(f"❌ Failed to import models: {e}")
+    raise
+
+try:
+    from backend.app.services.model_service import model_service
+    print("✅ Model service imported successfully")
+except Exception as e:
+    print(f"❌ Failed to import model service: {e}")
+    raise
+
+print("🔍 RAG Service: Config and models imported successfully")
 
 # Conditional import for ChromaDB to avoid SQLite version issues
 try:
+    print("🔍 RAG Service: Attempting to import ChromaDB...")
     import chromadb
     from chromadb.config import Settings
     CHROMADB_AVAILABLE = True
+    print("✅ ChromaDB imported successfully")
 except ImportError as e:
     print(f"⚠️  ChromaDB not available: {e}")
     CHROMADB_AVAILABLE = False
@@ -37,7 +63,7 @@ except RuntimeError as e:
 
 # Conditional import for FAISS as fallback
 try:
-    print("🔍 Attempting to import FAISS...")
+    print("🔍 RAG Service: Attempting to import FAISS...")
     import faiss
     print("✅ FAISS imported successfully")
     import numpy as np
@@ -47,6 +73,8 @@ try:
 except ImportError as e:
     print(f"⚠️  FAISS not available: {e}")
     FAISS_AVAILABLE = False
+
+print(f"🔍 RAG Service: Import status - CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}, FAISS_AVAILABLE={FAISS_AVAILABLE}")
 
 # Lazy import for sentence_transformers to avoid startup issues
 SentenceTransformer = None
@@ -427,7 +455,7 @@ A:"""
             print(f"🔍 RAG Service Debug: Calling model service with model: {request.model_name}")
             
             model_response = await model_service.generate_response(model_request)
-            print(f"�� RAG Service Debug: Model response received successfully")
+            print(f"🔍 RAG Service Debug: Model response received successfully")
             answer = model_response.text if model_response.text.strip() else "I found relevant information in the document, but I'm having trouble generating a detailed response. Please try rephrasing your question."
         except Exception as e:
             print(f"❌ RAG Service Error: Model generation failed: {e}")
@@ -879,4 +907,6 @@ A:"""
             raise ValueError(f"Failed to export collection: {str(e)}")
 
 # Global RAG service instance
-rag_service = RAGService() 
+print("🔍 RAG Service: Creating global instance...")
+rag_service = RAGService()
+print("🔍 RAG Service: Global instance created successfully") 
