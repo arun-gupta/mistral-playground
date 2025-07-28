@@ -72,6 +72,30 @@ try:
     print("✅ FAISS_AVAILABLE set to True")
 except ImportError as e:
     print(f"⚠️  FAISS not available: {e}")
+    print("🔍 RAG Service: Trying alternative FAISS import methods...")
+    
+    # Try alternative import methods
+    try:
+        print("🔍 RAG Service: Trying 'import faiss' without numpy...")
+        import faiss
+        print("✅ FAISS imported successfully (without numpy)")
+        FAISS_AVAILABLE = True
+    except ImportError as e2:
+        print(f"⚠️  Alternative FAISS import failed: {e2}")
+        FAISS_AVAILABLE = False
+    
+    # Try to import numpy separately
+    try:
+        print("🔍 RAG Service: Trying to import numpy separately...")
+        import numpy as np
+        print("✅ NumPy imported successfully (separately)")
+    except ImportError as e3:
+        print(f"⚠️  NumPy import failed: {e3}")
+        FAISS_AVAILABLE = False
+except Exception as e:
+    print(f"⚠️  Unexpected error during FAISS import: {e}")
+    import traceback
+    traceback.print_exc()
     FAISS_AVAILABLE = False
 
 print(f"🔍 RAG Service: Import status - CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}, FAISS_AVAILABLE={FAISS_AVAILABLE}")
@@ -93,6 +117,11 @@ class RAGService:
         self.faiss_collections = {}  # Store collection data
         self.faiss_collection_metadata = {}  # Store collection metadata
         self.faiss_collection_path = None  # Will be set after imports are handled
+        
+        # Simple in-memory fallback when no vector database is available
+        self.use_simple_fallback = False
+        self.simple_collections = {}  # Simple in-memory storage
+        self.simple_collection_metadata = {}
         
         print(f"🔍 RAGService.__init__: CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}")
         
@@ -146,9 +175,14 @@ class RAGService:
         elif self.chroma_client is None:
             print("⚠️  RAGService.__init__: No vector database available - RAG functionality will be disabled")
             print(f"🔍 RAGService.__init__: Debug - CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}, FAISS_AVAILABLE={FAISS_AVAILABLE}")
+            
+            # Enable simple in-memory fallback
+            print("🔍 RAGService.__init__: Enabling simple in-memory fallback for basic RAG functionality")
+            self.use_simple_fallback = True
         
         print(f"🔍 RAGService.__init__: Final state - chroma_client is None: {self.chroma_client is None}")
         print(f"🔍 RAGService.__init__: Final state - faiss_collections count: {len(self.faiss_collections)}")
+        print(f"🔍 RAGService.__init__: Final state - use_simple_fallback: {self.use_simple_fallback}")
         print("🔍 RAGService.__init__: Initialization completed")
     
     def _load_embedding_model(self):
@@ -268,8 +302,13 @@ class RAGService:
         if self.chroma_client is None:
             print("🔍 process_document: ChromaDB is None, checking FAISS availability...")
             if not FAISS_AVAILABLE:
-                print("❌ process_document: Neither ChromaDB nor FAISS is available")
-                raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
+                print("🔍 process_document: FAISS not available, checking simple fallback...")
+                if self.use_simple_fallback:
+                    print("🔍 process_document: Using simple in-memory fallback")
+                    return await self._process_document_simple(file_path, collection_name, chunk_size, chunk_overlap, description, tags, is_public)
+                else:
+                    print("❌ process_document: Neither ChromaDB nor FAISS is available")
+                    raise RuntimeError("Neither ChromaDB nor FAISS is available. RAG functionality is disabled.")
             else:
                 print("🔍 process_document: Using FAISS fallback")
                 # Use FAISS fallback
@@ -432,6 +471,74 @@ class RAGService:
             "collection_size": len(collection['documents'])
         }
         print(f"🔍 _process_document_faiss: Returning result: {result}")
+        return result
+    
+    async def _process_document_simple(self, file_path: str, collection_name: str, 
+                                      chunk_size: int = 1000, chunk_overlap: int = 200,
+                                      description: str = None, tags: List[str] = None, 
+                                      is_public: bool = False) -> Dict[str, Any]:
+        """Process document using simple in-memory fallback (no vector similarity)"""
+        print(f"🔍 _process_document_simple: Starting with file_path={file_path}, collection_name={collection_name}")
+        
+        # Extract text from document
+        print("🔍 _process_document_simple: Extracting text from document...")
+        text = await self._extract_text(file_path)
+        print(f"🔍 _process_document_simple: Extracted text length: {len(text)}")
+        
+        # Split text into chunks
+        print("🔍 _process_document_simple: Splitting text into chunks...")
+        chunks = self._split_text(text, chunk_size, chunk_overlap)
+        print(f"🔍 _process_document_simple: Created {len(chunks)} chunks")
+        
+        # Initialize collection if it doesn't exist
+        print(f"🔍 _process_document_simple: Checking if collection '{collection_name}' exists...")
+        if collection_name not in self.simple_collections:
+            print(f"🔍 _process_document_simple: Collection '{collection_name}' does not exist, creating new collection...")
+            self.simple_collections[collection_name] = {
+                'documents': [],
+                'metadatas': [],
+                'ids': []
+            }
+            self.simple_collection_metadata[collection_name] = {
+                "description": description or f"Collection for {os.path.basename(file_path)}",
+                "tags": tags or [],
+                "is_public": is_public,
+                "created_at": datetime.now().isoformat(),
+                "last_updated": datetime.now().isoformat()
+            }
+            print(f"🔍 _process_document_simple: Created new collection '{collection_name}'")
+        else:
+            print(f"🔍 _process_document_simple: Collection '{collection_name}' already exists")
+        
+        # Add documents to collection
+        print("🔍 _process_document_simple: Adding documents to collection...")
+        collection = self.simple_collections[collection_name]
+        start_idx = len(collection['documents'])
+        print(f"🔍 _process_document_simple: Starting at index {start_idx}")
+        
+        for i, chunk in enumerate(chunks):
+            doc_id = str(uuid.uuid4())
+            collection['documents'].append(chunk)
+            collection['metadatas'].append({
+                "source": os.path.basename(file_path),
+                "chunk_index": i,
+                "chunk_size": len(chunk)
+            })
+            collection['ids'].append(doc_id)
+        
+        print(f"🔍 _process_document_simple: Added {len(chunks)} documents to collection")
+        
+        # Update metadata
+        print("🔍 _process_document_simple: Updating collection metadata...")
+        self.simple_collection_metadata[collection_name]["last_updated"] = datetime.now().isoformat()
+        
+        result = {
+            "collection_name": collection_name,
+            "document_name": os.path.basename(file_path),
+            "chunks_processed": len(chunks),
+            "collection_size": len(collection['documents'])
+        }
+        print(f"🔍 _process_document_simple: Returning result: {result}")
         return result
     
     async def query_rag(self, request: RAGRequest) -> RAGResponse:
@@ -743,8 +850,13 @@ A:"""
         if self.chroma_client is None:
             print("🔍 list_collections: ChromaDB is None, checking FAISS availability...")
             if not FAISS_AVAILABLE:
-                print("⚠️  list_collections: Neither ChromaDB nor FAISS available - returning empty collections list")
-                return []
+                print("🔍 list_collections: FAISS not available, checking simple fallback...")
+                if self.use_simple_fallback:
+                    print("🔍 list_collections: Using simple in-memory fallback")
+                    return self._list_collections_simple()
+                else:
+                    print("⚠️  list_collections: Neither ChromaDB nor FAISS available - returning empty collections list")
+                    return []
             else:
                 print("🔍 list_collections: Using FAISS fallback")
                 # Use FAISS fallback
@@ -809,6 +921,31 @@ A:"""
             return collections
         except Exception as e:
             print(f"❌ Error listing FAISS collections: {e}")
+            return []
+    
+    def _list_collections_simple(self) -> List[CollectionInfo]:
+        """List all collections using simple in-memory fallback"""
+        try:
+            collections = []
+            for collection_name, metadata in self.simple_collection_metadata.items():
+                if collection_name in self.simple_collections:
+                    collection = self.simple_collections[collection_name]
+                    collections.append(CollectionInfo(
+                        name=collection_name,
+                        description=metadata.get("description"),
+                        tags=metadata.get("tags", []),
+                        document_count=len(collection['documents']),
+                        chunk_count=len(collection['documents']), # Simple in-memory, no chunk count
+                        total_size_mb=None, # No direct size calculation for simple fallback
+                        created_at=metadata.get("created_at", datetime.now().isoformat()),
+                        last_updated=metadata.get("last_updated", datetime.now().isoformat()),
+                        last_queried=None, # No query tracking for simple fallback
+                        is_public=metadata.get("is_public", False),
+                        owner=None # No user management for simple fallback
+                    ))
+            return collections
+        except Exception as e:
+            print(f"❌ Error listing simple collections: {e}")
             return []
     
     def delete_collection(self, collection_name: str) -> bool:
