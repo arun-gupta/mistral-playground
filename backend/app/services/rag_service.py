@@ -1,6 +1,7 @@
 import os
 import uuid
 import re
+import pickle
 from typing import List, Dict, Any, Optional
 import asyncio
 import json
@@ -36,10 +37,13 @@ except RuntimeError as e:
 
 # Conditional import for FAISS as fallback
 try:
+    print("🔍 Attempting to import FAISS...")
     import faiss
+    print("✅ FAISS imported successfully")
     import numpy as np
-    import pickle
+    print("✅ NumPy imported successfully")
     FAISS_AVAILABLE = True
+    print("✅ FAISS_AVAILABLE set to True")
 except ImportError as e:
     print(f"⚠️  FAISS not available: {e}")
     FAISS_AVAILABLE = False
@@ -91,14 +95,19 @@ class RAGService:
         # If ChromaDB failed, try FAISS
         if self.chroma_client is None and FAISS_AVAILABLE:
             try:
+                print(f"🔍 Attempting FAISS initialization...")
                 # Set FAISS collection path now that os is available
                 self.faiss_collection_path = os.path.join(settings.CHROMA_PERSIST_DIRECTORY, "faiss_collections.pkl")
+                print(f"🔍 FAISS collection path: {self.faiss_collection_path}")
                 self._load_faiss_collections()
                 print("✅ Using FAISS for vector storage (fallback)")
             except Exception as e:
                 print(f"⚠️  FAISS initialization failed: {e}")
+                import traceback
+                traceback.print_exc()
         elif self.chroma_client is None:
             print("⚠️  No vector database available - RAG functionality will be disabled")
+            print(f"🔍 Debug: CHROMADB_AVAILABLE={CHROMADB_AVAILABLE}, FAISS_AVAILABLE={FAISS_AVAILABLE}")
     
     def _load_embedding_model(self):
         """Lazy load the embedding model"""
@@ -115,24 +124,30 @@ class RAGService:
     
     def _load_faiss_collections(self):
         """Load FAISS collections from disk"""
+        print(f"🔍 Loading FAISS collections from: {self.faiss_collection_path}")
         if os.path.exists(self.faiss_collection_path):
             try:
+                print("🔍 FAISS collections file exists, loading...")
                 with open(self.faiss_collection_path, 'rb') as f:
                     data = pickle.load(f)
                     if isinstance(data, dict) and 'collections' in data:
                         # New format with metadata
                         self.faiss_collections = data['collections']
                         self.faiss_collection_metadata = data.get('metadata', {})
+                        print(f"✅ Loaded {len(self.faiss_collections)} FAISS collections (new format)")
                     else:
                         # Old format - just collections
                         self.faiss_collections = data
                         self.faiss_collection_metadata = {}
-                print(f"✅ Loaded {len(self.faiss_collections)} FAISS collections")
+                        print(f"✅ Loaded {len(self.faiss_collections)} FAISS collections (old format)")
             except Exception as e:
                 print(f"⚠️  Failed to load FAISS collections: {e}")
+                import traceback
+                traceback.print_exc()
                 self.faiss_collections = {}
                 self.faiss_collection_metadata = {}
         else:
+            print("🔍 No existing FAISS collections file found, starting fresh")
             self.faiss_collections = {}
             self.faiss_collection_metadata = {}
     
@@ -412,7 +427,7 @@ A:"""
             print(f"🔍 RAG Service Debug: Calling model service with model: {request.model_name}")
             
             model_response = await model_service.generate_response(model_request)
-            print(f"🔍 RAG Service Debug: Model response received successfully")
+            print(f"�� RAG Service Debug: Model response received successfully")
             answer = model_response.text if model_response.text.strip() else "I found relevant information in the document, but I'm having trouble generating a detailed response. Please try rephrasing your question."
         except Exception as e:
             print(f"❌ RAG Service Error: Model generation failed: {e}")
