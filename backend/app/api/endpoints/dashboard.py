@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 import time
 import psutil
 import os
-from ..models.responses import ModelResponse, ModelComparison
-from ...services.model_service import ModelService
-from ...core.config import settings
+from backend.app.models.responses import ModelResponse, ModelComparison
+from backend.app.services.model_service import model_service
+from backend.app.core.config import settings
 
 router = APIRouter()
 
@@ -212,9 +212,9 @@ async def get_system_metrics():
         uptime_str = f"{uptime_hours}h {uptime_minutes}m"
         
         # Get model information
-        model_service = ModelService()
-        available_models = await model_service.list_models()
-        active_models = len([m for m in available_models if m.get('is_loaded', False)])
+        available_models = model_service.get_available_models()
+        # For now, assume all available models are active (simplified)
+        active_models = len(available_models)
         total_models = len(available_models)
         
         return {
