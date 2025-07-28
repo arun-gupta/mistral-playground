@@ -16,6 +16,7 @@ torch==2.2.2
 accelerate==0.25.0
 ctransformers==0.2.27  # For GGUF model support
 huggingface-hub>=0.19.3
+sentence-transformers==2.2.2  # For text embeddings
 
 # Document processing
 pymupdf==1.23.8  # For PDF text extraction

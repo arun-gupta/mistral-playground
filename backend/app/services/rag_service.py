@@ -822,19 +822,11 @@ A:"""
         
         # Query collection
         try:
-            print(f"🔍 RAG Service Debug: Loading embedding model")
-            self._load_embedding_model()
-            print(f"🔍 RAG Service Debug: Generating query embedding")
-            query_embedding = self.embedding_model.encode([request.query])
+            print(f"�� RAG Service Debug: Using keyword-based search (no embedding model needed)")
             print(f"🔍 RAG Service Debug: Querying simple collection with {request.top_k} results")
             
-            # Search in simple collection (no vector similarity, just text matching)
-            # This is a placeholder. In a real system, you'd need a more sophisticated search
-            # For example, using Levenshtein distance or keyword matching.
-            # For now, we'll just return all documents as retrieved.
-            retrieved_docs = []
-            
             # Simple keyword-based search
+            retrieved_docs = []
             query_terms = request.query.lower().split()
             scored_docs = []
             
