@@ -1,0 +1,13 @@
+# Mistral Playground - Welcome Message
+echo ""
+echo "🎉 Welcome to Mistral Playground!"
+echo "=================================="
+echo "📋 Quick Commands:"
+echo "   🚀 ./welcome-message.sh    - Get started guide"
+echo "   📄 ./show-logs.sh          - Check logs and status"
+echo "   🌐 ./show-codespaces-urls.sh - Get access URLs"
+echo "   📊 ./show-logs.sh && ./show-codespaces-urls.sh - Full status"
+echo ""
+echo "💡 Services are starting in the background..."
+echo "📄 Logs: tail -f /tmp/setup.log"
+echo "" 

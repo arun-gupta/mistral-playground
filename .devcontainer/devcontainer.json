@@ -29,6 +29,7 @@
         "esbenp.prettier-vscode",
         "ms-vscode.vscode-json"
       ],
+
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.linting.enabled": true,
@@ -53,6 +54,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postStartCommand": "bash -c 'chmod +x .devcontainer/setup-and-start.sh && .devcontainer/setup-and-start.sh > /tmp/setup.log 2>&1 & echo \"🚀 Services starting in background. Check logs with: tail -f /tmp/setup.log\"'",
+  "postStartCommand": "bash -c 'chmod +x .devcontainer/setup-and-start.sh && .devcontainer/setup-and-start.sh > /tmp/setup.log 2>&1 & echo \"source .devcontainer/bashrc-additions\" >> ~/.bashrc && echo \"\" && echo \"🎉 Mistral Playground is starting up!\" && echo \"📋 Quick commands: ./welcome-message.sh | ./show-logs.sh | ./show-codespaces-urls.sh\" && echo \"📄 Logs: tail -f /tmp/setup.log\" && echo \"\"'",
   "remoteUser": "vscode"
 } 
