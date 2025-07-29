@@ -21,16 +21,36 @@ fi
 echo "🔍 Service Status:"
 echo "------------------"
 
-# Check backend
+# Check backend - multiple methods
+BACKEND_RUNNING=false
 if lsof -i :8000 > /dev/null 2>&1; then
+    BACKEND_RUNNING=true
+elif netstat -tlnp 2>/dev/null | grep :8000 > /dev/null; then
+    BACKEND_RUNNING=true
+elif ss -tlnp 2>/dev/null | grep :8000 > /dev/null; then
+    BACKEND_RUNNING=true
+fi
+
+if [ "$BACKEND_RUNNING" = true ]; then
     echo "✅ Backend (port 8000): Running"
-    echo "   Health check: $(curl -s http://localhost:8000/health 2>/dev/null | head -1 || echo 'Not responding')"
+    # Try health check with timeout
+    HEALTH_CHECK=$(timeout 3 curl -s http://localhost:8000/health 2>/dev/null | head -1 || echo 'Not responding')
+    echo "   Health check: $HEALTH_CHECK"
 else
     echo "❌ Backend (port 8000): Not running"
 fi
 
-# Check frontend
+# Check frontend - multiple methods
+FRONTEND_RUNNING=false
 if lsof -i :5173 > /dev/null 2>&1; then
+    FRONTEND_RUNNING=true
+elif netstat -tlnp 2>/dev/null | grep :5173 > /dev/null; then
+    FRONTEND_RUNNING=true
+elif ss -tlnp 2>/dev/null | grep :5173 > /dev/null; then
+    FRONTEND_RUNNING=true
+fi
+
+if [ "$FRONTEND_RUNNING" = true ]; then
     echo "✅ Frontend (port 5173): Running"
 else
     echo "❌ Frontend (port 5173): Not running"

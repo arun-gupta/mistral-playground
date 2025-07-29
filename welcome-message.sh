@@ -7,13 +7,31 @@ echo ""
 
 # Check if services are running
 echo "🔍 Checking service status..."
+BACKEND_RUNNING=false
 if lsof -i :8000 > /dev/null 2>&1; then
+    BACKEND_RUNNING=true
+elif netstat -tlnp 2>/dev/null | grep :8000 > /dev/null; then
+    BACKEND_RUNNING=true
+elif ss -tlnp 2>/dev/null | grep :8000 > /dev/null; then
+    BACKEND_RUNNING=true
+fi
+
+if [ "$BACKEND_RUNNING" = true ]; then
     echo "✅ Backend (port 8000): Running"
 else
     echo "❌ Backend (port 8000): Not running"
 fi
 
+FRONTEND_RUNNING=false
 if lsof -i :5173 > /dev/null 2>&1; then
+    FRONTEND_RUNNING=true
+elif netstat -tlnp 2>/dev/null | grep :5173 > /dev/null; then
+    FRONTEND_RUNNING=true
+elif ss -tlnp 2>/dev/null | grep :5173 > /dev/null; then
+    FRONTEND_RUNNING=true
+fi
+
+if [ "$FRONTEND_RUNNING" = true ]; then
     echo "✅ Frontend (port 5173): Running"
 else
     echo "❌ Frontend (port 5173): Not running"
@@ -21,7 +39,7 @@ fi
 
 echo ""
 echo "📋 Quick Commands:"
-echo "   🚀 Start services: .devcontainer/setup-and-start.sh"
+echo "   🚀 Start services: ./start-services.sh"
 echo "   📄 Check logs: ./show-logs.sh"
 echo "   🌐 Get URLs: ./show-codespaces-urls.sh"
 echo "   📊 Full status: ./show-logs.sh && ./show-codespaces-urls.sh"
