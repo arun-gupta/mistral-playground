@@ -652,9 +652,17 @@ const Comparison = () => {
                         </Badge>
                       )}
                       {isGatedModel(modelName) && (
-                        <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
-                          🔒 Gated
-                        </Badge>
+                        <a
+                          href={`https://huggingface.co/${encodeURIComponent(modelName)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block"
+                          title="Click to visit HuggingFace page and request access"
+                        >
+                          <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs cursor-pointer hover:bg-red-200 transition-colors">
+                            🔒 Gated
+                          </Badge>
+                        </a>
                       )}
                       {isSelected && (
                         <Badge variant="default" className="text-xs">
