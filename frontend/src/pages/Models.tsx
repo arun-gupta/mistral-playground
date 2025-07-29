@@ -51,6 +51,7 @@ const Models = () => {
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
   const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)  // Toggle for GPU recommended models
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
+  const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const { toast } = useToast()
 
   // Model categorization and filtering logic
@@ -201,6 +202,11 @@ const Models = () => {
     // Apply CPU compatibility filter
     if (showCPUOnly) {
       filteredModels = filteredModels.filter(model => isCPUCompatible(model.name))
+    }
+
+    // Apply no authentication required filter
+    if (showNoAuthRequired) {
+      filteredModels = filteredModels.filter(model => !isGatedModel(model.name))
     }
 
     // Apply advanced variants filter
@@ -1174,6 +1180,32 @@ const Models = () => {
                       </button>
                       <span className="text-xs font-medium text-green-800">
                         {showCPUOnly ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* No Authentication Required Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div>
+                      <span className="text-sm font-medium text-yellow-800">No Auth Required</span>
+                      <p className="text-xs text-yellow-600 mt-1">Hide gated models</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${
+                          showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            showNoAuthRequired ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-medium text-yellow-800">
+                        {showNoAuthRequired ? 'ON' : 'OFF'}
                       </span>
                     </div>
                   </div>

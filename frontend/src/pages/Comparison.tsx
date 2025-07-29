@@ -47,6 +47,8 @@ const Comparison = () => {
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)
   const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)
+  const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
+  const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const [filterBy, setFilterBy] = useState<'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'>('all')
   const [sortBy, setSortBy] = useState<'size' | 'name' | 'status'>('size')
   const [showAdvanced, setShowAdvanced] = useState(true)
@@ -143,6 +145,59 @@ const Comparison = () => {
     return gpuRecommended.includes(modelName)
   }
 
+  // Check if model works well on CPU
+  const isCPUCompatible = (modelName: string): boolean => {
+    // Models that work well on CPU (smaller models, GGUF variants, etc.)
+    const cpuCompatible = [
+      // Small models that work well on CPU
+      'microsoft/DialoGPT-small',
+      'microsoft/DialoGPT-medium',
+      'microsoft/DialoGPT-large',
+      'google/gemma-2b-it',
+      'google/gemma-2b',
+      
+      // GGUF variants (optimized for CPU)
+      'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
+      
+      // Small Mistral variants
+      'mistralai/Mistral-7B-Instruct-v0.2',
+      'mistralai/Mistral-7B-v0.1',
+      
+      // Small Llama variants
+      'meta-llama/Meta-Llama-3-8B-Instruct',
+      'meta-llama/Meta-Llama-3-8B'
+    ]
+    
+    // Also include any model with "GGUF" in the name (CPU-optimized format)
+    if (modelName.includes('GGUF')) return true
+    
+    // Include small models (2B and under)
+    if (getModelSize(modelName) <= 2) return true
+    
+    return cpuCompatible.includes(modelName)
+  }
+
+  // Check if model requires authentication (gated)
+  const isGatedModel = (modelName: string): boolean => {
+    const gatedModels = [
+      'meta-llama/Meta-Llama-3-8B-Instruct',
+      'meta-llama/Meta-Llama-3-8B',
+      'meta-llama/Meta-Llama-3-14B-Instruct',
+      'meta-llama/Meta-Llama-3-14B',
+      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
+      'google/gemma-2b-it',
+      'google/gemma-2b',
+      'google/gemma-7b-it',
+      'google/gemma-7b'
+    ]
+    return gatedModels.includes(modelName)
+  }
+
   // Get filtered available models based on toggle state
   const getFilteredAvailableModels = () => {
     let filtered = availableModels
@@ -188,6 +243,16 @@ const Comparison = () => {
     // Apply GPU recommended filter
     if (showGPURecommendedOnly) {
       filtered = filtered.filter(modelName => isGPURecommended(modelName))
+    }
+
+    // Apply CPU compatibility filter
+    if (showCPUOnly) {
+      filtered = filtered.filter(modelName => isCPUCompatible(modelName))
+    }
+
+    // Apply no authentication required filter
+    if (showNoAuthRequired) {
+      filtered = filtered.filter(modelName => !isGatedModel(modelName))
     }
 
     // Apply sorting
@@ -487,6 +552,58 @@ const Comparison = () => {
                     </span>
                   </div>
                 </div>
+
+                {/* CPU Compatible Models Toggle */}
+                <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-green-800">Works on CPU</span>
+                    <p className="text-xs text-green-600 mt-1">Show CPU-compatible models</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowCPUOnly(!showCPUOnly)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                        showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showCPUOnly ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-green-800">
+                      {showCPUOnly ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* No Authentication Required Toggle */}
+                <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <div>
+                    <span className="text-sm font-medium text-yellow-800">No Auth Required</span>
+                    <p className="text-xs text-yellow-600 mt-1">Hide gated models</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${
+                        showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showNoAuthRequired ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-yellow-800">
+                      {showNoAuthRequired ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -517,6 +634,16 @@ const Comparison = () => {
                       {isLoaded && (
                         <Badge variant="secondary" className="text-xs">
                           ✅ Loaded
+                        </Badge>
+                      )}
+                      {isCPUCompatible(modelName) && (
+                        <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
+                          💻 CPU
+                        </Badge>
+                      )}
+                      {isGatedModel(modelName) && (
+                        <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
+                          🔒 Gated
                         </Badge>
                       )}
                       {isSelected && (
