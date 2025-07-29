@@ -52,6 +52,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postStartCommand": "bash -c '.devcontainer/startup.sh'",
+  "postCreateCommand": "bash -c '.devcontainer/startup.sh'",
   "remoteUser": "vscode"
 } 
