@@ -172,7 +172,18 @@ class DownloadService:
                 "meta-llama/Meta-Llama-3-14B",
                 "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",
                 "TheBloke/Meta-Llama-3-10B-Instruct-GGUF",
-                "TheBloke/Meta-Llama-3-14B-Instruct-GGUF"
+                "TheBloke/Meta-Llama-3-14B-Instruct-GGUF",
+                # Google Gemma models (all require authentication)
+                "google/gemma-2b-it",
+                "google/gemma-2b",
+                "google/gemma-7b-it",
+                "google/gemma-7b",
+                "google/gemma-3n-E4B-it",
+                "google/gemma-3n-E4B-it-litert-preview",
+                "google/gemma-3n-E2B-it-litert-preview",
+                "google/gemma-3-4b-it",
+                "google/gemma-3n-E2B-it",
+                "google/gemma-3-27b-it"
             ]
             
             if model_name in gated_models:
@@ -190,7 +201,7 @@ To access this model:
 Alternative models that don't require authentication:
 • TheBloke/Mistral-7B-Instruct-v0.2-GGUF (Recommended)
 • microsoft/DialoGPT-small (For testing)
-• google/gemma-2b-it (Google's open model)
+• TheBloke/Meta-Llama-3-8B-Instruct-GGUF (CPU optimized)
 """
                 print(error_msg)
                 

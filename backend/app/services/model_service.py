@@ -325,6 +325,7 @@ Alternative models that don't require authentication:
             if "401" in str(e) or "gated" in str(e).lower():
                 print(f"🔒 This is a gated model that requires authentication.")
                 print(f"💡 Try using an open model like 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF' instead.")
+                print(f"💡 Or use 'microsoft/DialoGPT-small' for testing.")
                 raise Exception(f"Gated model access required for {model_name}. Use an open model instead.")
             
             # Fallback to a smaller model
