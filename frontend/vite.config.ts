@@ -4,6 +4,10 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Ensure environment variables are available
+    'process.env': process.env,
+  },
   resolve: {
     alias: {
       "@": "/src",
@@ -12,6 +16,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: '0.0.0.0', // Allow external connections for Codespaces
+    strictPort: true, // Ensure the exact port is used
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000', // Use explicit IPv4 address
@@ -29,6 +34,7 @@ export default defineConfig({
     // Disable Vite's ping mechanism to prevent connection refused errors
     hmr: {
       overlay: false, // Disable error overlay for network errors
+      clientPort: 5173, // Ensure HMR uses the correct port
     },
   },
   // Suppress console errors for connection refused
