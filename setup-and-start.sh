@@ -140,9 +140,20 @@ if command -v node &> /dev/null && command -v npm &> /dev/null; then
     echo ""
     echo "🎉 All services started successfully!"
     echo ""
-    echo "📱 Frontend: http://localhost:5173"
-    echo "🔧 Backend API: http://localhost:8000"
-    echo "📚 API Docs: http://localhost:8000/docs"
+    
+    # Detect environment and show appropriate URLs
+    if [ -n "$CODESPACES" ] || [ -n "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN" ]; then
+        echo "✅ Running in GitHub Codespaces"
+        CODESPACE_NAME=${CODESPACE_NAME:-$(hostname | sed 's/-[0-9]*$//')}
+        echo "📱 Frontend: https://${CODESPACE_NAME}-5173.app.github.dev"
+        echo "🔧 Backend API: https://${CODESPACE_NAME}-8000.app.github.dev"
+        echo "📚 API Docs: https://${CODESPACE_NAME}-8000.app.github.dev/docs"
+    else
+        echo "🏠 Running locally"
+        echo "📱 Frontend: http://localhost:5173"
+        echo "🔧 Backend API: http://localhost:8000"
+        echo "📚 API Docs: http://localhost:8000/docs"
+    fi
     echo ""
     echo "Press Ctrl+C to stop all services"
 else

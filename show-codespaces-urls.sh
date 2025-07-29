@@ -4,8 +4,8 @@ echo "🌐 Mistral Playground - Access URLs"
 echo "==================================="
 echo ""
 
-# Check if we're in Codespaces
-if [ -n "$CODESPACES" ] || [ -n "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN" ]; then
+# Check if we're in Codespaces (multiple indicators)
+if [ -n "$CODESPACES" ] || [ -n "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN" ] || [ -d "/workspaces" ] || [[ "$(hostname)" == *"-"* && "$(hostname)" != "MacBookPro.lan" ]]; then
     echo "✅ Running in GitHub Codespaces"
     echo ""
     
