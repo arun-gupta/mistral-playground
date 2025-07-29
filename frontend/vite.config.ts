@@ -21,6 +21,7 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:8000', // Use explicit IPv4 address
         changeOrigin: true,
+        secure: false, // Allow insecure connections for local development
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('🔌 Proxy error:', err.message);
@@ -31,11 +32,8 @@ export default defineConfig({
         },
       },
     },
-    // Disable Vite's ping mechanism to prevent connection refused errors
-    hmr: {
-      overlay: false, // Disable error overlay for network errors
-      clientPort: 5173, // Ensure HMR uses the correct port
-    },
+    // HMR configuration for Codespaces
+    hmr: false, // Disable HMR to prevent refreshing issues in Codespaces
   },
   // Suppress console errors for connection refused
   logLevel: 'warn',
