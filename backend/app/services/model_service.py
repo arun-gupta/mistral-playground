@@ -326,6 +326,7 @@ Alternative models that don't require authentication:
                 print(f"🔒 This is a gated model that requires authentication.")
                 print(f"💡 Try using an open model like 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF' instead.")
                 print(f"💡 Or use 'microsoft/DialoGPT-small' for testing.")
+                print(f"💡 For Llama models, try 'TheBloke/Meta-Llama-3-8B-Instruct-GGUF' (CPU optimized).")
                 raise Exception(f"Gated model access required for {model_name}. Use an open model instead.")
             
             # Fallback to a smaller model

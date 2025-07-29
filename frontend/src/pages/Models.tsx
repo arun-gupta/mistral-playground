@@ -114,10 +114,16 @@ const Models = () => {
   // Check if model requires authentication (gated)
   const isGatedModel = (modelName: string): boolean => {
     const gatedModels = [
+      // Meta Llama models (all require authentication)
       'meta-llama/Meta-Llama-3-8B-Instruct',
       'meta-llama/Meta-Llama-3-8B',
       'meta-llama/Meta-Llama-3-14B-Instruct',
       'meta-llama/Meta-Llama-3-14B',
+      'meta-llama/Llama-3.1-8B-Instruct',
+      'meta-llama/Llama-3.2-3B-Instruct',
+      'meta-llama/Llama-3.2-1B',
+      'meta-llama/Llama-3.3-70B-Instruct',
+      'meta-llama/Llama-4-Scout-17B-16E-Instruct',
       'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
       'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
       'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
