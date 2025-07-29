@@ -651,6 +651,15 @@ const Comparison = () => {
                           💻 CPU
                         </Badge>
                       )}
+                      {isGPURecommended(modelName) && (
+                        <Badge 
+                          variant="default" 
+                          className="bg-orange-100 text-orange-800 border-orange-200 text-xs cursor-help"
+                          title="This model will be very slow on CPU. Consider GPU setup for better performance."
+                        >
+                          🚀 GPU Recommended
+                        </Badge>
+                      )}
                       {isGatedModel(modelName) && (
                         <a
                           href={`https://huggingface.co/${encodeURIComponent(modelName)}`}

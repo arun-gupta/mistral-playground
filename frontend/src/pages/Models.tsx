@@ -1272,7 +1272,11 @@ const Models = () => {
                               </Badge>
                             )}
                             {isGPURecommended(model.name) && (
-                              <Badge variant="default" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                              <Badge 
+                                variant="default" 
+                                className="bg-orange-100 text-orange-800 border-orange-200 text-xs cursor-help"
+                                title="This model will be very slow on CPU. Consider GPU setup for better performance."
+                              >
                                 🚀 GPU Recommended
                               </Badge>
                             )}
@@ -1428,14 +1432,7 @@ const Models = () => {
                           </p>
                         )}
 
-                        {/* GPU Warning for GPU-recommended models */}
-                        {isGPURecommended(model.name) && (
-                          <div className="p-2 bg-orange-50 border border-orange-200 rounded-md">
-                            <p className="text-xs text-orange-800 text-center">
-                              <span className="font-medium">⚠️ GPU Recommended:</span> This model will be very slow on CPU. Consider GPU setup for better performance.
-                            </p>
-                          </div>
-                        )}
+
 
 
                       </CardContent>
