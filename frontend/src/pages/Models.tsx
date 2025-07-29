@@ -88,13 +88,12 @@ const Models = () => {
   }
 
   const isRecommended = (modelName: string): boolean => {
-    // Recommended models for different use cases
+    // Recommended models for different use cases (excluding gated models)
     const recommended = [
       'microsoft/DialoGPT-small', // Testing
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', // Production CPU
       'TheBloke/Meta-Llama-3-8B-Instruct-GGUF', // CPU-optimized Llama 3
       'TheBloke/Meta-Llama-3-14B-Instruct-GGUF', // High-quality Llama 3
-      'google/gemma-2b-it', // Efficient development
       'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF' // High performance
     ]
     return recommended.includes(modelName)
@@ -121,7 +120,11 @@ const Models = () => {
       'meta-llama/Meta-Llama-3-14B',
       'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
       'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
-      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF'
+      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
+      'google/gemma-2b-it',
+      'google/gemma-2b',
+      'google/gemma-7b-it',
+      'google/gemma-7b'
     ]
     return gatedModels.includes(modelName)
   }
@@ -134,8 +137,6 @@ const Models = () => {
       'microsoft/DialoGPT-small',
       'microsoft/DialoGPT-medium',
       'microsoft/DialoGPT-large',
-      'google/gemma-2b-it',
-      'google/gemma-2b',
       
       // GGUF variants (optimized for CPU)
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
@@ -155,8 +156,8 @@ const Models = () => {
     // Also include any model with "GGUF" in the name (CPU-optimized format)
     if (modelName.includes('GGUF')) return true
     
-    // Include small models (2B and under)
-    if (getModelSize(modelName) <= 2) return true
+    // Include small models (2B and under) that are not gated
+    if (getModelSize(modelName) <= 2 && !isGatedModel(modelName)) return true
     
     return cpuCompatible.includes(modelName)
   }

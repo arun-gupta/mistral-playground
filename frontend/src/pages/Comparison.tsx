@@ -129,7 +129,6 @@ const Comparison = () => {
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', // Production CPU
       'TheBloke/Meta-Llama-3-8B-Instruct-GGUF', // CPU-optimized Llama 3
       'TheBloke/Meta-Llama-3-14B-Instruct-GGUF', // High-quality Llama 3
-      'google/gemma-2b-it', // Efficient development
       'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF' // High performance
     ]
     return recommended.includes(modelName)
@@ -153,8 +152,6 @@ const Comparison = () => {
       'microsoft/DialoGPT-small',
       'microsoft/DialoGPT-medium',
       'microsoft/DialoGPT-large',
-      'google/gemma-2b-it',
-      'google/gemma-2b',
       
       // GGUF variants (optimized for CPU)
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
@@ -174,8 +171,8 @@ const Comparison = () => {
     // Also include any model with "GGUF" in the name (CPU-optimized format)
     if (modelName.includes('GGUF')) return true
     
-    // Include small models (2B and under)
-    if (getModelSize(modelName) <= 2) return true
+    // Include small models (2B and under) that are not gated
+    if (getModelSize(modelName) <= 2 && !isGatedModel(modelName)) return true
     
     return cpuCompatible.includes(modelName)
   }
@@ -713,13 +710,13 @@ const Comparison = () => {
                 size="sm"
                 className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
                 onClick={() => setSelectedModels([
-                  'google/gemma-2b-it',
-                  'google/gemma-7b-it'
+                  'microsoft/DialoGPT-small',
+                  'microsoft/DialoGPT-large'
                 ])}
               >
                 <div className="text-left">
-                  <div className="font-medium">🧠 Google Models</div>
-                  <div className="text-xs text-gray-600">Gemma 2B vs 7B</div>
+                  <div className="font-medium">🔬 Small vs Large</div>
+                  <div className="text-xs text-gray-600">DialoGPT comparison</div>
                 </div>
               </Button>
               
