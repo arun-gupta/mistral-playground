@@ -13,9 +13,6 @@
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "remoteEnv": {
-    "PYTHONPATH": "/workspaces/mistral-playground"
-  },
   "containerEnv": {
     "PYTHONPATH": "/workspaces/mistral-playground",
     "AUTO_START_SERVICES": "true"
