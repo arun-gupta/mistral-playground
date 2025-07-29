@@ -39,11 +39,11 @@ echo "Workspaces dir exists: $([ -d "/workspaces" ] && echo "yes" || echo "no")"
 if [ "$AUTO_START_SERVICES" = "true" ] || [ -n "$CODESPACES" ] || [ -d "/workspaces" ] || [ "$(hostname)" != "MacBookPro.lan" ]; then
     echo "🔄 Auto-starting services..." | tee -a /tmp/startup.log
     echo "📄 Logs will be saved to /tmp/setup.log" | tee -a /tmp/startup.log
-    .devcontainer/quick-start.sh > /tmp/setup.log 2>&1 &
+    .devcontainer/setup-and-start.sh > /tmp/setup.log 2>&1 &
     echo "✅ Services starting in background. Check logs with: tail -f /tmp/setup.log" | tee -a /tmp/startup.log
 else
     echo "📋 Services not auto-started." | tee -a /tmp/startup.log
-    echo "   Run '.devcontainer/quick-start.sh' to start them manually." | tee -a /tmp/startup.log
+    echo "   Run '.devcontainer/setup-and-start.sh' to start them manually." | tee -a /tmp/startup.log
 fi
 
 echo "" | tee -a /tmp/startup.log

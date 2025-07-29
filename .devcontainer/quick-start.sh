@@ -44,39 +44,14 @@ fi
 
 cd "$WORKSPACE_PATH"
 
-# Check and setup Python environment
-echo "🐍 Setting up Python environment..."
-
-# In Codespaces, Python is typically available globally
-if [ -d "venv" ]; then
-    echo "✅ Using local virtual environment"
-    source venv/bin/activate
-elif command -v python3 >/dev/null 2>&1; then
-    echo "✅ Using system Python (Codespaces)"
-    # In Codespaces, Python is typically available globally
-    export PYTHONPATH="$WORKSPACE_PATH"
-else
-    echo "❌ Python not found. Please ensure Python is installed."
+# Check if virtual environment exists
+if [ ! -d "venv" ]; then
+    echo "❌ Virtual environment not found. Please run the full setup first."
     exit 1
 fi
 
+source venv/bin/activate
 export PYTHONPATH="$WORKSPACE_PATH"
-
-# Check and install Python dependencies if needed
-echo "📦 Checking Python dependencies..."
-if [ ! -f "requirements.txt" ]; then
-    echo "⚠️  requirements.txt not found, skipping dependency check"
-elif ! python3 -c "import fastapi, uvicorn" 2>/dev/null; then
-    echo "⚠️  Python dependencies not found. Installing..."
-    pip install -r requirements.txt
-    if [ $? -ne 0 ]; then
-        echo "❌ Failed to install Python dependencies."
-        exit 1
-    fi
-    echo "✅ Python dependencies installed"
-else
-    echo "✅ Python dependencies found"
-fi
 
 # Start backend in background
 python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 > /tmp/backend.log 2>&1 &
@@ -99,19 +74,10 @@ echo ""
 echo "🎨 Starting Frontend Server..."
 cd "$WORKSPACE_PATH/frontend"
 
-# Check and setup frontend dependencies
-echo "📦 Checking frontend dependencies..."
-
+# Check if node_modules exists
 if [ ! -d "node_modules" ]; then
-    echo "⚠️  Frontend dependencies not found. Installing..."
-    npm install
-    if [ $? -ne 0 ]; then
-        echo "❌ Failed to install frontend dependencies."
-        exit 1
-    fi
-    echo "✅ Frontend dependencies installed"
-else
-    echo "✅ Frontend dependencies found"
+    echo "❌ Frontend dependencies not found. Please run the full setup first."
+    exit 1
 fi
 
 # Start frontend in background
