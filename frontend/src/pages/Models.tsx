@@ -50,6 +50,7 @@ const Models = () => {
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
   const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)  // Toggle for GPU recommended models
+  const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const { toast } = useToast()
 
   // Model categorization and filtering logic
@@ -124,6 +125,41 @@ const Models = () => {
     return gatedModels.includes(modelName)
   }
 
+  // Check if model works well on CPU
+  const isCPUCompatible = (modelName: string): boolean => {
+    // Models that work well on CPU (smaller models, GGUF variants, etc.)
+    const cpuCompatible = [
+      // Small models that work well on CPU
+      'microsoft/DialoGPT-small',
+      'microsoft/DialoGPT-medium',
+      'microsoft/DialoGPT-large',
+      'google/gemma-2b-it',
+      'google/gemma-2b',
+      
+      // GGUF variants (optimized for CPU)
+      'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
+      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
+      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
+      
+      // Small Mistral variants
+      'mistralai/Mistral-7B-Instruct-v0.2',
+      'mistralai/Mistral-7B-v0.1',
+      
+      // Small Llama variants
+      'meta-llama/Meta-Llama-3-8B-Instruct',
+      'meta-llama/Meta-Llama-3-8B'
+    ]
+    
+    // Also include any model with "GGUF" in the name (CPU-optimized format)
+    if (modelName.includes('GGUF')) return true
+    
+    // Include small models (2B and under)
+    if (getModelSize(modelName) <= 2) return true
+    
+    return cpuCompatible.includes(modelName)
+  }
+
   // Group and filter models
   const getGroupedModels = (): ModelGroup[] => {
     let filteredModels = models
@@ -160,6 +196,11 @@ const Models = () => {
     // Apply GPU recommended filter
     if (showGPURecommendedOnly) {
       filteredModels = filteredModels.filter(model => isGPURecommended(model.name))
+    }
+
+    // Apply CPU compatibility filter
+    if (showCPUOnly) {
+      filteredModels = filteredModels.filter(model => isCPUCompatible(model.name))
     }
 
     // Apply advanced variants filter
@@ -1110,6 +1151,32 @@ const Models = () => {
                       </span>
                     </div>
                   </div>
+
+                  {/* CPU Compatible Models Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div>
+                      <span className="text-sm font-medium text-green-800">Works on CPU</span>
+                      <p className="text-xs text-green-600 mt-1">Show CPU-compatible models</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowCPUOnly(!showCPUOnly)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                          showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            showCPUOnly ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-medium text-green-800">
+                        {showCPUOnly ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1161,6 +1228,11 @@ const Models = () => {
                             {isGPURecommended(model.name) && (
                               <Badge variant="default" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                                 🚀 GPU Recommended
+                              </Badge>
+                            )}
+                            {isCPUCompatible(model.name) && (
+                              <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
+                                💻 CPU Compatible
                               </Badge>
                             )}
                             {isGatedModel(model.name) && (
