@@ -34,7 +34,15 @@ fi
 # Start backend
 echo ""
 echo "🔧 Starting Backend Server..."
-cd /workspaces/mistral-playground
+
+# Detect workspace path (Codespaces vs local)
+if [ -d "/workspaces/mistral-playground" ]; then
+    WORKSPACE_PATH="/workspaces/mistral-playground"
+else
+    WORKSPACE_PATH="$(pwd)"
+fi
+
+cd "$WORKSPACE_PATH"
 
 # Check if virtual environment exists
 if [ ! -d "venv" ]; then
@@ -43,7 +51,7 @@ if [ ! -d "venv" ]; then
 fi
 
 source venv/bin/activate
-export PYTHONPATH=/workspaces/mistral-playground
+export PYTHONPATH="$WORKSPACE_PATH"
 
 # Start backend in background
 python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 > /tmp/backend.log 2>&1 &
@@ -64,7 +72,7 @@ done
 # Start frontend
 echo ""
 echo "🎨 Starting Frontend Server..."
-cd /workspaces/mistral-playground/frontend
+cd "$WORKSPACE_PATH/frontend"
 
 # Check if node_modules exists
 if [ ! -d "node_modules" ]; then
