@@ -40,7 +40,7 @@ fi
 echo ""
 echo "📋 Quick Commands:"
 echo "# 🚀 Start services:"
-echo ".devcontainer/setup-and-start.sh"
+echo ".devcontainer/quick-start.sh"
 echo ""
 echo "# 📄 Check logs:"
 echo "./show-logs.sh"
