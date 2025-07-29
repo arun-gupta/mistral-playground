@@ -1282,9 +1282,17 @@ const Models = () => {
                               </Badge>
                             )}
                             {isGatedModel(model.name) && (
-                              <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
-                                🔒 Requires Access
-                              </Badge>
+                              <a
+                                href={`https://huggingface.co/${encodeURIComponent(model.name)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block"
+                                title="Click to visit HuggingFace page and request access"
+                              >
+                                <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs cursor-pointer hover:bg-red-200 transition-colors">
+                                  🔒 Requires Access
+                                </Badge>
+                              </a>
                             )}
                             {model.is_loaded ? (
                               <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
@@ -1429,25 +1437,7 @@ const Models = () => {
                           </div>
                         )}
 
-                        {/* Gated Model Warning */}
-                        {isGatedModel(model.name) && (
-                          <div className="p-2 bg-red-50 border border-red-200 rounded-md">
-                            <p className="text-xs text-red-800 text-center mb-2">
-                              <span className="font-medium">🔒 Authentication Required:</span> This model requires Hugging Face access.
-                            </p>
-                            <a 
-                              href={`https://huggingface.co/${encodeURIComponent(model.name)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:text-blue-800 underline block text-center"
-                            >
-                              Visit model page to request access →
-                            </a>
-                            <p className="text-xs text-red-600 text-center mt-1">
-                              Look for "Request access" button on the model page
-                            </p>
-                          </div>
-                        )}
+
                       </CardContent>
                     </Card>
                   )
@@ -1525,7 +1515,7 @@ const Models = () => {
                 <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
                   🔒 Requires Access
                 </Badge>
-                <span className="text-sm text-red-700">Models that need Hugging Face authentication</span>
+                <span className="text-sm text-red-700">Models that need Hugging Face authentication (click badge to visit model page)</span>
               </div>
               <div className="text-sm text-red-700 space-y-2">
                 <p><strong>Why some models require authentication:</strong></p>
