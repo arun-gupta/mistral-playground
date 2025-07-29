@@ -1423,13 +1423,16 @@ const Models = () => {
                               <span className="font-medium">🔒 Authentication Required:</span> This model requires Hugging Face access.
                             </p>
                             <a 
-                              href={`https://huggingface.co/${model.name}`}
+                              href={`https://huggingface.co/${encodeURIComponent(model.name)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-blue-600 hover:text-blue-800 underline block text-center"
                             >
-                              Click here to request access →
+                              Visit model page to request access →
                             </a>
+                            <p className="text-xs text-red-600 text-center mt-1">
+                              Look for "Request access" button on the model page
+                            </p>
                           </div>
                         )}
                       </CardContent>

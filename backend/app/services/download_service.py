@@ -195,9 +195,11 @@ Alternative models that don't require authentication:
                 print(error_msg)
                 
                 if model_name in self.download_status:
+                    import urllib.parse
+                    encoded_model_name = urllib.parse.quote(model_name, safe='')
                     self.download_status[model_name].update({
                         "status": "failed",
-                        "message": f"Gated model access required. Visit https://huggingface.co/{model_name} to request access.",
+                        "message": f"Gated model access required. Visit https://huggingface.co/{encoded_model_name} to request access.",
                         "progress": 0.0
                     })
                 return
