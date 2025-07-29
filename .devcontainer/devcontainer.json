@@ -17,7 +17,8 @@
     "PYTHONPATH": "/workspaces/mistral-playground"
   },
   "containerEnv": {
-    "PYTHONPATH": "/workspaces/mistral-playground"
+    "PYTHONPATH": "/workspaces/mistral-playground",
+    "AUTO_START_SERVICES": "true"
   },
   "customizations": {
     "vscode": {
@@ -54,6 +55,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postStartCommand": "bash -c 'chmod +x .devcontainer/setup-and-start.sh && .devcontainer/setup-and-start.sh > /tmp/setup.log 2>&1 & echo \"source .devcontainer/bashrc-additions\" >> ~/.bashrc && echo \"\" && echo \"🎉 Mistral Playground is starting up!\" && echo \"📋 Quick commands: ./welcome-message.sh | ./show-logs.sh | ./show-codespaces-urls.sh\" && echo \"📄 Logs: tail -f /tmp/setup.log\" && echo \"\"'",
+  "postStartCommand": "bash -c '.devcontainer/startup.sh'",
   "remoteUser": "vscode"
 } 
