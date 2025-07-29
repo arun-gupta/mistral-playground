@@ -13,7 +13,6 @@ echo "PWD: $PWD" | tee -a /tmp/startup.log
 # Make all scripts executable
 echo "Making scripts executable..." | tee -a /tmp/startup.log
 chmod +x .devcontainer/setup-and-start.sh
-chmod +x .devcontainer/quick-start.sh
 chmod +x show-logs.sh
 chmod +x show-codespaces-urls.sh
 chmod +x welcome-message.sh
