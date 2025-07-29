@@ -81,7 +81,7 @@ EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 # API Configuration
 API_HOST=0.0.0.0
 API_PORT=8000
-CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
+CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000", "https://*.app.github.dev"]
 
 # Security
 SECRET_KEY=your-secret-key-here
