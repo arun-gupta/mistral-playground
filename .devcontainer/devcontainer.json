@@ -53,6 +53,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postStartCommand": "bash -c 'chmod +x .devcontainer/setup-and-start.sh && .devcontainer/setup-and-start.sh'",
+  "postStartCommand": "bash -c 'chmod +x .devcontainer/setup-and-start.sh && .devcontainer/setup-and-start.sh > /tmp/setup.log 2>&1 & echo \"🚀 Services starting in background. Check logs with: tail -f /tmp/setup.log\"'",
   "remoteUser": "vscode"
 } 
