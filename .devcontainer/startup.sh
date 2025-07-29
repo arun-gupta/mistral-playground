@@ -16,7 +16,8 @@ if ! grep -q "bashrc-additions" ~/.bashrc; then
 fi
 
 # Check if we should auto-start services
-if [ "$AUTO_START_SERVICES" = "true" ] || [ -n "$CODESPACES" ]; then
+# Force auto-start in Codespaces by checking multiple indicators
+if [ "$AUTO_START_SERVICES" = "true" ] || [ -n "$CODESPACES" ] || [ -d "/workspaces" ] || [ "$(hostname)" != "MacBookPro.lan" ]; then
     echo "🔄 Auto-starting services..."
     echo "📄 Logs will be saved to /tmp/setup.log"
     .devcontainer/quick-start.sh > /tmp/setup.log 2>&1 &
