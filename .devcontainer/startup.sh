@@ -5,7 +5,6 @@ echo "========================================="
 
 # Make all scripts executable
 chmod +x .devcontainer/setup-and-start.sh
-chmod +x start-services.sh
 chmod +x show-logs.sh
 chmod +x show-codespaces-urls.sh
 chmod +x welcome-message.sh
@@ -18,10 +17,10 @@ fi
 # Check if we should auto-start services
 if [ "$AUTO_START_SERVICES" = "true" ] || [ -n "$CODESPACES" ]; then
     echo "🔄 Auto-starting services..."
-    ./start-services.sh
+    .devcontainer/setup-and-start.sh
 else
     echo "📋 Services not auto-started."
-    echo "   Run './start-services.sh' to start them manually."
+    echo "   Run '.devcontainer/setup-and-start.sh' to start them manually."
 fi
 
 echo ""
