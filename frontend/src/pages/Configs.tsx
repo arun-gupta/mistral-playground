@@ -34,6 +34,7 @@ const Configs = () => {
   // Load API keys from localStorage on component mount
   useEffect(() => {
     loadApiKeys()
+    loadEnvKeys() // Load keys from .env file
   }, [])
 
   const loadApiKeys = () => {
@@ -52,6 +53,58 @@ const Configs = () => {
       google: !!storedKeys.google,
       huggingface: !!storedKeys.huggingface
     })
+  }
+
+  const loadEnvKeys = async () => {
+    try {
+      const response = await fetch('/api/v1/configs/env-keys')
+      if (response.ok) {
+        const envKeys = await response.json()
+        
+        // Map .env keys to our frontend format
+        const mappedKeys = {
+          openai: envKeys.OPENAI_API_KEY || '',
+          anthropic: envKeys.ANTHROPIC_API_KEY || '',
+          google: envKeys.GOOGLE_API_KEY || '',
+          huggingface: envKeys.HUGGINGFACE_API_KEY || ''
+        }
+        
+        // Only update if we have keys from .env and they're not already in localStorage
+        const updatedKeys = { ...apiKeys }
+        let hasNewKeys = false
+        
+        Object.entries(mappedKeys).forEach(([provider, key]) => {
+          const storageKey = provider === 'huggingface' ? 'huggingface_token' : `${provider}_api_key`
+          const existingKey = localStorage.getItem(storageKey)
+          
+          if (key && !existingKey) {
+            // Key exists in .env but not in localStorage, so populate it
+            updatedKeys[provider as keyof typeof apiKeys] = key
+            localStorage.setItem(storageKey, key)
+            hasNewKeys = true
+          }
+        })
+        
+        if (hasNewKeys) {
+          setApiKeys(updatedKeys)
+          setApiKeyStatus({
+            openai: !!updatedKeys.openai,
+            anthropic: !!updatedKeys.anthropic,
+            google: !!updatedKeys.google,
+            huggingface: !!updatedKeys.huggingface
+          })
+          
+          toast({
+            title: "API Keys Loaded",
+            description: "API keys from .env file have been loaded into the form.",
+            variant: "default"
+          })
+        }
+      }
+    } catch (error) {
+      console.log('Could not load API keys from .env file:', error)
+      // This is expected in Codespaces or when .env file is not accessible
+    }
   }
 
   const saveApiKey = (provider: string, key: string) => {
@@ -155,6 +208,17 @@ const Configs = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Load from .env button */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={loadEnvKeys}
+                  className="flex items-center gap-2"
+                >
+                  🔄 Load from .env
+                </Button>
+              </div>
+              
               {/* Hosted Models Section */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">

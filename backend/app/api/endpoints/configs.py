@@ -1,10 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from typing import List
+from typing import List, Dict
 import uuid
 import os
+from datetime import datetime
+from pathlib import Path
 
 from backend.app.models.requests import PromptConfigSaveRequest
 from backend.app.models.responses import PromptConfig
+from backend.app.core.config import settings
 
 router = APIRouter()
 
@@ -99,3 +102,39 @@ async def search_prompt_configs_by_tag(tag: str):
         return matching_configs
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
+
+@router.get("/env-keys", response_model=Dict[str, str])
+async def get_env_api_keys():
+    """Get API keys from .env file"""
+    try:
+        # Get the project root directory (where .env file is located)
+        project_root = Path(__file__).parent.parent.parent.parent.parent
+        env_file = project_root / ".env"
+        
+        api_keys = {}
+        
+        if env_file.exists():
+            with open(env_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        
+                        # Only include API key variables
+                        if any(api_key in key.lower() for api_key in ['openai_api_key', 'anthropic_api_key', 'google_api_key', 'huggingface_api_key']):
+                            # Remove quotes if present
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value.startswith("'") and value.endswith("'"):
+                                value = value[1:-1]
+                            
+                            # Only include non-empty, non-placeholder values
+                            if value and value != 'your-openai-api-key-here' and value != 'your-anthropic-api-key-here' and value != 'your-google-api-key-here' and value != 'your-huggingface-api-key-here':
+                                api_keys[key] = value
+        
+        return api_keys
+    except Exception as e:
+        print(f"Error reading .env file: {e}")
+        return {} 
