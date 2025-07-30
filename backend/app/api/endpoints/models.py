@@ -388,7 +388,6 @@ async def get_available_models():
             
             # Mixtral models (high performance)
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
-            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
             
             # GPU-only models (for reference)
             "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended

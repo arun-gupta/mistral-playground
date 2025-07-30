@@ -56,7 +56,7 @@ const RAG = () => {
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(500)
   const [topK, setTopK] = useState(3)
-  const [selectedModel, setSelectedModel] = useState('TheBloke/Mistral-7B-Instruct-v0.2-GGUF')
+  const [selectedModel, setSelectedModel] = useState('mistralai/Mistral-7B-Instruct-v0.2')
   const [selectedProvider, setSelectedProvider] = useState('huggingface')
   const [showContext, setShowContext] = useState(false)
   const [modelStatuses, setModelStatuses] = useState<Array<{name: string, is_loaded: boolean}>>([])

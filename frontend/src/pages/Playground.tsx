@@ -10,7 +10,7 @@ const Playground = () => {
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(50)
   const [topP, setTopP] = useState(0.9)
-  const [selectedModel, setSelectedModel] = useState('TheBloke/Mistral-7B-Instruct-v0.2-GGUF')
+  const [selectedModel, setSelectedModel] = useState('mistralai/Mistral-7B-Instruct-v0.2')
   const [selectedProvider, setSelectedProvider] = useState('huggingface')
   const [actualModelUsed, setActualModelUsed] = useState('')
   const [fallbackUsed, setFallbackUsed] = useState(false)
@@ -75,9 +75,9 @@ const Playground = () => {
         
         // Fallback to hardcoded models if API fails
         const fallbackModels = [
-          'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-          'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
-          'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
+          'mistralai/Mistral-7B-Instruct-v0.2',
+          'mistralai/Mistral-7B-Instruct-v0.1',
+          'mistralai/Mixtral-8x7B-Instruct-v0.1'
         ]
         console.log('🔄 Using fallback models:', fallbackModels)
         setAvailableModels(fallbackModels)
@@ -88,9 +88,9 @@ const Playground = () => {
       
       // Fallback to hardcoded models on error
       const fallbackModels = [
-        'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-        'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
-        'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
+        'mistralai/Mistral-7B-Instruct-v0.2',
+        'mistralai/Mistral-7B-Instruct-v0.1',
+        'mistralai/Mixtral-8x7B-Instruct-v0.1'
       ]
       console.log('🔄 Using fallback models due to error:', fallbackModels)
       setAvailableModels(fallbackModels)

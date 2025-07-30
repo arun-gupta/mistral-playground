@@ -326,7 +326,7 @@ To access this model:
 4. Set up your Hugging Face token in the environment
 
 Alternative models that don't require authentication:
-• TheBloke/Mistral-7B-Instruct-v0.2-GGUF (Recommended)
+• mistralai/Mistral-7B-Instruct-v0.2 (Recommended)
 • microsoft/DialoGPT-small (For testing)
 • google/gemma-2b-it (Google's open model)
 """

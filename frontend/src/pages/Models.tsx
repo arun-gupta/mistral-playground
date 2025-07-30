@@ -271,21 +271,7 @@ const Models = () => {
         // Fallback to hardcoded models if API fails
         const fallbackModels: ModelStatus[] = [
           {
-            name: 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-            provider: 'huggingface',
-            is_loaded: false,
-            is_downloading: false,
-            download_progress: 0
-          },
-          {
-            name: 'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
-            provider: 'huggingface',
-            is_loaded: false,
-            is_downloading: false,
-            download_progress: 0
-          },
-          {
-            name: 'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF',
+            name: 'mistralai/Mistral-7B-Instruct-v0.2',
             provider: 'huggingface',
             is_loaded: false,
             is_downloading: false,
@@ -293,6 +279,13 @@ const Models = () => {
           },
           {
             name: 'microsoft/DialoGPT-small',
+            provider: 'huggingface',
+            is_loaded: false,
+            is_downloading: false,
+            download_progress: 0
+          },
+          {
+            name: 'google/gemma-2b-it',
             provider: 'huggingface',
             is_loaded: false,
             is_downloading: false,
@@ -315,21 +308,7 @@ const Models = () => {
       // Fallback to hardcoded models on error
       const fallbackModels: ModelStatus[] = [
         {
-          name: 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-          provider: 'huggingface',
-          is_loaded: false,
-          is_downloading: false,
-          download_progress: 0
-        },
-        {
-          name: 'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
-          provider: 'huggingface',
-          is_loaded: false,
-          is_downloading: false,
-          download_progress: 0
-        },
-        {
-          name: 'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF',
+          name: 'mistralai/Mistral-7B-Instruct-v0.2',
           provider: 'huggingface',
           is_loaded: false,
           is_downloading: false,
@@ -337,6 +316,13 @@ const Models = () => {
         },
         {
           name: 'microsoft/DialoGPT-small',
+          provider: 'huggingface',
+          is_loaded: false,
+          is_downloading: false,
+          download_progress: 0
+        },
+        {
+          name: 'google/gemma-2b-it',
           provider: 'huggingface',
           is_loaded: false,
           is_downloading: false,
@@ -1600,7 +1586,7 @@ const Models = () => {
                 </div>
                 <p className="text-sm mt-3">
                   <strong>💡 Alternative:</strong> Use open models like{' '}
-                  <span className="font-mono text-xs bg-gray-100 px-1 rounded">TheBloke/Mistral-7B-Instruct-v0.2-GGUF</span>{' '}
+                  <span className="font-mono text-xs bg-gray-100 px-1 rounded">mistralai/Mistral-7B-Instruct-v0.2</span>{' '}
                   that don't require authentication.
                 </p>
               </div>
