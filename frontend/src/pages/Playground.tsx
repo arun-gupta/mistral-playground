@@ -649,28 +649,7 @@ const Playground = () => {
                 </div>
               </div>
               
-              {/* Show warning for models that are not loaded */}
-              {!isModelLoaded(selectedModel) && (
-                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-                  <p className="text-sm text-amber-800">
-                    <span className="font-medium">⚠️ Model Not Ready:</span> This model needs to be downloaded and loaded before use.
-                  </p>
-                  <p className="text-xs text-amber-600 mt-1">
-                    Large models may take 5-10 minutes to download on first use. Visit the Models page to download proactively.
-                  </p>
-                  <p className="text-xs text-blue-600 mt-2">
-                    <span className="font-medium">💡 Pro tip:</span> Download and load models from the{' '}
-                    <a 
-                      href="/models" 
-                      className="underline hover:text-blue-800 font-medium"
-                      title="Go to Models page to download and load models proactively"
-                    >
-                      Models page
-                    </a>{' '}
-                    before using them here for a better experience.
-                  </p>
-                </div>
-              )}
+
               
               {/* Show success message for models that are loaded */}
               {isModelLoaded(selectedModel) && (
