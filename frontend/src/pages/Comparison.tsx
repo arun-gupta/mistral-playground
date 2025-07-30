@@ -11,7 +11,8 @@ import {
   isGatedModel,
   isGPURequired,
   isSmallModel,
-  getActiveFilterCount
+  getActiveFilterCount,
+  isModelSizeWithinThreshold
 } from '../utils/modelUtils'
 
 interface ModelComparison {

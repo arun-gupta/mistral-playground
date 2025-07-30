@@ -17,7 +17,8 @@ import {
   getModelSizeCategory,
   getModelVariant,
   getActiveFilterCount,
-  getModelFamilyDisplayName
+  getModelFamilyDisplayName,
+  isModelSizeWithinThreshold
 } from '../utils/modelUtils'
 
 interface ModelStatus {
