@@ -92,8 +92,8 @@ const Models = () => {
     const recommended = [
       'microsoft/DialoGPT-small', // Testing
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', // Production CPU
-      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF', // CPU-optimized Llama 3
-      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF', // High-quality Llama 3
+      'TheBloke/Mistral-7B-Instruct-v0.1-GGUF', // Alternative Mistral GGUF
+      'mistralai/Mistral-7B-Instruct-v0.2', // Full quality Mistral
       'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF' // High performance
     ]
     return recommended.includes(modelName)
@@ -150,9 +150,8 @@ const Models = () => {
       
       // GGUF variants (optimized for CPU)
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
-      'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
-      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
+      'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
+      'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF',
       
       // Small Mistral variants
       'mistralai/Mistral-7B-Instruct-v0.2',

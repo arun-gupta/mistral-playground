@@ -127,8 +127,8 @@ const Comparison = () => {
     const recommended = [
       'microsoft/DialoGPT-small', // Testing
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', // Production CPU
-      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF', // CPU-optimized Llama 3
-      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF', // High-quality Llama 3
+      'TheBloke/Mistral-7B-Instruct-v0.1-GGUF', // Alternative Mistral GGUF
+      'mistralai/Mistral-7B-Instruct-v0.2', // Full quality Mistral
       'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF' // High performance
     ]
     return recommended.includes(modelName)
@@ -155,9 +155,8 @@ const Comparison = () => {
       
       // GGUF variants (optimized for CPU)
       'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
-      'TheBloke/Meta-Llama-3-10B-Instruct-GGUF',
-      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
+      'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
+      'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF',
       
       // Small Mistral variants
       'mistralai/Mistral-7B-Instruct-v0.2',
@@ -697,7 +696,7 @@ const Comparison = () => {
                 className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
                 onClick={() => setSelectedModels([
                   'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-                  'TheBloke/Meta-Llama-3-14B-Instruct-GGUF'
+                  'TheBloke/Mistral-7B-Instruct-v0.1-GGUF'
                 ])}
               >
                 <div className="text-left">
@@ -757,13 +756,13 @@ const Comparison = () => {
                 size="sm"
                 className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
                 onClick={() => setSelectedModels([
-                  'TheBloke/Llama-2-13B-Chat-GGUF',
-                  'TheBloke/Meta-Llama-3-14B-Instruct-GGUF'
+                  'mistralai/Mistral-7B-Instruct-v0.1',
+                  'mistralai/Mistral-7B-Instruct-v0.2'
                 ])}
               >
                 <div className="text-left">
-                  <div className="font-medium">🔄 Llama Evolution</div>
-                  <div className="text-xs text-gray-600">Llama 2 vs Llama 3</div>
+                  <div className="font-medium">🔄 Mistral Evolution</div>
+                  <div className="text-xs text-gray-600">Mistral v0.1 vs v0.2</div>
                 </div>
               </Button>
               
