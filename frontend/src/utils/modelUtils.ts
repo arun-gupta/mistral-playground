@@ -32,10 +32,10 @@ export const getModelSize = (modelName: string): number => {
  */
 export const isRecommended = (modelName: string): boolean => {
   const recommended = [
-    'microsoft/DialoGPT-small', // Testing - open model
-    'mistralai/Mistral-7B-Instruct-v0.5', // Latest Mistral instruction-tuned (open)
-    'mistralai/Mistral-7B-Instruct-v0.4', // Latest Mistral instruction-tuned (open)
-    'mistralai/Mixtral-8x7B-Instruct-v0.1', // High quality Mistral (open)
+    'microsoft/DialoGPT-small', // Testing - open model, very small
+    'mistralai/Mistral-7B-v0.1', // Base Mistral model, open access
+    'mistralai/Mistral-7B-v0.2', // Base Mistral model v2, open access
+    'mistralai/Mistral-7B-Instruct-v0.3', // Instruction-tuned, open access
     'meta-llama/Meta-Llama-3-8B-Instruct', // Official Meta Llama (requires auth)
     'meta-llama/Llama-3.1-8B-Instruct' // Official Meta Llama (requires auth)
   ]
