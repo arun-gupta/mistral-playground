@@ -1204,19 +1204,26 @@ const Models = () => {
                             </Button>
                           ) : (
                             <Button 
-                              onClick={() => downloadAndLoadModel(model.name)}
+                              onClick={() => {
+                                if (isGatedModel(model.name)) {
+                                  // Open HuggingFace access request page
+                                  window.open(`https://huggingface.co/${model.name}`, '_blank')
+                                } else {
+                                  downloadAndLoadModel(model.name)
+                                }
+                              }}
                               size="sm"
                               className={`w-full text-xs ${
                                 isGatedModel(model.name) 
-                                  ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed' 
+                                  ? 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 cursor-pointer' 
                                   : 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100'
                               }`}
-                              disabled={downloadingModels.has(model.name) || loadingModels.has(model.name) || isGatedModel(model.name)}
+                              disabled={downloadingModels.has(model.name) || loadingModels.has(model.name)}
                             >
                               <span className="mr-1">
                                 {isGatedModel(model.name) ? '🔒' : '📥'}
                               </span>
-                              {isGatedModel(model.name) ? 'Requires Access' : 'Download & Load'}
+                              {isGatedModel(model.name) ? 'Request Access' : 'Download & Load'}
                             </Button>
                           )}
                         </div>
