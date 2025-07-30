@@ -149,6 +149,18 @@ const Comparison = () => {
     return size <= 2 || modelName.includes('DialoGPT')
   }
 
+  // Get count of active filters
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (showDownloadedOnly) count++
+    if (showLoadedOnly) count++
+    if (showRecommendedOnly) count++
+    if (showCPUOnly) count++
+    if (showNoAuthRequired) count++
+    if (showSmallModelsOnly) count++
+    return count
+  }
+
   // Check if model requires authentication (gated)
   const isGatedModel = (modelName: string): boolean => {
     const gatedModels = [
@@ -322,14 +334,32 @@ const Comparison = () => {
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-700">Quick Filters</h3>
-                  <Button
-                    onClick={fetchModelStatuses}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs px-3 py-1 h-8"
-                  >
-                    🔄 Refresh
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowDownloadedOnly(false)
+                        setShowLoadedOnly(false)
+                        setShowRecommendedOnly(false)
+                        setShowCPUOnly(false)
+                        setShowNoAuthRequired(false)
+                        setShowSmallModelsOnly(false)
+                      }}
+                      className="text-xs px-3 py-1 h-8"
+                      disabled={getActiveFilterCount() === 0}
+                    >
+                      Clear All
+                    </Button>
+                    <Button
+                      onClick={fetchModelStatuses}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-3 py-1 h-8"
+                    >
+                      🔄 Refresh
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

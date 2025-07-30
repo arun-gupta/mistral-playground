@@ -986,21 +986,39 @@ const Models = () => {
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-700">Quick Filters</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowDownloadedOnly(false)
-                      setShowLoadedOnly(false)
-                      setShowRecommendedOnly(true)
-                      setShowCPUOnly(false)
-                      setShowNoAuthRequired(true)
-                      setShowSmallModelsOnly(false)
-                    }}
-                    className="text-xs px-3 py-1 h-8 bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
-                  >
-                    Quick Start
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowDownloadedOnly(false)
+                        setShowLoadedOnly(false)
+                        setShowRecommendedOnly(false)
+                        setShowCPUOnly(false)
+                        setShowNoAuthRequired(false)
+                        setShowSmallModelsOnly(false)
+                      }}
+                      className="text-xs px-3 py-1 h-8"
+                      disabled={getActiveFilterCount() === 0}
+                    >
+                      Clear All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowDownloadedOnly(false)
+                        setShowLoadedOnly(false)
+                        setShowRecommendedOnly(true)
+                        setShowCPUOnly(false)
+                        setShowNoAuthRequired(true)
+                        setShowSmallModelsOnly(false)
+                      }}
+                      className="text-xs px-3 py-1 h-8 bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
+                    >
+                      Quick Start
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
