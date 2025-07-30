@@ -67,6 +67,7 @@ const Models = () => {
 
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)  // New toggle for downloaded models
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
+  const [showReadyToUseOnly, setShowReadyToUseOnly] = useState(false)  // Toggle for ready to use models
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
 
 
@@ -106,6 +107,11 @@ const Models = () => {
     // Apply loaded filter
     if (showLoadedOnly) {
       filteredModels = filteredModels.filter(model => model.is_loaded)
+    }
+
+    // Apply ready to use filter
+    if (showReadyToUseOnly) {
+      filteredModels = filteredModels.filter(model => model.is_hosted || model.is_loaded)
     }
 
     // Apply downloaded filter
@@ -888,6 +894,7 @@ const Models = () => {
               onClick={() => {
                 setShowDownloadedOnly(false)
                 setShowLoadedOnly(false)
+                setShowReadyToUseOnly(false)
                 setShowRecommendedOnly(false)
                 setShowNoAuthRequired(false)
                 setShowHostedOnly(false)
@@ -897,6 +904,7 @@ const Models = () => {
               disabled={getActiveFilterCount({
                 showDownloadedOnly,
                 showLoadedOnly,
+                showReadyToUseOnly,
                 showRecommendedOnly,
                 showNoAuthRequired,
                 showSmallModelsOnly: maxModelSize < 70,
@@ -958,6 +966,24 @@ const Models = () => {
                       />
                     </button>
                     <span className="text-xs font-medium text-gray-700">☁️ Hosted</span>
+                  </div>
+
+                  {/* Ready to Use */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReadyToUseOnly(!showReadyToUseOnly)}
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                        showReadyToUseOnly ? 'bg-green-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showReadyToUseOnly ? 'translate-x-4' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-gray-700">✅ Ready to Use</span>
                   </div>
 
                   {/* Recommended */}

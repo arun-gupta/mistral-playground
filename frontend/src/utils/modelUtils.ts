@@ -198,6 +198,7 @@ export const getModelVariant = (modelName: string): string => {
 export const getActiveFilterCount = (filters: {
   showDownloadedOnly?: boolean
   showLoadedOnly?: boolean
+  showReadyToUseOnly?: boolean
   showRecommendedOnly?: boolean
   showNoAuthRequired?: boolean
   showSmallModelsOnly?: boolean
@@ -206,6 +207,7 @@ export const getActiveFilterCount = (filters: {
   let count = 0
   if (filters.showDownloadedOnly) count++
   if (filters.showLoadedOnly) count++
+  if (filters.showReadyToUseOnly) count++
   if (filters.showRecommendedOnly) count++
   if (filters.showNoAuthRequired) count++
   if (filters.showSmallModelsOnly) count++
