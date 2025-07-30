@@ -49,7 +49,7 @@ const Models = () => {
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)  // New toggle for downloaded models
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
-  const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)  // Toggle for GPU recommended models
+
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const [showSmallModelsOnly, setShowSmallModelsOnly] = useState(false)  // Toggle for small models only
@@ -92,18 +92,7 @@ const Models = () => {
     return recommended.includes(modelName)
   }
 
-  // Check if model is GPU recommended
-  const isGPURecommended = (modelName: string): boolean => {
-    // Models that would perform significantly better with GPU
-    // Only include models that are actually in our system AND need GPU
-    const gpuRecommended = [
-      'mistralai/Mixtral-8x7B-Instruct-v0.1', // Full Mixtral (~70B effective, ~32GB RAM)
-      'mistralai/CodeMistral-7B-Instruct-v0.1', // CodeMistral (~14GB RAM, specialized)
-      'meta-llama/Meta-Llama-3-14B-Instruct', // Large Llama model (~28GB RAM)
-      'meta-llama/Llama-3.3-70B-Instruct' // Very large Llama model (~140GB RAM)
-    ]
-    return gpuRecommended.includes(modelName)
-  }
+
 
   // Check if model requires authentication (gated)
   const isGatedModel = (modelName: string): boolean => {
@@ -126,29 +115,20 @@ const Models = () => {
     return gatedModels.includes(modelName)
   }
 
-  // Check if model works well on CPU
-  const isCPUCompatible = (modelName: string): boolean => {
-    // Models that work well on CPU (smaller models, etc.)
-    const cpuCompatible = [
-      // Small models that work well on CPU
-      'microsoft/DialoGPT-small',
-      'microsoft/DialoGPT-medium',
-      'microsoft/DialoGPT-large',
-      
-      // Small Mistral variants
-      'mistralai/Mistral-7B-Instruct-v0.2',
-      'mistralai/Mistral-7B-v0.1',
-      
-      // Small Llama variants (official Meta models)
-      'meta-llama/Meta-Llama-3-8B-Instruct',
-      'meta-llama/Meta-Llama-3-8B',
-      'meta-llama/Llama-3.1-8B-Instruct'
+  // Check if model requires GPU (simplified binary logic)
+  const isGPURequired = (modelName: string): boolean => {
+    // Only very large models actually require GPU
+    const gpuRequired = [
+      'mistralai/Mixtral-8x7B-Instruct-v0.1', // ~70B effective parameters
+      'meta-llama/Llama-3.3-70B-Instruct',    // 70B parameters
+      'google/gemma-3-27b-it'                 // 27B parameters but very large
     ]
     
-    // Include small models (2B and under) that are not gated
-    if (getModelSize(modelName) <= 2 && !isGatedModel(modelName)) return true
+    // Models with >20B parameters generally need GPU
+    const modelSize = getModelSize(modelName)
+    if (modelSize > 20) return true
     
-    return cpuCompatible.includes(modelName)
+    return gpuRequired.includes(modelName)
   }
 
   // Group and filter models
@@ -184,14 +164,11 @@ const Models = () => {
       filteredModels = filteredModels.filter(model => isRecommended(model.name))
     }
 
-    // Apply GPU recommended filter
-    if (showGPURecommendedOnly) {
-      filteredModels = filteredModels.filter(model => isGPURecommended(model.name))
-    }
 
-    // Apply CPU compatibility filter
+
+    // Apply CPU compatibility filter (show models that don't require GPU)
     if (showCPUOnly) {
-      filteredModels = filteredModels.filter(model => isCPUCompatible(model.name))
+      filteredModels = filteredModels.filter(model => !isGPURequired(model.name))
     }
 
     // Apply no authentication required filter
@@ -822,7 +799,6 @@ const Models = () => {
     if (showDownloadedOnly) count++
     if (showLoadedOnly) count++
     if (showRecommendedOnly) count++
-    if (showGPURecommendedOnly) count++
     if (showCPUOnly) count++
     if (showNoAuthRequired) count++
     if (showSmallModelsOnly) count++
@@ -1074,7 +1050,6 @@ const Models = () => {
                       setShowDownloadedOnly(false)
                       setShowLoadedOnly(false)
                       setShowRecommendedOnly(true)
-                      setShowGPURecommendedOnly(false)
                       setShowCPUOnly(false)
                       setShowNoAuthRequired(true)
                       setShowSmallModelsOnly(false)
@@ -1286,16 +1261,15 @@ const Models = () => {
                                 ⭐ Recommended
                               </Badge>
                             )}
-                            {isGPURecommended(model.name) && (
+                            {isGPURequired(model.name) ? (
                               <Badge 
                                 variant="default" 
-                                className="bg-orange-100 text-orange-800 border-orange-200 text-xs cursor-help"
-                                title="This model will be very slow on CPU. Consider GPU setup for better performance."
+                                className="bg-red-100 text-red-800 border-red-200 text-xs cursor-help"
+                                title="This model requires GPU for reasonable performance"
                               >
-                                🚀 GPU Recommended
+                                🚀 GPU Required
                               </Badge>
-                            )}
-                            {isCPUCompatible(model.name) && (
+                            ) : (
                               <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
                                 💻 CPU Compatible
                               </Badge>
