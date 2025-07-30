@@ -162,22 +162,24 @@ const Comparison = () => {
   }
 
   // Check if model requires authentication (gated)
-  const isGatedModel = (modelName: string): boolean => {
+    const isGatedModel = (modelName: string): boolean => {
     const gatedModels = [
-          // Official Meta Llama models (require authentication) - Top 6 most useful
-    'meta-llama/Meta-Llama-3-8B-Instruct',     // Medium size, instruction-tuned, good balance
-    'meta-llama/Llama-3.1-8B-Instruct',        // Medium size, instruction-tuned, good balance
-    'meta-llama/Meta-Llama-3-14B-Instruct',    // Large, instruction-tuned, high performance
-    'meta-llama/Llama-3.2-3B-Instruct',        // Small, instruction-tuned, great for testing
-    'meta-llama/Llama-3.2-1B',                 // Very small, base model, great for testing
-    'meta-llama/Llama-3.3-70B-Instruct',       // Very large, instruction-tuned, maximum performance
-          // Google Gemma models (all require authentication) - Top 6 most useful
-    'google/gemma-2b-it',                    // Small, instruction-tuned, great for testing
-    'google/gemma-7b-it',                    // Medium, instruction-tuned, good balance
-    'google/gemma-3n-E2B-it',                // Latest Gemma 3, small, instruction-tuned
-    'google/gemma-3n-E4B-it',                // Latest Gemma 3, medium, instruction-tuned
-    'google/gemma-3-4b-it',                  // Latest Gemma 3, 4B variant
-    'google/gemma-3-27b-it'                  // Large model for high performance
+      // Official Meta Llama models (require authentication) - Top 6 most useful
+      'meta-llama/Meta-Llama-3-8B-Instruct',     // Medium size, instruction-tuned, good balance
+      'meta-llama/Llama-3.1-8B-Instruct',        // Medium size, instruction-tuned, good balance
+      'meta-llama/Meta-Llama-3-14B-Instruct',    // Large, instruction-tuned, high performance
+      'meta-llama/Llama-3.2-3B-Instruct',        // Small, instruction-tuned, great for testing
+      'meta-llama/Llama-3.2-1B',                 // Very small, base model, great for testing
+      'meta-llama/Llama-3.3-70B-Instruct',       // Very large, instruction-tuned, maximum performance
+      // Google Gemma models (all require authentication) - Top 6 most useful
+      'google/gemma-2b-it',                    // Small, instruction-tuned, great for testing
+      'google/gemma-7b-it',                    // Medium, instruction-tuned, good balance
+      'google/gemma-3n-E2B-it',                // Latest Gemma 3, small, instruction-tuned
+      'google/gemma-3n-E4B-it',                // Latest Gemma 3, medium, instruction-tuned
+      'google/gemma-3-4b-it',                  // Latest Gemma 3, 4B variant
+      'google/gemma-3-27b-it',                 // Large model for high performance
+      // Mistral models that are now gated
+      'mistralai/Mistral-7B-Instruct-v0.1'      // Now requires authentication
     ]
     return gatedModels.includes(modelName)
   }

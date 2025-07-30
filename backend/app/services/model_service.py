@@ -310,7 +310,9 @@ class ModelService:
                     "google/gemma-3n-E2B-it-litert-preview",
                     "google/gemma-3-4b-it",
                     "google/gemma-3n-E2B-it",
-                    "google/gemma-3-27b-it"
+                    "google/gemma-3-27b-it",
+                    # Mistral models that are now gated
+                    "mistralai/Mistral-7B-Instruct-v0.1"
                 ]
                 
                 if model_name in gated_models:
