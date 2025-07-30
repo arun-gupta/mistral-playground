@@ -190,8 +190,12 @@ class DownloadService:
                 "google/gemma-3-27b-it"
             ]
             
+            # Check if this is a gated model and if we have authentication
             if model_name in gated_models:
-                error_msg = f"""
+                # Check if we have HuggingFace API key for authentication
+                from backend.app.core.config import settings
+                if not settings.HUGGINGFACE_API_KEY:
+                    error_msg = f"""
 ❌ Gated Model Access Required
 
 The model '{model_name}' requires authentication to download from Hugging Face.
@@ -205,17 +209,19 @@ To access this model:
 Alternative models that don't require authentication:
 • TheBloke/Mistral-7B-Instruct-v0.2-GGUF (Recommended)
 • microsoft/DialoGPT-small (For testing)
-• TheBloke/Meta-Llama-3-8B-Instruct-GGUF (CPU optimized)
+• TheBloke/Mistral-7B-Instruct-v0.1-GGUF (Alternative)
 """
-                print(error_msg)
-                
-                if model_name in self.download_status:
-                    self.download_status[model_name].update({
-                        "status": "failed",
-                        "message": f"Gated model access required. Visit https://huggingface.co/{model_name} to request access.",
-                        "progress": 0.0
-                    })
-                return
+                    print(error_msg)
+                    
+                    if model_name in self.download_status:
+                        self.download_status[model_name].update({
+                            "status": "failed",
+                            "message": f"Gated model access required. Visit https://huggingface.co/{model_name} to request access.",
+                            "progress": 0.0
+                        })
+                    return
+                else:
+                    print(f"✅ Authentication available for gated model {model_name}, proceeding with download...")
             
             # For now, we'll simulate the download process for non-gated models
             # In a real implementation, this would:
