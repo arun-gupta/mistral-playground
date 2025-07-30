@@ -52,7 +52,9 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Debug: Print settings after creation
-print(f"🔍 DEBUG: Settings created - HUGGINGFACE_API_KEY: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
+print(f"🔍 DEBUG: Settings created - HUGGINGFACE_API_KEY exists: {settings.HUGGINGFACE_API_KEY is not None}")
+print(f"🔍 DEBUG: Settings created - HUGGINGFACE_API_KEY value: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
+print(f"🔍 DEBUG: Settings created - HUGGINGFACE_API_KEY is truthy: {bool(settings.HUGGINGFACE_API_KEY)}")
 print(f"🔍 DEBUG: Current working directory: {os.getcwd()}")
 
 # Check multiple possible .env file locations

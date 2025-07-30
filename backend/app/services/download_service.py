@@ -168,7 +168,9 @@ class DownloadService:
             # Debug: Check settings at the start
             from backend.app.core.config import settings
             print(f"🔍 DEBUG: Settings loaded - HUGGINGFACE_API_KEY exists: {settings.HUGGINGFACE_API_KEY is not None}")
+            print(f"🔍 DEBUG: Settings HUGGINGFACE_API_KEY value: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
             print(f"🔍 DEBUG: Environment variable HUGGINGFACE_API_KEY: {os.environ.get('HUGGINGFACE_API_KEY', 'NOT_SET')[:10] if os.environ.get('HUGGINGFACE_API_KEY') else 'NOT_SET'}...")
+            print(f"🔍 DEBUG: All environment variables containing 'HUGGING': {[k for k in os.environ.keys() if 'HUGGING' in k.upper()]}")
             
             # Check if this is a gated model that requires authentication
             gated_models = [
@@ -202,6 +204,7 @@ class DownloadService:
                 from backend.app.core.config import settings
                 print(f"🔍 DEBUG: HUGGINGFACE_API_KEY exists: {settings.HUGGINGFACE_API_KEY is not None}")
                 print(f"🔍 DEBUG: HUGGINGFACE_API_KEY value: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
+                print(f"🔍 DEBUG: HUGGINGFACE_API_KEY is truthy: {bool(settings.HUGGINGFACE_API_KEY)}")
                 if not settings.HUGGINGFACE_API_KEY:
                     error_msg = f"""
 ❌ Gated Model Access Required
