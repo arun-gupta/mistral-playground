@@ -73,6 +73,8 @@ const Comparison = () => {
   }
 
   const getModelSize = (modelName: string): number => {
+    if (modelName.includes('70B') || modelName.includes('70b')) return 70
+    if (modelName.includes('17B') || modelName.includes('17b')) return 17
     if (modelName.includes('14B') || modelName.includes('14b')) return 14
     if (modelName.includes('13B') || modelName.includes('13b')) return 13
     if (modelName.includes('10B') || modelName.includes('10b')) return 10

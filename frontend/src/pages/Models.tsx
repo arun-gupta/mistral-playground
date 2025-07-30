@@ -60,7 +60,7 @@ const Models = () => {
   // Model categorization and filtering logic
   const getModelFamily = (modelName: string): string => {
     if (modelName.includes('Mistral-7B') || modelName.includes('Mixtral')) return 'mistral'
-    if (modelName.includes('Llama-3') || modelName.includes('Meta-Llama-3') || modelName.includes('Llama-2')) return 'llama'
+    if (modelName.includes('Llama-3') || modelName.includes('Meta-Llama-3') || modelName.includes('Llama-2') || modelName.includes('Llama-4')) return 'llama'
     if (modelName.includes('gemma')) return 'gemma'
     if (modelName.includes('DialoGPT')) return 'dialogpt'
     return 'other'
@@ -68,6 +68,8 @@ const Models = () => {
 
   const getModelSize = (modelName: string): number => {
     if (modelName.includes('70B') || modelName.includes('Mixtral-8x7B')) return 70
+    if (modelName.includes('17B')) return 17
+    if (modelName.includes('14B')) return 14
     if (modelName.includes('13B')) return 13
     if (modelName.includes('8B') || modelName.includes('7B')) return 7
     if (modelName.includes('2B')) return 2
