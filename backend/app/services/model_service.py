@@ -281,9 +281,27 @@ class ModelService:
                 
                 # Check if this is a gated model
                 gated_models = [
-                    "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",
-                    "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", 
-                    "TheBloke/Meta-Llama-3-14B-Instruct-GGUF"
+                    # Official Meta Llama models (require authentication)
+                    "meta-llama/Meta-Llama-3-8B-Instruct",
+                    "meta-llama/Meta-Llama-3-8B",
+                    "meta-llama/Meta-Llama-3-14B-Instruct",
+                    "meta-llama/Meta-Llama-3-14B",
+                    "meta-llama/Llama-3.1-8B-Instruct",
+                    "meta-llama/Llama-3.2-3B-Instruct",
+                    "meta-llama/Llama-3.2-1B",
+                    "meta-llama/Llama-3.3-70B-Instruct",
+                    "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                    # Google Gemma models (all require authentication)
+                    "google/gemma-2b-it",
+                    "google/gemma-2b",
+                    "google/gemma-7b-it",
+                    "google/gemma-7b",
+                    "google/gemma-3n-E4B-it",
+                    "google/gemma-3n-E4B-it-litert-preview",
+                    "google/gemma-3n-E2B-it-litert-preview",
+                    "google/gemma-3-4b-it",
+                    "google/gemma-3n-E2B-it",
+                    "google/gemma-3-27b-it"
                 ]
                 
                 if model_name in gated_models:
