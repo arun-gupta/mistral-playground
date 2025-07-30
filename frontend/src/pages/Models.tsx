@@ -1016,7 +1016,7 @@ const Models = () => {
         <CardContent>
           <div className="space-y-4">
             {/* Unified Controls Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Family Filter */}
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">Filter by Family</label>
@@ -1046,74 +1046,6 @@ const Models = () => {
                   <option value="name">Name (A-Z)</option>
                   <option value="status">Status (Loaded First)</option>
                 </select>
-              </div>
-
-
-
-              {/* Test API Button */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">API Testing</label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      console.log('🧪 Testing Models API endpoints...')
-                      
-                      const endpoints = [
-                        '/api/v1/models/available',
-                        '/api/v1/models/list',
-                        '/api/v1/models/mock-status',
-                        '/health'
-                      ]
-                      
-                      const results: Record<string, any> = {}
-                      
-                      for (const endpoint of endpoints) {
-                        try {
-                          const response = await fetch(endpoint)
-                          const data = await response.json()
-                          results[endpoint] = {
-                            status: response.status,
-                            ok: response.ok,
-                            data: data
-                          }
-                          console.log(`✅ ${endpoint}:`, results[endpoint])
-                        } catch (error) {
-                          results[endpoint] = {
-                            status: 'error',
-                            ok: false,
-                            error: error instanceof Error ? error.message : String(error)
-                          }
-                          console.error(`❌ ${endpoint}:`, error)
-                        }
-                      }
-                      
-                      console.log('🧪 All Models API test results:', results)
-                      
-                      const workingEndpoints = Object.keys(results).filter(k => results[k].ok)
-                      const failedEndpoints = Object.keys(results).filter(k => !results[k].ok)
-                      
-                      let message = `Models API Test Results:\n\n`
-                      message += `✅ Working (${workingEndpoints.length}): ${workingEndpoints.join(', ')}\n\n`
-                      message += `❌ Failed (${failedEndpoints.length}): ${failedEndpoints.join(', ')}\n\n`
-                      
-                      if (results['/api/v1/models/available']?.ok) {
-                        const models = results['/api/v1/models/available'].data
-                        message += `📋 Models found: ${models.length}\n`
-                        message += `Models: ${models.map((m: any) => m.name).join(', ')}`
-                      }
-                      
-                      alert(message)
-                    } catch (error) {
-                      console.error('Comprehensive Models API test failed:', error)
-                      alert('Comprehensive Models API test failed: ' + error)
-                    }
-                  }}
-                  className="w-full"
-                >
-                  🐛 Test API
-                </Button>
               </div>
             </div>
 
@@ -1305,6 +1237,87 @@ const Models = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Developer Tools */}
+      <Card className="border-orange-200 bg-orange-50">
+        <CardHeader>
+          <CardTitle className="text-orange-800">🛠️ Developer Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-sm text-orange-700">
+              Tools for debugging and testing the Models API endpoints.
+            </p>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    console.log('🧪 Testing Models API endpoints...')
+                    
+                    const endpoints = [
+                      '/api/v1/models/available',
+                      '/api/v1/models/list',
+                      '/api/v1/models/mock-status',
+                      '/health'
+                    ]
+                    
+                    const results: Record<string, any> = {}
+                    
+                    for (const endpoint of endpoints) {
+                      try {
+                        const response = await fetch(endpoint)
+                        const data = await response.json()
+                        results[endpoint] = {
+                          status: response.status,
+                          ok: response.ok,
+                          data: data
+                        }
+                        console.log(`✅ ${endpoint}:`, results[endpoint])
+                      } catch (error) {
+                        results[endpoint] = {
+                          status: 'error',
+                          ok: false,
+                          error: error instanceof Error ? error.message : String(error)
+                        }
+                        console.error(`❌ ${endpoint}:`, error)
+                      }
+                    }
+                    
+                    console.log('🧪 All Models API test results:', results)
+                    
+                    const workingEndpoints = Object.keys(results).filter(k => results[k].ok)
+                    const failedEndpoints = Object.keys(results).filter(k => !results[k].ok)
+                    
+                    let message = `Models API Test Results:\n\n`
+                    message += `✅ Working (${workingEndpoints.length}): ${workingEndpoints.join(', ')}\n\n`
+                    message += `❌ Failed (${failedEndpoints.length}): ${failedEndpoints.join(', ')}\n\n`
+                    
+                    if (results['/api/v1/models/available']?.ok) {
+                      const models = results['/api/v1/models/available'].data
+                      message += `📋 Models found: ${models.length}\n`
+                      message += `Models: ${models.map((m: any) => m.name).join(', ')}`
+                    }
+                    
+                    alert(message)
+                  } catch (error) {
+                    console.error('Comprehensive Models API test failed:', error)
+                    alert('API test failed. Check console for details.')
+                  }
+                }}
+                className="bg-orange-100 border-orange-300 text-orange-800 hover:bg-orange-200"
+              >
+                <span className="mr-1">🐛</span>
+                Test API Endpoints
+              </Button>
+              <span className="text-xs text-orange-600">
+                Tests connectivity to backend API endpoints
+              </span>
             </div>
           </div>
         </CardContent>
