@@ -33,9 +33,8 @@ export const getModelSize = (modelName: string): number => {
 export const isRecommended = (modelName: string): boolean => {
   const recommended = [
     'microsoft/DialoGPT-small', // Testing - open model, very small
-    'mistralai/Mistral-7B-v0.1', // Base Mistral model, open access
-    'mistralai/Mistral-7B-v0.2', // Base Mistral model v2, open access
-    'mistralai/Mistral-7B-Instruct-v0.3', // Instruction-tuned, open access
+    'microsoft/DialoGPT-medium', // Testing - open model, medium size
+    'microsoft/DialoGPT-large', // Testing - open model, large size
     'meta-llama/Meta-Llama-3-8B-Instruct', // Official Meta Llama (requires auth)
     'meta-llama/Llama-3.1-8B-Instruct' // Official Meta Llama (requires auth)
   ]
@@ -61,9 +60,14 @@ export const isGatedModel = (modelName: string): boolean => {
     'google/gemma-3n-E4B-it',                // Latest Gemma 3, medium, instruction-tuned
     'google/gemma-3-4b-it',                  // Latest Gemma 3, 4B variant
     'google/gemma-3-27b-it',                 // Large model for high performance
-    // Mistral models that are now gated
-    'mistralai/Mistral-7B-Instruct-v0.1',      // Now requires authentication
-    'mistralai/Mistral-7B-Instruct-v0.2'       // Now requires authentication
+    // Mistral models that are now gated (including base models)
+    'mistralai/Mistral-7B-v0.1',               // Base model, now gated
+    'mistralai/Mistral-7B-v0.2',               // Base model v2, now gated
+    'mistralai/Mistral-7B-Instruct-v0.1',      // Instruction-tuned, gated
+    'mistralai/Mistral-7B-Instruct-v0.2',      // Instruction-tuned, gated
+    'mistralai/Mistral-7B-Instruct-v0.3',      // Instruction-tuned, gated
+    'mistralai/Mistral-7B-Instruct-v0.4',      // Instruction-tuned, gated
+    'mistralai/Mistral-7B-Instruct-v0.5'       // Instruction-tuned, gated
   ]
   return gatedModels.includes(modelName)
 }

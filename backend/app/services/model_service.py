@@ -311,9 +311,14 @@ class ModelService:
                     "google/gemma-3-4b-it",
                     "google/gemma-3n-E2B-it",
                     "google/gemma-3-27b-it",
-                    # Mistral models that are now gated
+                    # Mistral models that are now gated (including base models)
+                    "mistralai/Mistral-7B-v0.1",
+                    "mistralai/Mistral-7B-v0.2",
                     "mistralai/Mistral-7B-Instruct-v0.1",
-                    "mistralai/Mistral-7B-Instruct-v0.2"
+                    "mistralai/Mistral-7B-Instruct-v0.2",
+                    "mistralai/Mistral-7B-Instruct-v0.3",
+                    "mistralai/Mistral-7B-Instruct-v0.4",
+                    "mistralai/Mistral-7B-Instruct-v0.5"
                 ]
                 
                 if model_name in gated_models:
@@ -554,18 +559,10 @@ Alternative models that don't require authentication:
         """Get list of available models"""
         # CPU-friendly models ordered by size (open models first)
         return [
-            # Tiny models (very CPU-friendly, open)
-            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
-            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
-            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
-            
-            # Mistral models (6 total - smaller sizes preferred)
-            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM (still open)
-            "mistralai/Mistral-7B-v0.2",               # Base model v2, ~14GB RAM (still open)
-            "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned, ~14GB RAM (still open)
-            "mistralai/Mistral-7B-Instruct-v0.4",      # Latest instruction-tuned, ~14GB RAM (still open)
-            "mistralai/Mistral-7B-Instruct-v0.5",      # Latest instruction-tuned, ~14GB RAM (still open)
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # High performance, ~32GB RAM, GPU recommended
+            # Open models for testing and development (no authentication required)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM, open access
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM, open access  
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM, open access
             
             # Google Gemma models (open) - Top 6 most useful
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing

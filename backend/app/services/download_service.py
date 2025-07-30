@@ -199,9 +199,14 @@ class DownloadService:
                 "google/gemma-3n-E4B-it",                # Latest Gemma 3, medium, instruction-tuned
                 "google/gemma-3-4b-it",                  # Latest Gemma 3, 4B variant
                 "google/gemma-3-27b-it",                 # Large model for high performance
-                # Mistral models that are now gated
-                "mistralai/Mistral-7B-Instruct-v0.1",      # Now requires authentication
-                "mistralai/Mistral-7B-Instruct-v0.2"       # Now requires authentication
+                # Mistral models that are now gated (including base models)
+                "mistralai/Mistral-7B-v0.1",               # Base model, now gated
+                "mistralai/Mistral-7B-v0.2",               # Base model v2, now gated
+                "mistralai/Mistral-7B-Instruct-v0.1",      # Instruction-tuned, gated
+                "mistralai/Mistral-7B-Instruct-v0.2",      # Instruction-tuned, gated
+                "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned, gated
+                "mistralai/Mistral-7B-Instruct-v0.4",      # Instruction-tuned, gated
+                "mistralai/Mistral-7B-Instruct-v0.5"       # Instruction-tuned, gated
             ]
             
             # Check if this is a gated model and if we have authentication
