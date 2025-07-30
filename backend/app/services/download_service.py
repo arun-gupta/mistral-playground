@@ -237,9 +237,16 @@ class DownloadService:
                             if exists:
                                 print(f"🔍 DEBUG: Loading API key from: {os.path.abspath(env_path)}")
                                 with open(env_path, 'r') as f:
-                                    for line in f:
+                                    file_content = f.read()
+                                    print(f"🔍 DEBUG: .env file content (first 200 chars): {file_content[:200]}...")
+                                    
+                                    # Reset file pointer and read line by line
+                                    f.seek(0)
+                                    for line_num, line in enumerate(f, 1):
+                                        line = line.strip()
+                                        print(f"🔍 DEBUG: Line {line_num}: {line}")
                                         if line.startswith('HUGGINGFACE_API_KEY='):
-                                            api_key = line.strip().split('=', 1)[1]
+                                            api_key = line.split('=', 1)[1]
                                             print(f"🔍 DEBUG: Successfully loaded API key: {api_key[:10]}...")
                                             break
                                     if api_key:
