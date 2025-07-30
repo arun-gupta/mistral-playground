@@ -1314,12 +1314,7 @@ const Models = () => {
                                 <span className="mr-1">📦</span>
                                 Downloaded
                               </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-muted-foreground border-gray-300 text-xs">
-                                <span className="mr-1">📋</span>
-                                Available
-                              </Badge>
-                            )}
+                            ) : null}
                           </div>
                         </div>
                       </CardHeader>
