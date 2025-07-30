@@ -661,7 +661,7 @@ const Comparison = () => {
                             title="Click to visit HuggingFace page and request access"
                           >
                             <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs cursor-pointer hover:bg-red-200 transition-colors">
-                              🔒 Gated
+                              🔒 Requires Access
                             </Badge>
                           </a>
                         )}
