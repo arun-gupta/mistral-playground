@@ -1509,11 +1509,17 @@ const Models = () => {
                             <Button 
                               onClick={() => downloadAndLoadModel(model.name)}
                               size="sm"
-                              className="w-full bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 text-xs"
-                              disabled={downloadingModels.has(model.name) || loadingModels.has(model.name)}
+                              className={`w-full text-xs ${
+                                isGatedModel(model.name) 
+                                  ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed' 
+                                  : 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100'
+                              }`}
+                              disabled={downloadingModels.has(model.name) || loadingModels.has(model.name) || isGatedModel(model.name)}
                             >
-                              <span className="mr-1">📥</span>
-                              Download & Load
+                              <span className="mr-1">
+                                {isGatedModel(model.name) ? '🔒' : '📥'}
+                              </span>
+                              {isGatedModel(model.name) ? 'Requires Access' : 'Download & Load'}
                             </Button>
                           )}
                         </div>
@@ -1609,6 +1615,13 @@ const Models = () => {
                   <span className="text-sm text-muted-foreground">Click "Download & Load" to get started</span>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 text-xs">
+                    <span className="mr-1">🔒</span>
+                    Requires Access
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">Button disabled - click badge to request access</span>
+                </div>
+                <div className="flex items-center space-x-2">
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
                     Downloading
@@ -1670,7 +1683,7 @@ const Models = () => {
                 <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
                   🔒 Requires Access
                 </Badge>
-                <span className="text-sm text-red-700">Models that need Hugging Face authentication (click badge to visit model page)</span>
+                <span className="text-sm text-red-700">Models that need Hugging Face authentication (button disabled, click badge to visit model page)</span>
               </div>
               <div className="text-sm text-red-700 space-y-2">
                 <p><strong>Why some models require authentication:</strong></p>
