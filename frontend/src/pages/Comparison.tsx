@@ -51,7 +51,7 @@ const Comparison = () => {
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const [filterBy, setFilterBy] = useState<'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'>('all')
   const [sortBy, setSortBy] = useState<'size' | 'name' | 'status'>('size')
-  const [showAdvanced, setShowAdvanced] = useState(true)
+
   const { toast } = useToast()
 
   // Common parameters for all models
@@ -83,15 +83,7 @@ const Comparison = () => {
     return 0
   }
 
-  const isKeyVariant = (modelName: string): boolean => {
-    const keyVariants = [
-      'mistralai/Mistral-7B-Instruct-v0.2',
-      'meta-llama/Meta-Llama-3-8B-Instruct',
-      'meta-llama/Llama-3.1-8B-Instruct',
-      'microsoft/DialoGPT-small'
-    ]
-    return keyVariants.includes(modelName)
-  }
+
 
   // Fetch model statuses and available models
   const fetchModelStatuses = async () => {
@@ -211,10 +203,7 @@ const Comparison = () => {
       })
     }
 
-    // Apply advanced variants filter
-    if (!showAdvanced) {
-      filtered = filtered.filter(modelName => isKeyVariant(modelName))
-    }
+
 
     // Apply downloaded filter
     if (showDownloadedOnly) {
@@ -406,28 +395,7 @@ const Comparison = () => {
                 </select>
               </div>
 
-              {/* Advanced Variants Toggle */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Advanced Variants</label>
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                      showAdvanced ? 'bg-green-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        showAdvanced ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-sm text-gray-600">
-                    {showAdvanced ? 'Show All' : 'Hide Advanced'}
-                  </span>
-                </div>
-              </div>
+
 
               {/* Refresh Models Button */}
               <div>
