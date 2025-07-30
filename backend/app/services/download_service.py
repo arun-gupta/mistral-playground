@@ -200,7 +200,8 @@ class DownloadService:
                 "google/gemma-3-4b-it",                  # Latest Gemma 3, 4B variant
                 "google/gemma-3-27b-it",                 # Large model for high performance
                 # Mistral models that are now gated
-                "mistralai/Mistral-7B-Instruct-v0.1"      # Now requires authentication
+                "mistralai/Mistral-7B-Instruct-v0.1",      # Now requires authentication
+                "mistralai/Mistral-7B-Instruct-v0.2"       # Now requires authentication
             ]
             
             # Check if this is a gated model and if we have authentication

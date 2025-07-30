@@ -116,8 +116,8 @@ const Comparison = () => {
   // Check if model is recommended
   const isRecommended = (modelName: string) => {
     const recommended = [
-      'microsoft/DialoGPT-small', // Testing
-      'mistralai/Mistral-7B-Instruct-v0.2', // Full quality Mistral
+      'microsoft/DialoGPT-small', // Testing - open model
+      'mistralai/Mixtral-8x7B-Instruct-v0.1', // High quality Mistral (open)
       'meta-llama/Meta-Llama-3-8B-Instruct', // Official Meta Llama (requires auth)
       'meta-llama/Llama-3.1-8B-Instruct' // Official Meta Llama (requires auth)
     ]
@@ -178,8 +178,9 @@ const Comparison = () => {
       'google/gemma-3n-E4B-it',                // Latest Gemma 3, medium, instruction-tuned
       'google/gemma-3-4b-it',                  // Latest Gemma 3, 4B variant
       'google/gemma-3-27b-it',                 // Large model for high performance
-      // Mistral models that are now gated
-      'mistralai/Mistral-7B-Instruct-v0.1'      // Now requires authentication
+             // Mistral models that are now gated
+       'mistralai/Mistral-7B-Instruct-v0.1',      // Now requires authentication
+       'mistralai/Mistral-7B-Instruct-v0.2'       // Now requires authentication
     ]
     return gatedModels.includes(modelName)
   }

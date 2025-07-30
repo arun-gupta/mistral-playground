@@ -299,10 +299,8 @@ async def get_available_models():
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
             
-            # Full Mistral models (require more RAM)
-            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
-            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
-            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            # Full Mistral models (require more RAM) - Note: v0.1 and v0.2 are now gated
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM (still open)
             
             # Meta Llama models (official) - Top 6 most useful
             "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
@@ -367,10 +365,8 @@ async def get_available_models():
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
             
-            # Full Mistral models (require more RAM)
-            "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
-            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
-            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
+            # Full Mistral models (require more RAM) - Note: v0.1 and v0.2 are now gated
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM (still open)
             
             # Meta Llama models (official) - Top 6 most useful
             "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
