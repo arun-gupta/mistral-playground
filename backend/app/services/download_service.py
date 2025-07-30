@@ -167,6 +167,15 @@ class DownloadService:
             
             # Debug: Check settings at the start
             from backend.app.core.config import settings
+            
+            # Environment detection
+            is_codespaces = bool(os.environ.get('CODESPACES') or os.environ.get('GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN'))
+            hostname = os.environ.get('HOSTNAME', 'unknown')
+            workspace_dir = os.environ.get('GITHUB_WORKSPACE', os.getcwd())
+            
+            print(f"🔍 DEBUG: Environment - Codespaces: {is_codespaces}, Hostname: {hostname}")
+            print(f"🔍 DEBUG: Environment - Workspace: {workspace_dir}")
+            print(f"🔍 DEBUG: Environment - Current working directory: {os.getcwd()}")
             print(f"🔍 DEBUG: Settings loaded - HUGGINGFACE_API_KEY exists: {settings.HUGGINGFACE_API_KEY is not None}")
             print(f"🔍 DEBUG: Settings HUGGINGFACE_API_KEY value: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
             print(f"🔍 DEBUG: Environment variable HUGGINGFACE_API_KEY: {os.environ.get('HUGGINGFACE_API_KEY', 'NOT_SET')[:10] if os.environ.get('HUGGINGFACE_API_KEY') else 'NOT_SET'}...")
@@ -223,8 +232,10 @@ class DownloadService:
                         ]
                         
                         for env_path in possible_env_paths:
-                            if os.path.exists(env_path):
-                                print(f"🔍 DEBUG: Trying to load API key from: {env_path}")
+                            exists = os.path.exists(env_path)
+                            print(f"🔍 DEBUG: Checking .env path: {env_path} - {'EXISTS' if exists else 'NOT FOUND'}")
+                            if exists:
+                                print(f"🔍 DEBUG: Loading API key from: {os.path.abspath(env_path)}")
                                 with open(env_path, 'r') as f:
                                     for line in f:
                                         if line.startswith('HUGGINGFACE_API_KEY='):
