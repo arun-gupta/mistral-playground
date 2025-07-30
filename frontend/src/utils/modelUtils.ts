@@ -100,6 +100,14 @@ export const isSmallModel = (modelName: string): boolean => {
 }
 
 /**
+ * Check if model size is within the specified threshold
+ */
+export const isModelSizeWithinThreshold = (modelName: string, maxSizeInB: number): boolean => {
+  const size = getModelSize(modelName)
+  return size <= maxSizeInB
+}
+
+/**
  * Check if model is large (requires significant resources)
  */
 export const isLargeModel = (modelName: string): boolean => {

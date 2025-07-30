@@ -65,7 +65,7 @@ const Models = () => {
 
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
-  const [showSmallModelsOnly, setShowSmallModelsOnly] = useState(false)  // Toggle for small models only
+  const [maxModelSize, setMaxModelSize] = useState(2)  // Slider for maximum model size (in billions of parameters)
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
   const { toast } = useToast()
@@ -108,9 +108,9 @@ const Models = () => {
       filteredModels = filteredModels.filter(model => !isGatedModel(model.name))
     }
 
-    // Apply small models filter
-    if (showSmallModelsOnly) {
-      filteredModels = filteredModels.filter(model => isSmallModel(model.name))
+    // Apply size filter using slider
+    if (maxModelSize < 70) { // Only apply filter if not showing all models
+      filteredModels = filteredModels.filter(model => isModelSizeWithinThreshold(model.name, maxModelSize))
     }
 
 
@@ -813,7 +813,7 @@ const Models = () => {
                 setShowRecommendedOnly(false)
                 setShowCPUOnly(false)
                 setShowNoAuthRequired(false)
-                setShowSmallModelsOnly(false)
+                setMaxModelSize(2) // Reset to default small models threshold
               }}
               className="text-xs px-2 py-1 h-6"
               disabled={getActiveFilterCount({
@@ -822,7 +822,7 @@ const Models = () => {
                 showRecommendedOnly,
                 showCPUOnly,
                 showNoAuthRequired,
-                showSmallModelsOnly
+                showSmallModelsOnly: maxModelSize < 70
               }) === 0}
             >
               Clear All
@@ -864,22 +864,26 @@ const Models = () => {
                     <span className="text-xs font-medium text-gray-700">CPU</span>
                   </div>
 
-                  {/* Small Models */}
+                  {/* Model Size Slider */}
                   <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showSmallModelsOnly ? 'translate-x-4' : 'translate-x-1'
-                        }`}
+                    <span className="text-xs font-medium text-gray-700">Max Size:</span>
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="70"
+                        step="0.1"
+                        value={maxModelSize}
+                        onChange={(e) => setMaxModelSize(parseFloat(e.target.value))}
+                        className="w-16 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        style={{
+                          background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(maxModelSize / 70) * 100}%, #e5e7eb ${(maxModelSize / 70) * 100}%, #e5e7eb 100%)`
+                        }}
                       />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">Small</span>
+                      <span className="text-xs font-medium text-gray-700 min-w-[2rem]">
+                        {maxModelSize === 70 ? 'All' : `${maxModelSize}B`}
+                      </span>
+                    </div>
                   </div>
 
                   {/* No Auth Required */}
@@ -921,6 +925,20 @@ const Models = () => {
 
                 </div>
               </div>
+
+      {/* Size Legend */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center space-x-4 text-blue-800">
+            <span className="font-medium">Size Guide:</span>
+            <span>• < 1B: Very Small (DialoGPT)</span>
+            <span>• 1-2B: Small (Testing)</span>
+            <span>• 3-8B: Medium (Good Balance)</span>
+            <span>• 14-17B: Large (High Performance)</span>
+            <span>• 27-70B: Very Large (GPU Required)</span>
+          </div>
+        </div>
+      </div>
 
       {/* Developer Tools - compact */}
       <div className="flex items-center justify-end">
