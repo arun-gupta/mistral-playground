@@ -1283,7 +1283,7 @@ const Models = () => {
                             )}
                             {isGatedModel(model.name) && (
                               <a
-                                href={`https://huggingface.co/${encodeURIComponent(model.name)}`}
+                                href={`https://huggingface.co/${model.name}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-block"

@@ -662,7 +662,7 @@ const Comparison = () => {
                         )}
                         {isGatedModel(modelName) && (
                           <a
-                            href={`https://huggingface.co/${encodeURIComponent(modelName)}`}
+                            href={`https://huggingface.co/${modelName}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-block"
