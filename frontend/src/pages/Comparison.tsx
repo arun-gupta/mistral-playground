@@ -255,148 +255,132 @@ const Comparison = () => {
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Model Comparison</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl font-bold">Model Comparison</h1>
+        <p className="text-sm text-muted-foreground">
           Compare responses from multiple models side by side
         </p>
       </div>
 
-      {/* Model Selection */}
-      <Card>
-        <CardHeader>
-          <div>
-            <CardTitle>Select Models to Compare</CardTitle>
-            <CardDescription>
-              Choose 2 or more models to compare their responses
-            </CardDescription>
+      {/* Compact Filters and Controls */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">Quick Filters</h3>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowDownloadedOnly(false)
+                setShowLoadedOnly(false)
+                setShowRecommendedOnly(false)
+                setShowCPUOnly(false)
+                setShowNoAuthRequired(false)
+                setShowSmallModelsOnly(false)
+              }}
+              className="text-xs px-2 py-1 h-6"
+              disabled={getActiveFilterCount({
+                showDownloadedOnly,
+                showLoadedOnly,
+                showRecommendedOnly,
+                showCPUOnly,
+                showNoAuthRequired,
+                showSmallModelsOnly
+              }) === 0}
+            >
+              Clear All
+            </Button>
+            <Button
+              onClick={fetchModelStatuses}
+              variant="outline"
+              size="sm"
+              className="text-xs px-2 py-1 h-6"
+            >
+              🔄 Refresh
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Unified Controls Grid */}
-            {/* Quick Filters Section */}
-            <div className="border-t border-gray-200 pt-4">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-gray-700">Quick Filters</h3>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setShowDownloadedOnly(false)
-                        setShowLoadedOnly(false)
-                        setShowRecommendedOnly(false)
-                        setShowCPUOnly(false)
-                        setShowNoAuthRequired(false)
-                        setShowSmallModelsOnly(false)
-                      }}
-                      className="text-xs px-3 py-1 h-8"
-                      disabled={getActiveFilterCount({
-                        showDownloadedOnly,
-                        showLoadedOnly,
-                        showRecommendedOnly,
-                        showCPUOnly,
-                        showNoAuthRequired,
-                        showSmallModelsOnly
-                      }) === 0}
-                    >
-                      Clear All
-                    </Button>
-                    <Button
-                      onClick={fetchModelStatuses}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs px-3 py-1 h-8"
-                    >
-                      🔄 Refresh
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        </div>
+                <div className="flex items-center space-x-4">
                   {/* CPU Compatible */}
-                  <div className="flex items-center space-x-2 p-2 bg-green-50 border border-green-200 rounded">
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setShowCPUOnly(!showCPUOnly)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
                         showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          showCPUOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showCPUOnly ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-green-800">CPU</span>
+                    <span className="text-xs font-medium text-gray-700">CPU</span>
                   </div>
 
                   {/* Small Models */}
-                  <div className="flex items-center space-x-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
                         showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          showSmallModelsOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showSmallModelsOnly ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-blue-800">Small</span>
+                    <span className="text-xs font-medium text-gray-700">Small</span>
                   </div>
 
                   {/* No Auth Required */}
-                  <div className="flex items-center space-x-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 ${
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
                         showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          showNoAuthRequired ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showNoAuthRequired ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-yellow-800">No Auth</span>
+                    <span className="text-xs font-medium text-gray-700">No Auth</span>
                   </div>
 
                   {/* Recommended */}
-                  <div className="flex items-center space-x-2 p-2 bg-purple-50 border border-purple-200 rounded">
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 ${
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
                         showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          showRecommendedOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showRecommendedOnly ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-purple-800">Recommended</span>
+                    <span className="text-xs font-medium text-gray-700">Recommended</span>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
           
           {/* Model Selection Grid */}
-          <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">Available Models ({getFilteredAvailableModels().length})</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+          <div className="mt-4">
+            <h3 className="text-lg font-medium text-gray-700 mb-3">Available Models ({getFilteredAvailableModels().length})</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
               {getFilteredAvailableModels().map((modelName) => {
                 const isSelected = selectedModels.includes(modelName)
                 const isLoaded = isModelLoaded(modelName)
@@ -405,12 +389,12 @@ const Comparison = () => {
                   <Button
                     key={modelName}
                     variant={isSelected ? "default" : "outline"}
-                    className={`justify-start h-auto p-4 min-h-[100px] ${
+                    className={`justify-start h-auto p-3 min-h-[80px] ${
                       isSelected ? 'ring-2 ring-primary bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                     }`}
                     onClick={() => handleModelToggle(modelName)}
                   >
-                    <div className="flex flex-col space-y-3 w-full">
+                    <div className="flex flex-col space-y-2 w-full">
                       <div className="flex-1 text-left">
                         <div className="font-medium text-sm truncate mb-1">
                           {modelName.split('/').pop()}
@@ -419,7 +403,7 @@ const Comparison = () => {
                           {modelName}
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1">
                         {isLoaded && (
                           <Badge variant="secondary" className="text-xs px-2 py-1">
                             ✅ Loaded
@@ -465,8 +449,8 @@ const Comparison = () => {
           </div>
           
           {/* Prepared Model Combinations */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h3 className="text-sm font-semibold text-blue-800 mb-3">🚀 Quick Test Combinations</h3>
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <h3 className="text-sm font-semibold text-blue-800 mb-2">🚀 Quick Test Combinations</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               <Button
                 variant="outline"
@@ -563,19 +547,19 @@ const Comparison = () => {
           
           {/* Selected Models Display */}
           {selectedModels.length > 0 && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <div className="flex items-center justify-between mb-3">
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-center justify-between mb-2">
                 <div className="text-sm font-semibold text-blue-800">Selected Models ({selectedModels.length})</div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs"
+                  className="text-xs px-2 py-1 h-6"
                   onClick={() => setSelectedModels([])}
                 >
                   🗑️ Clear All
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {selectedModels.map((model) => (
                   <Badge key={model} variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
                     {model.split('/').pop()}
@@ -589,7 +573,7 @@ const Comparison = () => {
 
       {/* Prompt Input */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Prompt</CardTitle>
@@ -599,9 +583,9 @@ const Comparison = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           {/* Prepared Prompts */}
-          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+          <div className="p-2 bg-green-50 border border-green-200 rounded-md">
             <h3 className="text-sm font-semibold text-green-800 mb-2">💡 Sample Prompts</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <Button
@@ -689,14 +673,14 @@ const Comparison = () => {
 
       {/* Parameters */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle>Generation Parameters</CardTitle>
           <CardDescription>
             These parameters will be applied to all models
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label className="block text-sm font-medium mb-2">Temperature</label>
               <input
