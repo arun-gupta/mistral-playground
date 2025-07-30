@@ -374,7 +374,7 @@ const Comparison = () => {
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center space-x-4 text-blue-800">
             <span className="font-medium">Size Guide:</span>
-            <span>• < 1B: Very Small (DialoGPT)</span>
+            <span>• &lt; 1B: Very Small (DialoGPT)</span>
             <span>• 1-2B: Small (Testing)</span>
             <span>• 3-8B: Medium (Good Balance)</span>
             <span>• 14-17B: Large (High Performance)</span>
