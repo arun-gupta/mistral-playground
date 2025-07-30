@@ -145,8 +145,33 @@ const Comparison = () => {
       filtered = filtered.filter(modelName => isSmallModel(modelName))
     }
 
-    // Sort models by size (largest first) for consistent display
-    filtered.sort((a, b) => getModelSize(b) - getModelSize(a))
+    // Sort models using the same logic as Models page
+    filtered.sort((a, b) => {
+      // First priority: Recommended models
+      const aIsRecommended = isRecommended(a)
+      const bIsRecommended = isRecommended(b)
+      if (aIsRecommended && !bIsRecommended) return -1
+      if (!aIsRecommended && bIsRecommended) return 1
+      
+      // Second priority: Family (Mistral first, then Llama, then others)
+      const aFamily = getModelFamily(a)
+      const bFamily = getModelFamily(b)
+      if (aFamily === 'mistral' && bFamily !== 'mistral') return -1
+      if (bFamily === 'mistral' && aFamily !== 'mistral') return 1
+      if (aFamily === 'llama' && bFamily !== 'llama') return -1
+      if (bFamily === 'llama' && aFamily !== 'llama') return 1
+      
+      // Third priority: For Llama family, put Llama 3 first, then Llama 2
+      if (aFamily === 'llama' && bFamily === 'llama') {
+        const aIsLlama3 = a.includes('Llama-3') || a.includes('Meta-Llama-3')
+        const bIsLlama3 = b.includes('Llama-3') || b.includes('Meta-Llama-3')
+        if (aIsLlama3 && !bIsLlama3) return -1
+        if (!aIsLlama3 && bIsLlama3) return 1
+      }
+      
+      // Fourth priority: Sort by size within each family
+      return getModelSize(b) - getModelSize(a)
+    })
 
     return filtered
   }
