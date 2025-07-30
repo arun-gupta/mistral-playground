@@ -115,10 +115,7 @@ const Models = () => {
 
 
 
-    // Sort models by size (largest first) for consistent display
-    filteredModels.sort((a, b) => getModelSize(b.name) - getModelSize(a.name))
-
-    // Group by family
+    // Group by family first
     const groups: Record<string, ModelStatus[]> = {}
     filteredModels.forEach(model => {
       const family = getModelFamily(model.name)
@@ -126,26 +123,9 @@ const Models = () => {
       groups[family].push(model)
     })
 
-    // Sort models within each group
+    // Sort models within each family by size (largest first)
     Object.keys(groups).forEach(family => {
-      groups[family].sort((a, b) => {
-        // First priority: Recommended models
-        const aIsRecommended = isRecommended(a.name)
-        const bIsRecommended = isRecommended(b.name)
-        if (aIsRecommended && !bIsRecommended) return -1
-        if (!aIsRecommended && bIsRecommended) return 1
-        
-        // Second priority: For Llama family, put Llama 3 first, then Llama 2
-        if (family === 'llama') {
-          const aIsLlama3 = a.name.includes('Llama-3') || a.name.includes('Meta-Llama-3')
-          const bIsLlama3 = b.name.includes('Llama-3') || b.name.includes('Meta-Llama-3')
-          if (aIsLlama3 && !bIsLlama3) return -1
-          if (!aIsLlama3 && bIsLlama3) return 1
-        }
-        
-        // Third priority: Sort by size within each subgroup
-        return getModelSize(b.name) - getModelSize(a.name)
-      })
+      groups[family].sort((a, b) => getModelSize(b.name) - getModelSize(a.name))
     })
 
     // Convert to ModelGroup array
