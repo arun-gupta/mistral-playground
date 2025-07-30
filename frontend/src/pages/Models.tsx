@@ -768,52 +768,40 @@ const Models = () => {
     });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Model Manager</h1>
-        <p className="text-muted-foreground">
-          Download and manage your AI models proactively
-        </p>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Models</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-800">{models.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Available models</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Downloaded</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+    <div className="space-y-4">
+      {/* Header with inline stats */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Model Manager</h1>
+          <p className="text-sm text-muted-foreground">
+            Download and manage your AI models
+          </p>
+        </div>
+        
+        {/* Compact stats */}
+        <div className="flex items-center space-x-6 text-sm">
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-800">{models.length}</div>
+            <div className="text-xs text-muted-foreground">Total</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-orange-600">
               {models.filter(m => m.download_progress === 100 || m.size_on_disk).length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">On disk, ready to load</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Loaded</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xs text-muted-foreground">Downloaded</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-green-600">
               {models.filter(m => m.is_loaded).length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Ready to use</p>
-          </CardContent>
-        </Card>
+            <div className="text-xs text-muted-foreground">Loaded</div>
+          </div>
+        </div>
       </div>
 
-      {/* Active Operations Indicator */}
+      {/* Active Operations Indicator - compact */}
       {(downloadingModels.size > 0 || loadingModels.size > 0) && (
-        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+        <div className="p-2 bg-blue-50 border border-blue-200 rounded-md">
           <div className="flex items-center justify-center space-x-4 text-sm text-blue-700">
             {downloadingModels.size > 0 && (
               <div className="flex items-center">
@@ -831,214 +819,202 @@ const Models = () => {
         </div>
       )}
 
-      {/* Filters and Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters & Controls</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-
-
-            {/* Model Filters Section */}
-            <div className="border-t border-gray-200 pt-4">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-gray-700">Quick Filters</h3>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setShowDownloadedOnly(false)
-                        setShowLoadedOnly(false)
-                        setShowRecommendedOnly(false)
-                        setShowCPUOnly(false)
-                        setShowNoAuthRequired(false)
-                        setShowSmallModelsOnly(false)
-                      }}
-                      className="text-xs px-3 py-1 h-8"
-                      disabled={getActiveFilterCount({
-                        showDownloadedOnly,
-                        showLoadedOnly,
-                        showRecommendedOnly,
-                        showCPUOnly,
-                        showNoAuthRequired,
-                        showSmallModelsOnly
-                      }) === 0}
-                    >
-                      Clear All
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setShowDownloadedOnly(false)
-                        setShowLoadedOnly(false)
-                        setShowRecommendedOnly(true)
-                        setShowCPUOnly(false)
-                        setShowNoAuthRequired(true)
-                        setShowSmallModelsOnly(false)
-                      }}
-                      className="text-xs px-3 py-1 h-8 bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
-                    >
-                      Quick Start
-                    </Button>
-                  </div>
-                </div>
+      {/* Compact Filters and Controls */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">Quick Filters</h3>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowDownloadedOnly(false)
+                setShowLoadedOnly(false)
+                setShowRecommendedOnly(false)
+                setShowCPUOnly(false)
+                setShowNoAuthRequired(false)
+                setShowSmallModelsOnly(false)
+              }}
+              className="text-xs px-2 py-1 h-6"
+              disabled={getActiveFilterCount({
+                showDownloadedOnly,
+                showLoadedOnly,
+                showRecommendedOnly,
+                showCPUOnly,
+                showNoAuthRequired,
+                showSmallModelsOnly
+              }) === 0}
+            >
+              Clear All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowDownloadedOnly(false)
+                setShowLoadedOnly(false)
+                setShowRecommendedOnly(true)
+                setShowCPUOnly(false)
+                setShowNoAuthRequired(true)
+                setShowSmallModelsOnly(false)
+              }}
+              className="text-xs px-2 py-1 h-6 bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
+            >
+              Quick Start
+            </Button>
+          </div>
+        </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="flex items-center space-x-4">
                   {/* CPU Compatible */}
-                  <div className="flex items-center space-x-2 p-2 bg-green-50 border border-green-200 rounded">
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setShowCPUOnly(!showCPUOnly)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
                         showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          showCPUOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showCPUOnly ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-green-800">CPU</span>
+                    <span className="text-xs font-medium text-gray-700">CPU</span>
                   </div>
 
                   {/* Small Models */}
-                  <div className="flex items-center space-x-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
                         showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          showSmallModelsOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showSmallModelsOnly ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-blue-800">Small</span>
+                    <span className="text-xs font-medium text-gray-700">Small</span>
                   </div>
 
                   {/* No Auth Required */}
-                  <div className="flex items-center space-x-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
                       onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 ${
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
                         showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          showNoAuthRequired ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showNoAuthRequired ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-sm text-yellow-800">No Auth</span>
+                    <span className="text-xs font-medium text-gray-700">No Auth</span>
                   </div>
 
-                                     {/* Recommended */}
-                   <div className="flex items-center space-x-2 p-2 bg-purple-50 border border-purple-200 rounded">
-                     <button
-                       type="button"
-                       onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
-                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 ${
-                         showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
-                       }`}
-                     >
-                       <span
-                         className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                           showRecommendedOnly ? 'translate-x-5' : 'translate-x-0.5'
-                         }`}
-                       />
-                     </button>
-                     <span className="text-sm text-purple-800">Recommended</span>
-                   </div>
+                  {/* Recommended */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showRecommendedOnly ? 'translate-x-4' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-gray-700">Recommended</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Developer Tools */}
-      <div className="inline-flex items-center space-x-2 p-2 bg-orange-50 border border-orange-200 rounded-md">
-        <span className="text-xs font-medium text-orange-800">🛠️ Dev Tools:</span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => {
-            try {
-              console.log('🧪 Testing Models API endpoints...')
-              
-              const endpoints = [
-                '/api/v1/models/available',
-                '/api/v1/models/list',
-                '/api/v1/models/mock-status',
-                '/health'
-              ]
-              
-              const results: Record<string, any> = {}
-              
-              for (const endpoint of endpoints) {
-                try {
-                  const response = await fetch(endpoint)
-                  const data = await response.json()
-                  results[endpoint] = {
-                    status: response.status,
-                    ok: response.ok,
-                    data: data
+      {/* Developer Tools - compact */}
+      <div className="flex items-center justify-end">
+        <div className="inline-flex items-center space-x-2 p-1 bg-orange-50 border border-orange-200 rounded text-xs">
+          <span className="text-orange-800">🛠️</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                console.log('🧪 Testing Models API endpoints...')
+                
+                const endpoints = [
+                  '/api/v1/models/available',
+                  '/api/v1/models/list',
+                  '/api/v1/models/mock-status',
+                  '/health'
+                ]
+                
+                const results: Record<string, any> = {}
+                
+                for (const endpoint of endpoints) {
+                  try {
+                    const response = await fetch(endpoint)
+                    const data = await response.json()
+                    results[endpoint] = {
+                      status: response.status,
+                      ok: response.ok,
+                      data: data
+                    }
+                    console.log(`✅ ${endpoint}:`, results[endpoint])
+                  } catch (error) {
+                    results[endpoint] = {
+                      status: 'error',
+                      ok: false,
+                      error: error instanceof Error ? error.message : String(error)
+                    }
+                    console.error(`❌ ${endpoint}:`, error)
                   }
-                  console.log(`✅ ${endpoint}:`, results[endpoint])
-                } catch (error) {
-                  results[endpoint] = {
-                    status: 'error',
-                    ok: false,
-                    error: error instanceof Error ? error.message : String(error)
-                  }
-                  console.error(`❌ ${endpoint}:`, error)
                 }
+                
+                console.log('🧪 All Models API test results:', results)
+                
+                const workingEndpoints = Object.keys(results).filter(k => results[k].ok)
+                const failedEndpoints = Object.keys(results).filter(k => !results[k].ok)
+                
+                let message = `Models API Test Results:\n\n`
+                message += `✅ Working (${workingEndpoints.length}): ${workingEndpoints.join(', ')}\n\n`
+                message += `❌ Failed (${failedEndpoints.length}): ${failedEndpoints.join(', ')}\n\n`
+                
+                if (results['/api/v1/models/available']?.ok) {
+                  const models = results['/api/v1/models/available'].data
+                  message += `📋 Models found: ${models.length}\n`
+                  message += `Models: ${models.map((m: any) => m.name).join(', ')}`
+                }
+                
+                alert(message)
+              } catch (error) {
+                console.error('Comprehensive Models API test failed:', error)
+                alert('API test failed. Check console for details.')
               }
-              
-              console.log('🧪 All Models API test results:', results)
-              
-              const workingEndpoints = Object.keys(results).filter(k => results[k].ok)
-              const failedEndpoints = Object.keys(results).filter(k => !results[k].ok)
-              
-              let message = `Models API Test Results:\n\n`
-              message += `✅ Working (${workingEndpoints.length}): ${workingEndpoints.join(', ')}\n\n`
-              message += `❌ Failed (${failedEndpoints.length}): ${failedEndpoints.join(', ')}\n\n`
-              
-              if (results['/api/v1/models/available']?.ok) {
-                const models = results['/api/v1/models/available'].data
-                message += `📋 Models found: ${models.length}\n`
-                message += `Models: ${models.map((m: any) => m.name).join(', ')}`
-              }
-              
-              alert(message)
-            } catch (error) {
-              console.error('Comprehensive Models API test failed:', error)
-              alert('API test failed. Check console for details.')
-            }
-          }}
-          className="text-xs px-2 py-1 h-6 bg-orange-100 border-orange-300 text-orange-800 hover:bg-orange-200"
-        >
-          🐛 Test API
-        </Button>
+            }}
+            className="text-xs px-2 py-1 h-5 bg-orange-100 border-orange-300 text-orange-800 hover:bg-orange-200"
+          >
+            Test API
+          </Button>
+        </div>
       </div>
 
       {/* Available Models Section */}
-      <div className="mt-8">
-        <h3 className="text-base font-semibold text-gray-700 mb-4">Available Models</h3>
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">Available Models</h3>
       </div>
 
       {/* Model Groups */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {groupedModels.map((group) => (
           <Card key={group.family}>
             <CardHeader>
@@ -1049,15 +1025,15 @@ const Models = () => {
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CardContent className="pt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {group.models.map((model) => {
                   const isDownloading = downloadingModels.has(model.name)
                   const progress = downloadProgress[model.name] || 0
                   
                   return (
                     <Card key={model.name} className="relative">
-                      <CardHeader className="pb-3">
+                      <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-sm font-semibold truncate">
