@@ -4,6 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge'
 import { Progress } from '../components/ui/progress'
 import { useToast } from '../components/ui/use-toast'
+import {
+  getModelFamily,
+  getModelSize,
+  isRecommended,
+  isGatedModel,
+  isGPURequired,
+  isSmallModel,
+  getActiveFilterCount
+} from '../utils/modelUtils'
 
 interface ModelComparison {
   model_name: string
@@ -61,27 +70,7 @@ const Comparison = () => {
   // Available models for comparison - will be populated from backend
   const [availableModels, setAvailableModels] = useState<string[]>([])
 
-  // Helper functions for filtering and sorting
-  const getModelFamily = (modelName: string): string => {
-    if (modelName.includes('mistral') || modelName.includes('Mixtral')) return 'mistral'
-    if (modelName.includes('llama') || modelName.includes('Llama')) return 'llama'
-    if (modelName.includes('gemma') || modelName.includes('Gemma')) return 'gemma'
-    if (modelName.includes('dialogpt') || modelName.includes('DialoGPT')) return 'dialogpt'
-    return 'other'
-  }
 
-  const getModelSize = (modelName: string): number => {
-    if (modelName.includes('70B') || modelName.includes('70b')) return 70
-    if (modelName.includes('17B') || modelName.includes('17b')) return 17
-    if (modelName.includes('14B') || modelName.includes('14b')) return 14
-    if (modelName.includes('13B') || modelName.includes('13b')) return 13
-    if (modelName.includes('10B') || modelName.includes('10b')) return 10
-    if (modelName.includes('8B') || modelName.includes('8b') || modelName.includes('8x7B')) return 8
-    if (modelName.includes('7B') || modelName.includes('7b')) return 7
-    if (modelName.includes('2B') || modelName.includes('2b')) return 2
-    if (modelName.includes('1B') || modelName.includes('1b')) return 1
-    return 0
-  }
 
 
 
@@ -113,77 +102,7 @@ const Comparison = () => {
     return modelStatuses.some(m => m.name === modelName && m.is_loaded)
   }
 
-  // Check if model is recommended
-  const isRecommended = (modelName: string) => {
-    const recommended = [
-      'microsoft/DialoGPT-small', // Testing - open model
-      'mistralai/Mixtral-8x7B-Instruct-v0.1', // High quality Mistral (open)
-      'meta-llama/Meta-Llama-3-8B-Instruct', // Official Meta Llama (requires auth)
-      'meta-llama/Llama-3.1-8B-Instruct' // Official Meta Llama (requires auth)
-    ]
-    return recommended.includes(modelName)
-  }
 
-
-
-  // Check if model requires GPU (simplified binary logic)
-  const isGPURequired = (modelName: string): boolean => {
-    // Only very large models actually require GPU
-    const gpuRequired = [
-      'mistralai/Mixtral-8x7B-Instruct-v0.1', // ~70B effective parameters
-      'meta-llama/Llama-3.3-70B-Instruct',    // 70B parameters
-      'google/gemma-3-27b-it'                 // 27B parameters but very large
-    ]
-    
-    // Models with >20B parameters generally need GPU
-    const modelSize = getModelSize(modelName)
-    if (modelSize > 20) return true
-    
-    return gpuRequired.includes(modelName)
-  }
-
-  // Check if model is small (suitable for quick testing and constrained environments)
-  const isSmallModel = (modelName: string) => {
-    const size = getModelSize(modelName)
-    // Small models: 2B parameters or less, or DialoGPT models
-    return size <= 2 || modelName.includes('DialoGPT')
-  }
-
-  // Get count of active filters
-  const getActiveFilterCount = () => {
-    let count = 0
-    if (showDownloadedOnly) count++
-    if (showLoadedOnly) count++
-    if (showRecommendedOnly) count++
-    if (showCPUOnly) count++
-    if (showNoAuthRequired) count++
-    if (showSmallModelsOnly) count++
-    return count
-  }
-
-  // Check if model requires authentication (gated)
-    const isGatedModel = (modelName: string): boolean => {
-    const gatedModels = [
-      // Official Meta Llama models (require authentication) - Top 6 most useful
-      'meta-llama/Meta-Llama-3-8B-Instruct',     // Medium size, instruction-tuned, good balance
-      'meta-llama/Llama-3.1-8B-Instruct',        // Medium size, instruction-tuned, good balance
-      'meta-llama/Meta-Llama-3-14B-Instruct',    // Large, instruction-tuned, high performance
-      'meta-llama/Llama-3.2-3B-Instruct',        // Small, instruction-tuned, great for testing
-      'meta-llama/Llama-3.2-1B',                 // Very small, base model, great for testing
-      'meta-llama/Llama-3.3-70B-Instruct',       // Very large, instruction-tuned, maximum performance
-      // Google Gemma models (all require authentication) - Top 6 most useful
-      'google/gemma-2b-it',                    // Small, instruction-tuned, great for testing
-      'google/gemma-7b-it',                    // Medium, instruction-tuned, good balance
-      'google/gemma-3n-E2B-it',                // Latest Gemma 3, small, instruction-tuned
-      'google/gemma-3n-E4B-it',                // Latest Gemma 3, medium, instruction-tuned
-      'google/gemma-3-4b-it',                  // Latest Gemma 3, 4B variant
-      'google/gemma-3-27b-it',                 // Large model for high performance
-             // Mistral models that are now gated
-       'mistralai/Mistral-7B-Instruct-v0.1',      // Now requires authentication
-       'mistralai/Mistral-7B-Instruct-v0.2'       // Now requires authentication
-    ]
-    return gatedModels.includes(modelName)
-  }
 
   // Get filtered available models based on toggle state
   const getFilteredAvailableModels = () => {
@@ -350,7 +269,14 @@ const Comparison = () => {
                         setShowSmallModelsOnly(false)
                       }}
                       className="text-xs px-3 py-1 h-8"
-                      disabled={getActiveFilterCount() === 0}
+                      disabled={getActiveFilterCount({
+                        showDownloadedOnly,
+                        showLoadedOnly,
+                        showRecommendedOnly,
+                        showCPUOnly,
+                        showNoAuthRequired,
+                        showSmallModelsOnly
+                      }) === 0}
                     >
                       Clear All
                     </Button>

@@ -4,6 +4,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge'
 import { Progress } from '../components/ui/progress'
 import { useToast } from '../components/ui/use-toast'
+import {
+  getModelFamily,
+  getModelSize,
+  isRecommended,
+  isGatedModel,
+  isGPURequired,
+  isSmallModel,
+  isLargeModel,
+  getDiskSpaceRequirement,
+  getEstimatedDownloadTime,
+  getModelSizeCategory,
+  getModelVariant,
+  getActiveFilterCount,
+  getModelFamilyDisplayName
+} from '../utils/modelUtils'
 
 interface ModelStatus {
   name: string
@@ -56,81 +71,7 @@ const Models = () => {
   const { toast } = useToast()
 
   // Model categorization and filtering logic
-  const getModelFamily = (modelName: string): string => {
-    if (modelName.includes('Mistral-7B') || modelName.includes('Mixtral')) return 'mistral'
-    if (modelName.includes('Llama-3') || modelName.includes('Meta-Llama-3') || modelName.includes('Llama-2') || modelName.includes('Llama-4')) return 'llama'
-    if (modelName.includes('gemma')) return 'gemma'
-    if (modelName.includes('DialoGPT')) return 'dialogpt'
-    return 'other'
-  }
 
-  const getModelSize = (modelName: string): number => {
-    if (modelName.includes('70B') || modelName.includes('Mixtral-8x7B')) return 70
-    if (modelName.includes('17B')) return 17
-    if (modelName.includes('14B')) return 14
-    if (modelName.includes('13B')) return 13
-    if (modelName.includes('8B') || modelName.includes('7B')) return 7
-    if (modelName.includes('2B')) return 2
-    if (modelName.includes('DialoGPT-large')) return 0.774
-    if (modelName.includes('DialoGPT-medium')) return 0.345
-    if (modelName.includes('DialoGPT-small')) return 0.117
-    return 0
-  }
-
-
-
-  const isRecommended = (modelName: string): boolean => {
-    // Recommended models for different use cases (excluding gated models)
-    const recommended = [
-      'microsoft/DialoGPT-small', // Testing - open model
-      'mistralai/Mixtral-8x7B-Instruct-v0.1', // High quality Mistral (open)
-      'meta-llama/Meta-Llama-3-8B-Instruct', // Official Meta Llama (requires auth)
-      'meta-llama/Llama-3.1-8B-Instruct' // Official Meta Llama (requires auth)
-    ]
-    return recommended.includes(modelName)
-  }
-
-
-
-  // Check if model requires authentication (gated)
-  const isGatedModel = (modelName: string): boolean => {
-    const gatedModels = [
-      // Official Meta Llama models (require authentication) - Top 6 most useful
-      'meta-llama/Meta-Llama-3-8B-Instruct',     // Medium size, instruction-tuned, good balance
-      'meta-llama/Llama-3.1-8B-Instruct',        // Medium size, instruction-tuned, good balance
-      'meta-llama/Meta-Llama-3-14B-Instruct',    // Large, instruction-tuned, high performance
-      'meta-llama/Llama-3.2-3B-Instruct',        // Small, instruction-tuned, great for testing
-      'meta-llama/Llama-3.2-1B',                 // Very small, base model, great for testing
-      'meta-llama/Llama-3.3-70B-Instruct',       // Very large, instruction-tuned, maximum performance
-      // Google Gemma models (all require authentication) - Top 6 most useful
-      'google/gemma-2b-it',                    // Small, instruction-tuned, great for testing
-      'google/gemma-7b-it',                    // Medium, instruction-tuned, good balance
-      'google/gemma-3n-E2B-it',                // Latest Gemma 3, small, instruction-tuned
-      'google/gemma-3n-E4B-it',                // Latest Gemma 3, medium, instruction-tuned
-      'google/gemma-3-4b-it',                  // Latest Gemma 3, 4B variant
-      'google/gemma-3-27b-it',                 // Large model for high performance
-      // Mistral models that are now gated
-      'mistralai/Mistral-7B-Instruct-v0.1',      // Now requires authentication
-      'mistralai/Mistral-7B-Instruct-v0.2'       // Now requires authentication
-    ]
-    return gatedModels.includes(modelName)
-  }
-
-  // Check if model requires GPU (simplified binary logic)
-  const isGPURequired = (modelName: string): boolean => {
-    // Only very large models actually require GPU
-    const gpuRequired = [
-      'mistralai/Mixtral-8x7B-Instruct-v0.1', // ~70B effective parameters
-      'meta-llama/Llama-3.3-70B-Instruct',    // 70B parameters
-      'google/gemma-3-27b-it'                 // 27B parameters but very large
-    ]
-    
-    // Models with >20B parameters generally need GPU
-    const modelSize = getModelSize(modelName)
-    if (modelSize > 20) return true
-    
-    return gpuRequired.includes(modelName)
-  }
 
   // Group and filter models
   const getGroupedModels = (): ModelGroup[] => {
@@ -208,17 +149,9 @@ const Models = () => {
     })
 
     // Convert to ModelGroup array
-    const familyNames: Record<string, string> = {
-      mistral: 'Mistral & Mixtral',
-      llama: 'Meta Llama',
-      gemma: 'Google Gemma',
-      dialogpt: 'Microsoft DialoGPT',
-      other: 'Other Models'
-    }
-
     return Object.entries(groups).map(([family, models]) => ({
       family,
-      displayName: familyNames[family] || family,
+      displayName: getModelFamilyDisplayName(family),
       models,
       expanded: false
     })).sort((a, b) => {
@@ -701,73 +634,10 @@ const Models = () => {
     }, 600000)
   }
 
-  // Get model size category
-  const getModelSizeCategory = (modelName: string) => {
-    const size = getModelSize(modelName)
-    if (size >= 70) return 'Very Large (70B+ parameters)'
-    if (size >= 10) return 'Large (10B+ parameters)'
-    if (size >= 7) return 'Large (7B parameters)'
-    if (size >= 2) return 'Medium (2B parameters)'
-    if (size >= 0.5) return 'Medium (500M+ parameters)'
-    return 'Small (100M+ parameters)'
-  }
 
-  // Get estimated download time
-  const getEstimatedDownloadTime = (modelName: string) => {
-    const size = getModelSize(modelName)
-    if (size >= 70) return '15-30 minutes'
-    if (size >= 10) return '8-15 minutes'
-    if (size >= 7) return '5-10 minutes'
-    if (size >= 2) return '3-5 minutes'
-    return '30 seconds - 2 minutes'
-  }
-
-  // Get model variant type
-  const getModelVariant = (modelName: string) => {
-    if (modelName.includes('GGUF')) return 'Quantized'
-    if (modelName.includes('Instruct') || modelName.includes('chat')) return 'Instruct'
-    if (modelName.includes('Base') || (!modelName.includes('Instruct') && !modelName.includes('chat'))) return 'Base'
-    return 'Standard'
-  }
-
-  // Get disk space requirement for model
-  const getDiskSpaceRequirement = (modelName: string) => {
-    const size = getModelSize(modelName)
-    if (size >= 70) return '~140GB'
-    if (size >= 14) return '~28GB'
-    if (size >= 10) return '~20GB'
-    if (size >= 7) return '~14GB'
-    if (size >= 2) return '~4GB'
-    if (size >= 0.5) return '~1GB'
-    return '~500MB'
-  }
-
-  // Check if model requires significant disk space (only show warnings for very large models)
-  const isLargeModel = (modelName: string) => {
-    const size = getModelSize(modelName)
-    // Only show warnings for very large models (14B+ or Mixtral models)
-    // 7B models are common and reasonable for most users
-    return size >= 14 || modelName.includes('Mixtral') || modelName.includes('70B')
-  }
 
   // Check if model is small (suitable for quick testing and constrained environments)
-  const isSmallModel = (modelName: string) => {
-    const size = getModelSize(modelName)
-    // Small models: 2B parameters or less, or DialoGPT models
-    return size <= 2 || modelName.includes('DialoGPT')
-  }
 
-  // Get count of active filters
-  const getActiveFilterCount = () => {
-    let count = 0
-    if (showDownloadedOnly) count++
-    if (showLoadedOnly) count++
-    if (showRecommendedOnly) count++
-    if (showCPUOnly) count++
-    if (showNoAuthRequired) count++
-    if (showSmallModelsOnly) count++
-    return count
-  }
 
   // Offload model from memory (unload)
   const offloadModel = async (modelName: string) => {
@@ -988,7 +858,14 @@ const Models = () => {
                         setShowSmallModelsOnly(false)
                       }}
                       className="text-xs px-3 py-1 h-8"
-                      disabled={getActiveFilterCount() === 0}
+                      disabled={getActiveFilterCount({
+                        showDownloadedOnly,
+                        showLoadedOnly,
+                        showRecommendedOnly,
+                        showCPUOnly,
+                        showNoAuthRequired,
+                        showSmallModelsOnly
+                      }) === 0}
                     >
                       Clear All
                     </Button>
