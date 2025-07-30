@@ -1615,11 +1615,6 @@ const Models = () => {
                             <p className="text-xs text-muted-foreground text-center">
                               ⏱️ {getEstimatedDownloadTime(model.name)}
                             </p>
-                            {isLargeModel(model.name) && (
-                              <p className="text-xs text-yellow-600 text-center">
-                                💾 {getDiskSpaceRequirement(model.name)} disk space
-                              </p>
-                            )}
                           </div>
                         )}
 
