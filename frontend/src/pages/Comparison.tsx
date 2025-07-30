@@ -85,10 +85,9 @@ const Comparison = () => {
 
   const isKeyVariant = (modelName: string): boolean => {
     const keyVariants = [
-      'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-      'TheBloke/Meta-Llama-3-8B-Instruct-GGUF',
-      'TheBloke/Meta-Llama-3-14B-Instruct-GGUF',
-      'google/gemma-2b-it',
+      'mistralai/Mistral-7B-Instruct-v0.2',
+      'meta-llama/Meta-Llama-3-8B-Instruct',
+      'meta-llama/Llama-3.1-8B-Instruct',
       'microsoft/DialoGPT-small'
     ]
     return keyVariants.includes(modelName)
@@ -126,10 +125,9 @@ const Comparison = () => {
   const isRecommended = (modelName: string) => {
     const recommended = [
       'microsoft/DialoGPT-small', // Testing
-      'TheBloke/Mistral-7B-Instruct-v0.2-GGUF', // Production CPU
-      'TheBloke/Mistral-7B-Instruct-v0.1-GGUF', // Alternative Mistral GGUF
       'mistralai/Mistral-7B-Instruct-v0.2', // Full quality Mistral
-      'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF' // High performance
+      'meta-llama/Meta-Llama-3-8B-Instruct', // Official Meta Llama (requires auth)
+      'meta-llama/Llama-3.1-8B-Instruct' // Official Meta Llama (requires auth)
     ]
     return recommended.includes(modelName)
   }
@@ -138,37 +136,31 @@ const Comparison = () => {
   const isGPURecommended = (modelName: string) => {
     const gpuRecommended = [
       'mistralai/Mixtral-8x7B-Instruct-v0.1', // Full Mixtral (~70B effective, ~32GB RAM)
-      'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF', // Mixtral GGUF (~70B effective, 16-24GB RAM)
-      'mistralai/CodeMistral-7B-Instruct-v0.1' // CodeMistral (~14GB RAM, specialized)
+      'mistralai/CodeMistral-7B-Instruct-v0.1', // CodeMistral (~14GB RAM, specialized)
+      'meta-llama/Meta-Llama-3-14B-Instruct', // Large Llama model (~28GB RAM)
+      'meta-llama/Llama-3.3-70B-Instruct' // Very large Llama model (~140GB RAM)
     ]
     return gpuRecommended.includes(modelName)
   }
 
   // Check if model works well on CPU
   const isCPUCompatible = (modelName: string): boolean => {
-    // Models that work well on CPU (smaller models, GGUF variants, etc.)
+    // Models that work well on CPU (smaller models, etc.)
     const cpuCompatible = [
       // Small models that work well on CPU
       'microsoft/DialoGPT-small',
       'microsoft/DialoGPT-medium',
       'microsoft/DialoGPT-large',
       
-      // GGUF variants (optimized for CPU)
-      'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-      'TheBloke/Mistral-7B-Instruct-v0.1-GGUF',
-      'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF',
-      
       // Small Mistral variants
       'mistralai/Mistral-7B-Instruct-v0.2',
       'mistralai/Mistral-7B-v0.1',
       
-      // Small Llama variants
+      // Small Llama variants (official Meta models)
       'meta-llama/Meta-Llama-3-8B-Instruct',
-      'meta-llama/Meta-Llama-3-8B'
+      'meta-llama/Meta-Llama-3-8B',
+      'meta-llama/Llama-3.1-8B-Instruct'
     ]
-    
-    // Also include any model with "GGUF" in the name (CPU-optimized format)
-    if (modelName.includes('GGUF')) return true
     
     // Include small models (2B and under) that are not gated
     if (getModelSize(modelName) <= 2 && !isGatedModel(modelName)) return true
@@ -695,13 +687,13 @@ const Comparison = () => {
                 size="sm"
                 className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
                 onClick={() => setSelectedModels([
-                  'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-                  'TheBloke/Mistral-7B-Instruct-v0.1-GGUF'
+                  'mistralai/Mistral-7B-Instruct-v0.2',
+                  'meta-llama/Meta-Llama-3-8B-Instruct'
                 ])}
               >
                 <div className="text-left">
                   <div className="font-medium">⭐ Recommended Duo</div>
-                  <div className="text-xs text-gray-600">Best CPU models</div>
+                  <div className="text-xs text-gray-600">Official models</div>
                 </div>
               </Button>
               
@@ -726,8 +718,8 @@ const Comparison = () => {
                 size="sm"
                 className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
                 onClick={() => setSelectedModels([
-                  'TheBloke/Mistral-7B-Instruct-v0.2-GGUF',
-                  'TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF'
+                  'mistralai/Mistral-7B-Instruct-v0.2',
+                  'mistralai/Mixtral-8x7B-Instruct-v0.1'
                 ])}
               >
                 <div className="text-left">
@@ -771,13 +763,13 @@ const Comparison = () => {
                 size="sm"
                 className="text-xs h-auto p-2 bg-white hover:bg-blue-50"
                 onClick={() => setSelectedModels([
-                  'mistralai/Mistral-7B-Instruct-v0.2',
-                  'TheBloke/Mistral-7B-Instruct-v0.2-GGUF'
+                  'meta-llama/Meta-Llama-3-8B-Instruct',
+                  'meta-llama/Llama-3.1-8B-Instruct'
                 ])}
               >
                 <div className="text-left">
-                  <div className="font-medium">⚖️ Full vs Quantized</div>
-                  <div className="text-xs text-gray-600">Quality vs Speed</div>
+                  <div className="font-medium">🦙 Llama Evolution</div>
+                  <div className="text-xs text-gray-600">Llama 3.1 vs Meta-Llama 3</div>
                 </div>
               </Button>
             </div>
