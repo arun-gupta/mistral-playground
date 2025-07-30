@@ -52,6 +52,7 @@ const Models = () => {
   const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)  // Toggle for GPU recommended models
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
+  const [showSmallModelsOnly, setShowSmallModelsOnly] = useState(false)  // Toggle for small models only
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
   const { toast } = useToast()
@@ -212,6 +213,11 @@ const Models = () => {
     // Apply no authentication required filter
     if (showNoAuthRequired) {
       filteredModels = filteredModels.filter(model => !isGatedModel(model.name))
+    }
+
+    // Apply small models filter
+    if (showSmallModelsOnly) {
+      filteredModels = filteredModels.filter(model => isSmallModel(model.name))
     }
 
     // Apply advanced variants filter
@@ -822,6 +828,13 @@ const Models = () => {
     return size >= 14 || modelName.includes('Mixtral') || modelName.includes('70B')
   }
 
+  // Check if model is small (suitable for quick testing and constrained environments)
+  const isSmallModel = (modelName: string) => {
+    const size = getModelSize(modelName)
+    // Small models: 2B parameters or less, or DialoGPT models
+    return size <= 2 || modelName.includes('DialoGPT')
+  }
+
   // Offload model from memory (unload)
   const offloadModel = async (modelName: string) => {
     if (!confirm(`Are you sure you want to offload ${modelName} from memory? This will free up RAM but you'll need to reload it to use it again.`)) {
@@ -1301,6 +1314,32 @@ const Models = () => {
                       </button>
                       <span className="text-xs font-medium text-yellow-800">
                         {showNoAuthRequired ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Small Models Only Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div>
+                      <span className="text-sm font-medium text-blue-800">Small Models Only</span>
+                      <p className="text-xs text-blue-600 mt-1">Show models ≤2B parameters</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            showSmallModelsOnly ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-medium text-blue-800">
+                        {showSmallModelsOnly ? 'ON' : 'OFF'}
                       </span>
                     </div>
                   </div>
