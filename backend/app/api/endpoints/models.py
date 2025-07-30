@@ -247,12 +247,12 @@ async def get_available_models():
     # Define fallback models once to avoid duplication
     def get_fallback_models():
         return [
-            # Tiny models (very CPU-friendly)
+            # Open models for testing and development (no authentication required) - Top 3
             "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
             
-            # Mistral/Mixtral models (6 total - all require authentication)
+            # Mistral/Mixtral models (6 total - all require authentication) - Keep all as requested
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM, gated
             "mistralai/Mistral-7B-v0.3",               # Base model v3, ~14GB RAM, gated
             "mistralai/Mistral-7B-Instruct-v0.1",      # Instruction-tuned, ~14GB RAM, gated
@@ -260,27 +260,15 @@ async def get_available_models():
             "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned v3, ~14GB RAM, gated
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # High performance, ~32GB RAM, gated
             
-            # Meta Llama models (official) - Top 6 most useful
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
-            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
-            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
-            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
+            # Meta Llama models (official, require authentication) - Top 3 most useful
             "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
             "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
             
-            # Google Gemma models - Top 6 most useful
+            # Google Gemma models (all require authentication) - Top 3 most useful
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
             "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
-            "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
-            "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
-            "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
             "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
-            
-            # Mixtral models (high performance)
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
-            
-            # GPU-only models (for reference)
-            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
     
     def create_model_statuses(model_names):

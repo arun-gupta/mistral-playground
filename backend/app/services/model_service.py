@@ -290,28 +290,15 @@ class ModelService:
                 
                 # Check if this is a gated model
                 gated_models = [
-                    # Official Meta Llama models (require authentication)
-                    "meta-llama/Meta-Llama-3-8B-Instruct",
-                    "meta-llama/Meta-Llama-3-8B",
-                    "meta-llama/Meta-Llama-3-14B-Instruct",
-                    "meta-llama/Meta-Llama-3-14B",
-                    "meta-llama/Llama-3.1-8B-Instruct",
-                    "meta-llama/Llama-3.2-3B-Instruct",
+                    # Official Meta Llama models (require authentication) - Top 3 most useful
                     "meta-llama/Llama-3.2-1B",
+                    "meta-llama/Meta-Llama-3-8B-Instruct",
                     "meta-llama/Llama-3.3-70B-Instruct",
-                    "meta-llama/Llama-4-Scout-17B-16E-Instruct",
-                    # Google Gemma models (all require authentication)
+                    # Google Gemma models (all require authentication) - Top 3 most useful
                     "google/gemma-2b-it",
-                    "google/gemma-2b",
                     "google/gemma-7b-it",
-                    "google/gemma-7b",
-                    "google/gemma-3n-E4B-it",
-                    "google/gemma-3n-E4B-it-litert-preview",
-                    "google/gemma-3n-E2B-it-litert-preview",
-                    "google/gemma-3-4b-it",
-                    "google/gemma-3n-E2B-it",
                     "google/gemma-3-27b-it",
-                    # Mistral models that are now gated (including base models)
+                    # Mistral models that are now gated (including base models) - Keep all as requested
                     "mistralai/Mistral-7B-v0.1",
                     "mistralai/Mistral-7B-v0.2",
                     "mistralai/Mistral-7B-Instruct-v0.1",
@@ -559,12 +546,12 @@ Alternative models that don't require authentication:
         """Get list of available models"""
         # CPU-friendly models ordered by size (open models first)
         return [
-            # Open models for testing and development (no authentication required)
+            # Open models for testing and development (no authentication required) - Top 3
             "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM, open access
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM, open access  
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM, open access
             
-            # Mistral/Mixtral models (6 total - all require authentication)
+            # Mistral/Mixtral models (6 total - all require authentication) - Keep all as requested
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM, gated
             "mistralai/Mistral-7B-v0.3",               # Base model v3, ~14GB RAM, gated
             "mistralai/Mistral-7B-Instruct-v0.1",      # Instruction-tuned, ~14GB RAM, gated
@@ -572,20 +559,14 @@ Alternative models that don't require authentication:
             "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned v3, ~14GB RAM, gated
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # High performance, ~32GB RAM, gated
             
-            # Google Gemma models (all require authentication) - Top 6 most useful
+            # Google Gemma models (all require authentication) - Top 3 most useful
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
             "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
-            "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
-            "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
-            "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
             "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
             
-            # Meta Llama models (official, require authentication) - Top 6 most useful
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
-            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
-            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
-            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
+            # Meta Llama models (official, require authentication) - Top 3 most useful
             "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
             "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
         ]
 
