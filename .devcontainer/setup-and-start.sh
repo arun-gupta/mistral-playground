@@ -294,6 +294,15 @@ echo "=================================="
 export PYTHONPATH=$PWD
 echo "   - PYTHONPATH set to: $PYTHONPATH"
 
+# Load HUGGINGFACE_API_KEY from .env file if it exists
+if [ -f ".env" ]; then
+    export HUGGINGFACE_API_KEY=$(grep "^HUGGINGFACE_API_KEY=" .env | cut -d'=' -f2)
+    echo "   - Loaded HUGGINGFACE_API_KEY from .env file"
+    echo "   - HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY:0:10}..."
+else
+    echo "   - ⚠️  No .env file found, HUGGINGFACE_API_KEY not set"
+fi
+
 # Run from project root with backend module path and set PYTHONPATH
 echo "   - Backend logs will appear below:"
 echo "   ==================================="

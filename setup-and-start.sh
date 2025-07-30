@@ -98,6 +98,11 @@ trap cleanup SIGINT SIGTERM
 echo "🔧 Starting backend server..."
 echo "   - Starting uvicorn server on port 8000..."
 # Run from project root with backend module path and set PYTHONPATH
+# Also set HUGGINGFACE_API_KEY from .env file if it exists
+if [ -f ".env" ]; then
+    export HUGGINGFACE_API_KEY=$(grep "^HUGGINGFACE_API_KEY=" .env | cut -d'=' -f2)
+    echo "   - Loaded HUGGINGFACE_API_KEY from .env file"
+fi
 PYTHONPATH=$PWD python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
