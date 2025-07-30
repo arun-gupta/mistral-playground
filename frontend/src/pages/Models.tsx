@@ -1027,6 +1027,7 @@ const Models = () => {
                         {maxModelSize === 70 ? 'All' : `${maxModelSize}B`}
                       </span>
                     </div>
+                    <span className="text-xs text-gray-500">(local models only)</span>
                   </div>
 
                 </div>
