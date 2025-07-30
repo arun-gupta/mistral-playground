@@ -1608,14 +1608,14 @@ const Models = () => {
               <h4 className="font-medium mb-3">📊 Model States</h4>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 text-xs">
-                    <span className="mr-1">📋</span>
-                    Available
+                  <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 text-xs">
+                    <span className="mr-1">✅</span>
+                    Ready to Download
                   </Badge>
                   <span className="text-sm text-muted-foreground">Click "Download & Load" to get started</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300 text-xs">
+                  <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 text-xs">
                     <span className="mr-1">🔒</span>
                     Requires Access
                   </Badge>
