@@ -559,27 +559,29 @@ Alternative models that don't require authentication:
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
             
-            # Full Mistral models (require more RAM) - Note: v0.1 and v0.2 are now gated
+            # Mistral models (6 total - smaller sizes preferred)
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM (still open)
+            "mistralai/Mistral-7B-v0.2",               # Base model v2, ~14GB RAM (still open)
+            "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned, ~14GB RAM (still open)
+            "mistralai/Mistral-7B-Instruct-v0.4",      # Latest instruction-tuned, ~14GB RAM (still open)
+            "mistralai/Mistral-7B-Instruct-v0.5",      # Latest instruction-tuned, ~14GB RAM (still open)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # High performance, ~32GB RAM, GPU recommended
             
-                # Google Gemma models (open) - Top 6 most useful
-    "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
-    "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
-    "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
-    "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
-    "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
-    "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
+            # Google Gemma models (open) - Top 6 most useful
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
+            "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
+            "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
+            "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
+            "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
             
-                # Meta Llama models (official, require authentication) - Top 6 most useful
-    "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
-    "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
-    "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
-    "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
-    "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
-    "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
-            
-            # Mixtral models (high performance)
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            # Meta Llama models (official, require authentication) - Top 6 most useful
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
+            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
+            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
+            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
+            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
+            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
             
             # GPU-only models (for reference)
             "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
