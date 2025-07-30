@@ -165,16 +165,13 @@ const Comparison = () => {
   // Check if model requires authentication (gated)
   const isGatedModel = (modelName: string): boolean => {
     const gatedModels = [
-      // Official Meta Llama models (require authentication)
-      'meta-llama/Meta-Llama-3-8B-Instruct',
-      'meta-llama/Meta-Llama-3-8B',
-      'meta-llama/Meta-Llama-3-14B-Instruct',
-      'meta-llama/Meta-Llama-3-14B',
-      'meta-llama/Llama-3.1-8B-Instruct',
-      'meta-llama/Llama-3.2-3B-Instruct',
-      'meta-llama/Llama-3.2-1B',
-      'meta-llama/Llama-3.3-70B-Instruct',
-      'meta-llama/Llama-4-Scout-17B-16E-Instruct',
+          // Official Meta Llama models (require authentication) - Top 6 most useful
+    'meta-llama/Meta-Llama-3-8B-Instruct',     // Medium size, instruction-tuned, good balance
+    'meta-llama/Llama-3.1-8B-Instruct',        // Medium size, instruction-tuned, good balance
+    'meta-llama/Meta-Llama-3-14B-Instruct',    // Large, instruction-tuned, high performance
+    'meta-llama/Llama-3.2-3B-Instruct',        // Small, instruction-tuned, great for testing
+    'meta-llama/Llama-3.2-1B',                 // Very small, base model, great for testing
+    'meta-llama/Llama-3.3-70B-Instruct',       // Very large, instruction-tuned, maximum performance
           // Google Gemma models (all require authentication) - Top 6 most useful
     'google/gemma-2b-it',                    // Small, instruction-tuned, great for testing
     'google/gemma-7b-it',                    // Medium, instruction-tuned, good balance

@@ -569,16 +569,13 @@ Alternative models that don't require authentication:
     "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
     "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
             
-            # Meta Llama models (official, require authentication)
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
-            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
-            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct
-            "meta-llama/Meta-Llama-3-14B",             # ~28GB RAM, base
-            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct
-            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct
-            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base
-            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct
-            "meta-llama/Llama-4-Scout-17B-16E-Instruct", # ~34GB RAM, instruct
+                # Meta Llama models (official, require authentication) - Top 6 most useful
+    "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
+    "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
+    "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
+    "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
+    "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
+    "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
             
             # Mixtral models (high performance)
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended

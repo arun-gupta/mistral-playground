@@ -304,16 +304,13 @@ async def get_available_models():
             "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
             
-            # Meta Llama models (official)
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
-            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
-            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct
-            "meta-llama/Meta-Llama-3-14B",             # ~28GB RAM, base
-            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct
-            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct
-            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base
-            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct
-            "meta-llama/Llama-4-Scout-17B-16E-Instruct", # ~34GB RAM, instruct
+            # Meta Llama models (official) - Top 6 most useful
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
+            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
+            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
+            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
+            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
+            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
             
                 # Google Gemma models - Top 6 most useful
     "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
@@ -375,16 +372,13 @@ async def get_available_models():
             "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
             
-            # Meta Llama models (official)
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
-            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
-            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct
-            "meta-llama/Meta-Llama-3-14B",             # ~28GB RAM, base
-            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct
-            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct
-            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base
-            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct
-            "meta-llama/Llama-4-Scout-17B-16E-Instruct", # ~34GB RAM, instruct
+            # Meta Llama models (official) - Top 6 most useful
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
+            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
+            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
+            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
+            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
+            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
             
             # Google Gemma models
             "google/gemma-2b",                          # ~4GB RAM, small model
