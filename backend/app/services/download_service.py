@@ -7,6 +7,7 @@ from typing import Dict, Optional, List
 from datetime import datetime
 from pathlib import Path
 import hashlib
+import urllib.parse
 
 from backend.app.core.config import settings
 
@@ -209,7 +210,6 @@ Alternative models that don't require authentication:
                 print(error_msg)
                 
                 if model_name in self.download_status:
-                    import urllib.parse
                     encoded_model_name = urllib.parse.quote(model_name, safe='')
                     self.download_status[model_name].update({
                         "status": "failed",
