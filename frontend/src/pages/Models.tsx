@@ -34,8 +34,7 @@ interface ModelGroup {
   expanded: boolean
 }
 
-type SortOption = 'size' | 'name' | 'status'
-type FilterOption = 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'
+
 
 const Models = () => {
   const [models, setModels] = useState<ModelStatus[]>([])
@@ -43,8 +42,7 @@ const Models = () => {
   const [downloadingModels, setDownloadingModels] = useState<Set<string>>(new Set())
   const [loadingModels, setLoadingModels] = useState<Set<string>>(new Set())
   const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({})
-  const [sortBy, setSortBy] = useState<SortOption>('size')
-  const [filterBy, setFilterBy] = useState<FilterOption>('all')
+
 
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)  // New toggle for downloaded models
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
@@ -135,16 +133,6 @@ const Models = () => {
   const getGroupedModels = (): ModelGroup[] => {
     let filteredModels = models
 
-    // Apply family filter
-    if (filterBy !== 'all') {
-      filteredModels = models.filter(model => getModelFamily(model.name) === filterBy)
-    }
-
-    // Apply recommended filter
-    if (filterBy === 'recommended') {
-      filteredModels = models.filter(model => isRecommended(model.name))
-    }
-
     // Apply loaded filter
     if (showLoadedOnly) {
       filteredModels = filteredModels.filter(model => model.is_loaded)
@@ -183,21 +171,8 @@ const Models = () => {
 
 
 
-    // Sort models
-    filteredModels.sort((a, b) => {
-      switch (sortBy) {
-        case 'size':
-          return getModelSize(b.name) - getModelSize(a.name)
-        case 'name':
-          return a.name.localeCompare(b.name)
-        case 'status':
-          if (a.is_loaded && !b.is_loaded) return -1
-          if (!a.is_loaded && b.is_loaded) return 1
-          return 0
-        default:
-          return 0
-      }
-    })
+    // Sort models by size (largest first) for consistent display
+    filteredModels.sort((a, b) => getModelSize(b.name) - getModelSize(a.name))
 
     // Group by family
     const groups: Record<string, ModelStatus[]> = {}
@@ -1004,39 +979,7 @@ const Models = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Unified Controls Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Family Filter */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Filter by Family</label>
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Families</option>
-                  <option value="mistral">Mistral & Mixtral</option>
-                  <option value="llama">Meta Llama 3</option>
-                  <option value="gemma">Google Gemma</option>
-                  <option value="dialogpt">Microsoft DialoGPT</option>
-                  <option value="recommended">Recommended Only</option>
-                </select>
-              </div>
 
-              {/* Sort Options */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Sort by</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="size">Size (Largest First)</option>
-                  <option value="name">Name (A-Z)</option>
-                  <option value="status">Status (Loaded First)</option>
-                </select>
-              </div>
-            </div>
 
             {/* Model Filters Section */}
             <div className="border-t border-gray-200 pt-4">
