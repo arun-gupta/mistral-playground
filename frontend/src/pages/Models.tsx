@@ -1528,28 +1528,28 @@ const Models = () => {
                   <p className="text-sm font-medium text-red-800 mb-2">🔗 Quick Access Links:</p>
                   <div className="space-y-1 text-sm">
                     <a 
-                      href="https://huggingface.co/TheBloke/Meta-Llama-3-14B-Instruct-GGUF" 
+                      href="https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 underline block"
                     >
-                      • Meta Llama 3 14B Instruct GGUF
+                      • Meta Llama 3 8B Instruct (Official)
                     </a>
                     <a 
-                      href="https://huggingface.co/TheBloke/Meta-Llama-3-8B-Instruct-GGUF" 
+                      href="https://huggingface.co/meta-llama/Meta-Llama-3-8B" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 underline block"
                     >
-                      • Meta Llama 3 8B Instruct GGUF
+                      • Meta Llama 3 8B Base (Official)
                     </a>
                     <a 
-                      href="https://huggingface.co/TheBloke/Meta-Llama-3-10B-Instruct-GGUF" 
+                      href="https://huggingface.co/google/gemma-2b-it" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 underline block"
                     >
-                      • Meta Llama 3 10B Instruct GGUF
+                      • Google Gemma 2B Instruct
                     </a>
                   </div>
                 </div>

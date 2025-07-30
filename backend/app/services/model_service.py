@@ -323,8 +323,7 @@ Alternative models that don't require authentication:
 • google/gemma-2b-it (Google's open model)
 """
                     print(error_msg)
-                    encoded_model_name = urllib.parse.quote(model_name, safe='')
-                    raise Exception(f"Gated model access required. Visit https://huggingface.co/{encoded_model_name} to request access.")
+                    raise Exception(f"Gated model access required. Visit https://huggingface.co/{model_name} to request access.")
                 
                 # Load GGUF model with ctransformers
                 self.ct_models[model_name] = CTModelForCausalLM.from_pretrained(
