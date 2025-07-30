@@ -302,81 +302,90 @@ const Comparison = () => {
             </Button>
           </div>
         </div>
-                <div className="flex items-center space-x-4">
-                  {/* CPU Compatible */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowCPUOnly(!showCPUOnly)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showCPUOnly ? 'translate-x-4' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">CPU</span>
-                  </div>
+        <div className="flex items-center space-x-4">
+          {/* CPU Compatible */}
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowCPUOnly(!showCPUOnly)}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                  showCPUOnly ? 'translate-x-4' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className="text-xs font-medium text-gray-700">CPU</span>
+          </div>
 
-                  {/* Small Models */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showSmallModelsOnly ? 'translate-x-4' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">Small</span>
-                  </div>
+          {/* Small Models */}
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                  showSmallModelsOnly ? 'translate-x-4' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className="text-xs font-medium text-gray-700">Small</span>
+          </div>
 
-                  {/* No Auth Required */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showNoAuthRequired ? 'translate-x-4' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">No Auth</span>
-                  </div>
+          {/* No Auth Required */}
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                  showNoAuthRequired ? 'translate-x-4' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className="text-xs font-medium text-gray-700">No Auth</span>
+          </div>
 
-                  {/* Recommended */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showRecommendedOnly ? 'translate-x-4' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">Recommended</span>
-                  </div>
-                </div>
-              </div>
+          {/* Recommended */}
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                  showRecommendedOnly ? 'translate-x-4' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className="text-xs font-medium text-gray-700">Recommended</span>
+          </div>
+        </div>
+      </div>
           
+      {/* Model Selection */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Select Models to Compare</CardTitle>
+          <CardDescription>
+            Choose 2 or more models to compare their responses
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           {/* Model Selection Grid */}
           <div className="mt-4">
             <h3 className="text-lg font-medium text-gray-700 mb-3">Available Models ({getFilteredAvailableModels().length})</h3>
