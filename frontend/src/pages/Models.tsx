@@ -814,10 +814,12 @@ const Models = () => {
     return '~500MB'
   }
 
-  // Check if model requires significant disk space
+  // Check if model requires significant disk space (only show warnings for very large models)
   const isLargeModel = (modelName: string) => {
     const size = getModelSize(modelName)
-    return size >= 7 // 7B parameters or larger
+    // Only show warnings for very large models (14B+ or Mixtral models)
+    // 7B models are common and reasonable for most users
+    return size >= 14 || modelName.includes('Mixtral') || modelName.includes('70B')
   }
 
   // Offload model from memory (unload)
