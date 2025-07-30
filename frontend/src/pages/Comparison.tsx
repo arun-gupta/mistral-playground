@@ -437,11 +437,6 @@ const Comparison = () => {
                 </div>
               </div>
             </div>
-
-
-
-              </div>
-            </div>
           </div>
           
           {/* Model Selection Grid */}
