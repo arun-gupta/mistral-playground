@@ -1505,67 +1505,7 @@ const Models = () => {
           
 
 
-          {/* Gated Models Section */}
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <h4 className="font-medium mb-3 text-red-800">🔒 Gated Models (Require Authentication)</h4>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs">
-                  🔒 Requires Access
-                </Badge>
-                <span className="text-sm text-red-700">Models that need Hugging Face authentication (button disabled, click badge to visit model page)</span>
-              </div>
-              <div className="text-sm text-red-700 space-y-2">
-                <p><strong>Why some models require authentication:</strong></p>
-                <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>Llama 3 models require accepting Meta's license terms</li>
-                  <li>Some models have usage restrictions or commercial licenses</li>
-                  <li>Hugging Face requires explicit permission for certain models</li>
-                </ul>
-                <p><strong>How to get access:</strong></p>
-                <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Visit the model page on Hugging Face</li>
-                  <li>Click "Access Request" and accept the license terms</li>
-                  <li>Wait for approval (usually instant for Llama 3)</li>
-                  <li>Set up your Hugging Face token in the environment</li>
-                </ol>
-                <div className="mt-3 p-3 bg-white border border-red-300 rounded-md">
-                  <p className="text-sm font-medium text-red-800 mb-2">🔗 Quick Access Links:</p>
-                  <div className="space-y-1 text-sm">
-                    <a 
-                      href="https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline block"
-                    >
-                      • Meta Llama 3 8B Instruct (Official)
-                    </a>
-                    <a 
-                      href="https://huggingface.co/meta-llama/Meta-Llama-3-8B" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline block"
-                    >
-                      • Meta Llama 3 8B Base (Official)
-                    </a>
-                    <a 
-                      href="https://huggingface.co/google/gemma-2b-it" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline block"
-                    >
-                      • Google Gemma 2B Instruct
-                    </a>
-                  </div>
-                </div>
-                <p className="text-sm mt-3">
-                  <strong>💡 Alternative:</strong> Use open models like{' '}
-                  <span className="font-mono text-xs bg-gray-100 px-1 rounded">mistralai/Mistral-7B-Instruct-v0.2</span>{' '}
-                  that don't require authentication.
-                </p>
-              </div>
-            </div>
-          </div>
+
         </CardContent>
       </Card>
     </div>
