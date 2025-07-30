@@ -816,6 +816,19 @@ const Models = () => {
     return size <= 2 || modelName.includes('DialoGPT')
   }
 
+  // Get count of active filters
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (showDownloadedOnly) count++
+    if (showLoadedOnly) count++
+    if (showRecommendedOnly) count++
+    if (showGPURecommendedOnly) count++
+    if (showCPUOnly) count++
+    if (showNoAuthRequired) count++
+    if (showSmallModelsOnly) count++
+    return count
+  }
+
   // Offload model from memory (unload)
   const offloadModel = async (modelName: string) => {
     if (!confirm(`Are you sure you want to offload ${modelName} from memory? This will free up RAM but you'll need to reload it to use it again.`)) {
@@ -1052,187 +1065,261 @@ const Models = () => {
             {/* Model Filters Section */}
             <div className="border-t border-gray-200 pt-4">
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
-                <h3 className="text-base font-semibold text-gray-700 mb-4">Model Filters</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Downloaded Models Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-teal-50 border border-teal-200 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium text-teal-800">Downloaded Models Only</span>
-                      <p className="text-xs text-teal-600 mt-1">Show models already downloaded</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowDownloadedOnly(!showDownloadedOnly)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
-                          showDownloadedOnly ? 'bg-teal-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showDownloadedOnly ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs font-medium text-teal-800">
-                        {showDownloadedOnly ? 'ON' : 'OFF'}
-                      </span>
+                {/* Filter Header with Quick Actions */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <h3 className="text-base font-semibold text-gray-700">Model Filters</h3>
+                    {getActiveFilterCount() > 0 && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                        {getActiveFilterCount()} active
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowDownloadedOnly(false)
+                        setShowLoadedOnly(false)
+                        setShowRecommendedOnly(false)
+                        setShowGPURecommendedOnly(false)
+                        setShowCPUOnly(false)
+                        setShowNoAuthRequired(false)
+                        setShowSmallModelsOnly(false)
+                      }}
+                      className="text-xs px-3 py-1 h-8"
+                      disabled={getActiveFilterCount() === 0}
+                    >
+                      Clear All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowDownloadedOnly(false)
+                        setShowLoadedOnly(false)
+                        setShowRecommendedOnly(true)
+                        setShowGPURecommendedOnly(false)
+                        setShowCPUOnly(false)
+                        setShowNoAuthRequired(true)
+                        setShowSmallModelsOnly(false)
+                      }}
+                      className="text-xs px-3 py-1 h-8 bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
+                    >
+                      Quick Start
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Filter Groups */}
+                <div className="space-y-6">
+                  {/* Status Filters */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                      <span className="mr-2">📊</span>
+                      Status Filters
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Downloaded Models Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-teal-50 border border-teal-200 rounded-md">
+                        <div>
+                          <span className="text-sm font-medium text-teal-800">Downloaded Models</span>
+                          <p className="text-xs text-teal-600 mt-1">Already on disk</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowDownloadedOnly(!showDownloadedOnly)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                              showDownloadedOnly ? 'bg-teal-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showDownloadedOnly ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className="text-xs font-medium text-teal-800">
+                            {showDownloadedOnly ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Loaded Models Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <div>
+                          <span className="text-sm font-medium text-blue-800">Loaded Models</span>
+                          <p className="text-xs text-blue-600 mt-1">Ready to use</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowLoadedOnly(!showLoadedOnly)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                              showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className="text-xs font-medium text-blue-800">
+                            {showLoadedOnly ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Loaded Models Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium text-blue-800">Loaded Models Only</span>
-                      <p className="text-xs text-blue-600 mt-1">Show models ready to use</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowLoadedOnly(!showLoadedOnly)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                          showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs font-medium text-blue-800">
-                        {showLoadedOnly ? 'ON' : 'OFF'}
-                      </span>
+                  {/* Performance Filters */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                      <span className="mr-2">⚡</span>
+                      Performance Filters
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {/* CPU Compatible Models Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                        <div>
+                          <span className="text-sm font-medium text-green-800">Works on CPU</span>
+                          <p className="text-xs text-green-600 mt-1">CPU-compatible</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowCPUOnly(!showCPUOnly)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                              showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showCPUOnly ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className="text-xs font-medium text-green-800">
+                            {showCPUOnly ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* GPU Recommended Models Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md">
+                        <div>
+                          <span className="text-sm font-medium text-orange-800">GPU Recommended</span>
+                          <p className="text-xs text-orange-600 mt-1">GPU-optimized</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowGPURecommendedOnly(!showGPURecommendedOnly)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                              showGPURecommendedOnly ? 'bg-orange-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showGPURecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className="text-xs font-medium text-orange-800">
+                            {showGPURecommendedOnly ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Small Models Only Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <div>
+                          <span className="text-sm font-medium text-blue-800">Small Models</span>
+                          <p className="text-xs text-blue-600 mt-1">≤2B parameters</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                              showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showSmallModelsOnly ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className="text-xs font-medium text-blue-800">
+                            {showSmallModelsOnly ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Recommended Models Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium text-purple-800">Recommended Models Only</span>
-                      <p className="text-xs text-purple-600 mt-1">Show curated best models</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-                          showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showRecommendedOnly ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs font-medium text-purple-800">
-                        {showRecommendedOnly ? 'ON' : 'OFF'}
-                      </span>
-                    </div>
-                  </div>
+                  {/* Quality & Access Filters */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                      <span className="mr-2">⭐</span>
+                      Quality & Access Filters
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Recommended Models Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-md">
+                        <div>
+                          <span className="text-sm font-medium text-purple-800">Recommended Only</span>
+                          <p className="text-xs text-purple-600 mt-1">Curated best models</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                              showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showRecommendedOnly ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className="text-xs font-medium text-purple-800">
+                            {showRecommendedOnly ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* GPU Recommended Models Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium text-orange-800">GPU Recommended Only</span>
-                      <p className="text-xs text-orange-600 mt-1">Show GPU-optimized models</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowGPURecommendedOnly(!showGPURecommendedOnly)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                          showGPURecommendedOnly ? 'bg-orange-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showGPURecommendedOnly ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs font-medium text-orange-800">
-                        {showGPURecommendedOnly ? 'ON' : 'OFF'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* CPU Compatible Models Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium text-green-800">Works on CPU</span>
-                      <p className="text-xs text-green-600 mt-1">Show CPU-compatible models</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowCPUOnly(!showCPUOnly)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                          showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showCPUOnly ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs font-medium text-green-800">
-                        {showCPUOnly ? 'ON' : 'OFF'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* No Authentication Required Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium text-yellow-800">No Auth Required</span>
-                      <p className="text-xs text-yellow-600 mt-1">Hide gated models</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${
-                          showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showNoAuthRequired ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs font-medium text-yellow-800">
-                        {showNoAuthRequired ? 'ON' : 'OFF'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Small Models Only Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium text-blue-800">Small Models Only</span>
-                      <p className="text-xs text-blue-600 mt-1">Show models ≤2B parameters</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                          showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            showSmallModelsOnly ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-xs font-medium text-blue-800">
-                        {showSmallModelsOnly ? 'ON' : 'OFF'}
-                      </span>
+                      {/* No Authentication Required Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                        <div>
+                          <span className="text-sm font-medium text-yellow-800">No Auth Required</span>
+                          <p className="text-xs text-yellow-600 mt-1">Hide gated models</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${
+                              showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showNoAuthRequired ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className="text-xs font-medium text-yellow-800">
+                            {showNoAuthRequired ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
