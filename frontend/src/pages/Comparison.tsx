@@ -608,8 +608,8 @@ const Comparison = () => {
           
           {/* Model Selection Grid */}
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Available Models ({getFilteredAvailableModels().length})</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+            <h3 className="text-sm font-medium text-gray-700 mb-4">Available Models ({getFilteredAvailableModels().length})</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
               {getFilteredAvailableModels().map((modelName) => {
                 const isSelected = selectedModels.includes(modelName)
                 const isLoaded = isModelLoaded(modelName)
@@ -618,35 +618,35 @@ const Comparison = () => {
                   <Button
                     key={modelName}
                     variant={isSelected ? "default" : "outline"}
-                    className={`justify-start h-auto p-3 min-h-[80px] ${
-                      isSelected ? 'ring-2 ring-primary' : ''
+                    className={`justify-start h-auto p-4 min-h-[100px] ${
+                      isSelected ? 'ring-2 ring-primary bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                     }`}
                     onClick={() => handleModelToggle(modelName)}
                   >
-                    <div className="flex flex-col space-y-2 w-full">
+                    <div className="flex flex-col space-y-3 w-full">
                       <div className="flex-1 text-left">
-                        <div className="font-medium text-sm truncate">
+                        <div className="font-medium text-sm truncate mb-1">
                           {modelName.split('/').pop()}
                         </div>
                         <div className="text-xs text-muted-foreground truncate">
                           {modelName}
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         {isLoaded && (
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-xs px-2 py-1">
                             ✅ Loaded
                           </Badge>
                         )}
                         {isCPUCompatible(modelName) && (
-                          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
+                          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1">
                             💻 CPU
                           </Badge>
                         )}
                         {isGPURecommended(modelName) && (
                           <Badge 
                             variant="default" 
-                            className="bg-orange-100 text-orange-800 border-orange-200 text-xs cursor-help"
+                            className="bg-orange-100 text-orange-800 border-orange-200 text-xs px-2 py-1 cursor-help"
                             title="This model will be very slow on CPU. Consider GPU setup for better performance."
                           >
                             🚀 GPU
@@ -660,14 +660,14 @@ const Comparison = () => {
                             className="inline-block"
                             title="Click to visit HuggingFace page and request access"
                           >
-                            <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs cursor-pointer hover:bg-red-200 transition-colors">
+                            <Badge variant="default" className="bg-red-100 text-red-800 border-red-200 text-xs px-2 py-1 cursor-pointer hover:bg-red-200 transition-colors">
                               🔒 Requires Access
                             </Badge>
                           </a>
                         )}
                         {isSelected && (
-                          <Badge variant="default" className="text-xs">
-                            ✓
+                          <Badge variant="default" className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border-blue-200">
+                            ✓ Selected
                           </Badge>
                         )}
                       </div>
