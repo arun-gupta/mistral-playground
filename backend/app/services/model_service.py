@@ -200,6 +200,9 @@ class ModelService:
                 print(f"   This may take several minutes for large models...")
                 # Use HuggingFace token for authentication if available and valid
                 token = settings.HUGGINGFACE_API_KEY if settings.HUGGINGFACE_API_KEY and settings.HUGGINGFACE_API_KEY != "your-huggingface-api-key-here" else None
+                print(f"🔍 Settings HUGGINGFACE_API_KEY: {settings.HUGGINGFACE_API_KEY}")
+                print(f"🔍 Settings HUGGINGFACE_API_KEY type: {type(settings.HUGGINGFACE_API_KEY)}")
+                print(f"🔍 Settings HUGGINGFACE_API_KEY truthy: {bool(settings.HUGGINGFACE_API_KEY)}")
                 print(f"🔑 Token being used: {token[:10] if token else 'None'}...")
                 print(f"🔑 Token length: {len(token) if token else 0}")
                 print(f"🔑 Token valid format: {token.startswith('hf_') if token else False}")
@@ -375,6 +378,8 @@ class ModelService:
                     print(f"🔄 DOWNLOADING & LOADING fallback model: {fallback_model}")
                     # Use HuggingFace token for authentication if available and valid
                     token = settings.HUGGINGFACE_API_KEY if settings.HUGGINGFACE_API_KEY and settings.HUGGINGFACE_API_KEY != "your-huggingface-api-key-here" else None
+                    print(f"🔍 Fallback - Settings HUGGINGFACE_API_KEY: {settings.HUGGINGFACE_API_KEY}")
+                    print(f"🔍 Fallback - Token being used: {token[:10] if token else 'None'}...")
                     
                     # Use CPU-aware settings for fallback model too
                     if cuda_available:
