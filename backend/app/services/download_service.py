@@ -172,6 +172,20 @@ class DownloadService:
             print(f"🔍 DEBUG: Environment variable HUGGINGFACE_API_KEY: {os.environ.get('HUGGINGFACE_API_KEY', 'NOT_SET')[:10] if os.environ.get('HUGGINGFACE_API_KEY') else 'NOT_SET'}...")
             print(f"🔍 DEBUG: All environment variables containing 'HUGGING': {[k for k in os.environ.keys() if 'HUGGING' in k.upper()]}")
             
+            # Try to manually load the API key from .env file as fallback
+            try:
+                env_file_path = os.path.join(os.getcwd(), '.env')
+                if os.path.exists(env_file_path):
+                    with open(env_file_path, 'r') as f:
+                        for line in f:
+                            if line.startswith('HUGGINGFACE_API_KEY='):
+                                manual_key = line.strip().split('=', 1)[1]
+                                print(f"🔍 DEBUG: Manually loaded API key: {manual_key[:10]}...")
+                                os.environ['HUGGINGFACE_API_KEY'] = manual_key
+                                break
+            except Exception as e:
+                print(f"🔍 DEBUG: Failed to manually load API key: {e}")
+            
             # Check if this is a gated model that requires authentication
             gated_models = [
                 # Official Meta Llama models (require authentication)
@@ -205,7 +219,12 @@ class DownloadService:
                 print(f"🔍 DEBUG: HUGGINGFACE_API_KEY exists: {settings.HUGGINGFACE_API_KEY is not None}")
                 print(f"🔍 DEBUG: HUGGINGFACE_API_KEY value: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
                 print(f"🔍 DEBUG: HUGGINGFACE_API_KEY is truthy: {bool(settings.HUGGINGFACE_API_KEY)}")
-                if not settings.HUGGINGFACE_API_KEY:
+                
+                # Try to get the API key from settings first, then environment
+                api_key = settings.HUGGINGFACE_API_KEY or os.environ.get('HUGGINGFACE_API_KEY')
+                print(f"🔍 DEBUG: Final API key to use: {api_key[:10] if api_key else 'None'}...")
+                
+                if not api_key:
                     error_msg = f"""
 ❌ Gated Model Access Required
 
@@ -233,6 +252,8 @@ Alternative models that don't require authentication:
                     return
                 else:
                     print(f"✅ Authentication available for gated model {model_name}, proceeding with download...")
+                    # Store the API key for use in the download process
+                    self.api_key = api_key
             
             # For now, we'll simulate the download process for non-gated models
             # In a real implementation, this would:
