@@ -217,6 +217,7 @@ class ModelService:
                     
                     if cuda_available:
                         # GPU settings
+                        print(f"🔄 Starting GPU model download and loading...")
                         self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
                             model_name,
                             torch_dtype=torch.float16,  # Use float16 for memory efficiency
@@ -226,9 +227,11 @@ class ModelService:
                             token=token,
                             max_memory={0: "4GB"}  # Limit memory usage
                         )
+                        print(f"✅ GPU model download and loading completed for {model_name}")
                     else:
                         # CPU-only settings
                         print(f"🖥️  Using CPU-only settings for {model_name}")
+                        print(f"🔄 Starting model download and loading...")
                         self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
                             model_name,
                             torch_dtype=torch.float32,  # Use float32 for CPU
@@ -237,9 +240,11 @@ class ModelService:
                             low_cpu_mem_usage=True,
                             token=token
                         )
+                        print(f"✅ Model download and loading completed for {model_name}")
                 else:
                     # Smaller models
                     if cuda_available:
+                        print(f"🔄 Starting smaller GPU model download and loading...")
                         self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
                             model_name,
                             torch_dtype=torch.float32,
@@ -248,7 +253,9 @@ class ModelService:
                             low_cpu_mem_usage=True,
                             token=token
                         )
+                        print(f"✅ Smaller GPU model download and loading completed for {model_name}")
                     else:
+                        print(f"🔄 Starting smaller CPU model download and loading...")
                         self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
                             model_name,
                             torch_dtype=torch.float32,
@@ -257,8 +264,10 @@ class ModelService:
                             low_cpu_mem_usage=True,
                             token=token
                         )
+                        print(f"✅ Smaller CPU model download and loading completed for {model_name}")
                 # Load tokenizer with more robust error handling
                 # Special handling for Mistral models that have tokenizer issues
+                print(f"🔄 Starting tokenizer loading for {model_name}...")
                 if "mistral" in model_name.lower():
                     print(f"🔧 Loading Mistral tokenizer with special settings...")
                     tokenizer_loaded = False
