@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     DISABLE_TELEMETRY: bool = True  # Disable all telemetry collection
     
     class Config:
-        env_file = ".env"
+        env_file = ".env"  # Will look in current directory and parent directories
         case_sensitive = True
     
     def __init__(self, **kwargs):
@@ -54,4 +54,19 @@ settings = Settings()
 # Debug: Print settings after creation
 print(f"🔍 DEBUG: Settings created - HUGGINGFACE_API_KEY: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
 print(f"🔍 DEBUG: Current working directory: {os.getcwd()}")
-print(f"🔍 DEBUG: .env file exists: {os.path.exists('.env')}") 
+
+# Check multiple possible .env file locations
+possible_env_paths = [
+    ".env",
+    "../.env", 
+    "../../.env",
+    os.path.join(os.path.dirname(__file__), "../../.env"),
+    os.path.join(os.path.dirname(__file__), "../../../.env")
+]
+
+for env_path in possible_env_paths:
+    exists = os.path.exists(env_path)
+    print(f"🔍 DEBUG: .env file at '{env_path}': {'EXISTS' if exists else 'NOT FOUND'}")
+    if exists:
+        print(f"🔍 DEBUG: Using .env file at: {os.path.abspath(env_path)}")
+        break 
