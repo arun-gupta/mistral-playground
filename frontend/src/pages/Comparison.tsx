@@ -58,6 +58,7 @@ const Comparison = () => {
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const [showSmallModelsOnly, setShowSmallModelsOnly] = useState(false)  // Toggle for small models only
+  const [sortBySizeDescending, setSortBySizeDescending] = useState(false)  // Toggle for size sorting (false = smallest first, true = largest first)
 
   const { toast } = useToast()
 
@@ -145,7 +146,7 @@ const Comparison = () => {
       filtered = filtered.filter(modelName => isSmallModel(modelName))
     }
 
-    // Sort models by family first, then by size within each family (largest first)
+    // Sort models by family first, then by size within each family (controlled by toggle)
     filtered.sort((a, b) => {
       // First priority: Family (Mistral first, then Llama, then others)
       const aFamily = getModelFamily(a)
@@ -155,8 +156,12 @@ const Comparison = () => {
       if (aFamily === 'llama' && bFamily !== 'llama') return -1
       if (bFamily === 'llama' && aFamily !== 'llama') return 1
       
-      // Second priority: Sort by size within each family
-      return getModelSize(b) - getModelSize(a)
+      // Second priority: Sort by size within each family (controlled by toggle)
+      if (sortBySizeDescending) {
+        return getModelSize(b) - getModelSize(a) // Largest first
+      } else {
+        return getModelSize(a) - getModelSize(b) // Smallest first
+      }
     })
 
     return filtered
@@ -265,6 +270,7 @@ const Comparison = () => {
                 setShowCPUOnly(false)
                 setShowNoAuthRequired(false)
                 setShowSmallModelsOnly(false)
+                setSortBySizeDescending(false) // Reset to smallest first
               }}
               className="text-xs px-2 py-1 h-6"
               disabled={getActiveFilterCount({
@@ -274,7 +280,7 @@ const Comparison = () => {
                 showCPUOnly,
                 showNoAuthRequired,
                 showSmallModelsOnly
-              }) === 0}
+              }) === 0 && !sortBySizeDescending}
             >
               Clear All
             </Button>
@@ -359,6 +365,26 @@ const Comparison = () => {
               />
             </button>
             <span className="text-xs font-medium text-gray-700">Recommended</span>
+          </div>
+
+          {/* Size Sorting */}
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setSortBySizeDescending(!sortBySizeDescending)}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                sortBySizeDescending ? 'bg-indigo-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                  sortBySizeDescending ? 'translate-x-4' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className="text-xs font-medium text-gray-700">
+              {sortBySizeDescending ? 'Largest First' : 'Smallest First'}
+            </span>
           </div>
         </div>
       </div>
