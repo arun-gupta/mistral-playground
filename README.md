@@ -4,15 +4,17 @@
 
 > 💡 **Tip**: Right-click the "Open in GitHub Codespaces" button and select "Open in new tab" for the best experience.
 
-A modern, developer-friendly full-stack application for exploring and experimenting with open AI models, with a primary focus on Mistral AI's powerful models. Built with performance and usability in mind, this playground provides comprehensive tools to understand model capabilities, performance characteristics, and real-world applications. It offers comprehensive support for popular open source AI models including Llama, Gemma, and DialoGPT, making it a versatile platform for model exploration and comparison.
+A modern, developer-friendly full-stack application for exploring and experimenting with both local and hosted AI models. Built with performance and usability in mind, this playground provides comprehensive tools to understand model capabilities, performance characteristics, and real-world applications. It offers support for popular open source AI models (Mistral, Llama, Gemma, DialoGPT) and hosted models (OpenAI, Anthropic, Google), making it a versatile platform for model exploration and comparison.
 
 ## 🎯 **Key Features**
 
 ### **Model Management & Inference**
-- **Multi-Model Support**: Run various open models locally with optimized inference
-- **Smart Model Manager**: Download, manage, and monitor models with real-time status tracking
+- **Multi-Model Support**: Run both local and hosted models with optimized inference
+- **Hosted Models Integration**: Seamless access to OpenAI, Anthropic, and Google models
+- **Smart Model Manager**: Download, manage, and monitor local models with real-time status tracking
 - **Performance Analytics**: Detailed metrics for model performance, token usage, and latency
 - **Comparison Engine**: Compare responses from multiple models side-by-side with prepared test scenarios
+- **CPU Compatibility**: Optimized for CPU-only environments with automatic fallbacks
 
 ### **Advanced Capabilities**
 - **RAG Mode**: Upload documents and generate grounded answers using Retrieval-Augmented Generation
@@ -29,8 +31,10 @@ A modern, developer-friendly full-stack application for exploring and experiment
 - **Modern UI**: Clean, responsive interface built with React and TailwindCSS
 - **Real-time Status**: Visual indicators for download, loading, and inference status
 - **Organized Workflow**: Intuitive model organization with filtering and sorting
+- **API Key Management**: Centralized configuration for hosted model API keys
 - **Mock Mode**: Test the interface without heavy downloads or compute requirements
 - **Environment Agnostic**: Works seamlessly in local development, Docker, and GitHub Codespaces
+- **Timeout Protection**: Automatic handling of long-running operations with user feedback
 
 ## 🚀 **Quick Start**
 
@@ -82,35 +86,45 @@ chmod +x setup-and-start.sh
 ## 🖥️ **Application Navigation**
 
 The main navigation is designed for efficient model exploration:
-- **Playground**: Single model interaction and testing with optimized interface
-- **Models**: Manage, download, and monitor all available models with organized grouping
-- **Comparison**: Compare responses from multiple models side-by-side with prepared test combinations
-- **RAG**: Retrieval-Augmented Generation for grounded Q&A from documents
-- **Configs**: Manage prompt and system configurations
+- **Playground**: Mistral-only playground for focused experimentation
+- **Models**: Manage local models and access hosted models with organized grouping
+- **Comparison**: Compare responses from multiple models (local + hosted) side-by-side
+- **RAG**: Mistral-only RAG for grounded Q&A from documents
+- **API Keys**: Centralized configuration for hosted model API keys
 
 ## 🚦 **Model Status Workflow**
 
 Models follow a streamlined three-state workflow:
 
-### **State 1: Not Downloaded** ⏳
+### **Local Models**
+
+#### **State 1: Not Downloaded** ⏳
 - **Status**: Model is available but not yet downloaded
 - **Action**: Click "📥 Download & Load" to download and load in one step
 - **Progress**: Shows download progress with percentage
 
-### **State 2: Downloaded** 📦  
+#### **State 2: Downloaded** 📦  
 - **Status**: Model is downloaded to disk, ready to load into memory
 - **Action**: Click "⚡ Load Model" to load into memory
 - **Progress**: Shows "Loading..." with spinner
 
-### **State 3: Ready** ✅
+#### **State 3: Ready** ✅
 - **Status**: Model is loaded in memory and ready for inference
 - **Action**: Click "✅ Use Now" to navigate to Playground
 - **Performance**: Immediate response generation
 
+### **Hosted Models** ☁️
+- **Status**: Always ready to use (no download/load required)
+- **Action**: Click "Compare Models" to use in comparison mode
+- **Performance**: Fast response times with API-based inference
+- **Cost**: Displayed per 1K tokens for transparency
+
 ### **Efficient Workflow**
-- **One-Click Setup**: "Download & Load" combines both operations for new models
+- **One-Click Setup**: "Download & Load" combines both operations for new local models
 - **Smart Caching**: Downloaded models persist on disk for faster subsequent loads
 - **Real-Time Status**: Live progress tracking for both download and loading operations
+- **Hosted Models**: Instant access without downloads or setup
+- **CPU Optimization**: Automatic token limits and timeout handling for CPU-only environments
 
 ## 🔍 **RAG (Retrieval-Augmented Generation)**
 
@@ -180,13 +194,16 @@ Frontend (React + Vite) → Backend (FastAPI) → Model Inference (vLLM/Ollama)
 **Tech Stack:**
 - **Frontend**: React 18 + Vite + TypeScript + TailwindCSS + shadcn/ui
 - **Backend**: Python 3.11+ + FastAPI + Pydantic
-- **Models**: vLLM for local inference, Hugging Face Transformers, Ollama
+- **Models**: 
+  - **Local**: vLLM, Hugging Face Transformers, Ollama
+  - **Hosted**: OpenAI, Anthropic, Google APIs
 - **RAG System**: 
   - **Primary**: ChromaDB for vector storage
   - **Secondary**: FAISS for in-memory vector search
   - **Fallback**: Simple in-memory with keyword search
 - **Embeddings**: SentenceTransformers (with graceful fallback)
 - **Document Processing**: PyMuPDF, intelligent chunking
+- **Environment**: CPU-optimized with automatic GPU detection
 
 For detailed architecture information, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
