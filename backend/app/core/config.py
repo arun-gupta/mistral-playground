@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # Optional: Hugging Face API
     HUGGINGFACE_API_KEY: Optional[str] = None
     
+    # Hosted Model API Keys
+    OPENAI_API_KEY: Optional[str] = None
+    ANTHROPIC_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
+    
     # Security
     SECRET_KEY: str = "your-secret-key-here"
     ALGORITHM: str = "HS256"

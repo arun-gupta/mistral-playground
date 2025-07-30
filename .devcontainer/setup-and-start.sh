@@ -66,6 +66,11 @@ CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000", "https://*.app.g
 # Optional: Hugging Face API
 HUGGINGFACE_API_KEY=your-huggingface-api-key-here
 
+# Hosted Model API Keys (add your keys here)
+# OPENAI_API_KEY=your_openai_api_key_here
+# ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# GOOGLE_API_KEY=your_google_api_key_here
+
 # Security
 SECRET_KEY=your-secret-key-here
 ALGORITHM=HS256

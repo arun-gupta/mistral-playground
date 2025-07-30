@@ -10,6 +10,7 @@ import urllib.parse
 from backend.app.core.config import settings
 from backend.app.models.requests import PromptRequest, ModelProvider
 from backend.app.models.responses import ModelResponse, ModelComparison
+from backend.app.services.hosted_model_service import hosted_model_service
 
 # Try to import vLLM, but don't fail if it's not available
 try:
@@ -46,6 +47,12 @@ class ModelService:
         print(f"   Prompt: {request.prompt[:50]}...")
         
         try:
+            # Check if this is a hosted provider
+            if request.provider in [ModelProvider.OPENAI.value, ModelProvider.ANTHROPIC.value, ModelProvider.GOOGLE.value]:
+                print(f"🌐 Using hosted model service for {request.provider}")
+                return await hosted_model_service.generate_response(request)
+            
+            # Local model providers
             if request.provider == ModelProvider.VLLM.value:
                 if VLLM_AVAILABLE:
                     response = await self._generate_vllm(request)
@@ -106,11 +113,20 @@ class ModelService:
             }
         
         if model_name not in self.vllm_models:
-            self.vllm_models[model_name] = LLM(
-                model=model_name,
-                trust_remote_code=True,
-                tensor_parallel_size=1
-            )
+            # Check if CUDA is available for vLLM
+            cuda_available = torch.cuda.is_available()
+            print(f"🔍 vLLM: CUDA available: {cuda_available}")
+            
+            if cuda_available:
+                self.vllm_models[model_name] = LLM(
+                    model=model_name,
+                    trust_remote_code=True,
+                    tensor_parallel_size=1
+                )
+            else:
+                print(f"⚠️  vLLM requires CUDA but it's not available. Falling back to HuggingFace.")
+                # Fallback to HuggingFace for CPU-only environments
+                return await self._generate_huggingface(request)
         
         llm = self.vllm_models[model_name]
         
@@ -184,19 +200,114 @@ class ModelService:
                 print(f"   This may take several minutes for large models...")
                 # Use HuggingFace token for authentication if available and valid
                 token = settings.HUGGINGFACE_API_KEY if settings.HUGGINGFACE_API_KEY and settings.HUGGINGFACE_API_KEY != "your-huggingface-api-key-here" else None
-                self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
-                    model_name,
-                    torch_dtype=torch.float32,  # PATCHED: Use float32 for CPU compatibility
-                    device_map="auto",
-                    trust_remote_code=True,
-                    low_cpu_mem_usage=True,
-                    token=token
-                )
-                self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
-                    model_name,
-                    trust_remote_code=True,
-                    token=token
-                )
+                # Check if CUDA is available
+                cuda_available = torch.cuda.is_available()
+                print(f"🔍 CUDA available: {cuda_available}")
+                
+                # For large models like Mistral, use more memory-efficient settings
+                if "mistral" in model_name.lower() or "7b" in model_name.lower():
+                    print(f"🔧 Loading large model {model_name} with memory-efficient settings...")
+                    
+                    if cuda_available:
+                        # GPU settings
+                        self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
+                            model_name,
+                            torch_dtype=torch.float16,  # Use float16 for memory efficiency
+                            device_map="auto",
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=True,
+                            token=token,
+                            max_memory={0: "4GB"}  # Limit memory usage
+                        )
+                    else:
+                        # CPU-only settings
+                        print(f"🖥️  Using CPU-only settings for {model_name}")
+                        self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
+                            model_name,
+                            torch_dtype=torch.float32,  # Use float32 for CPU
+                            device_map="cpu",  # Force CPU
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=True,
+                            token=token
+                        )
+                else:
+                    # Smaller models
+                    if cuda_available:
+                        self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
+                            model_name,
+                            torch_dtype=torch.float32,
+                            device_map="auto",
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=True,
+                            token=token
+                        )
+                    else:
+                        self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
+                            model_name,
+                            torch_dtype=torch.float32,
+                            device_map="cpu",  # Force CPU
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=True,
+                            token=token
+                        )
+                # Load tokenizer with more robust error handling
+                # Special handling for Mistral models that have tokenizer issues
+                if "mistral" in model_name.lower():
+                    print(f"🔧 Loading Mistral tokenizer with special settings...")
+                    try:
+                        self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                            model_name,
+                            trust_remote_code=True,
+                            token=token,
+                            use_fast=False,  # Use slow tokenizer for Mistral
+                            padding_side="left",
+                            model_max_length=4096  # Set explicit max length
+                        )
+                    except Exception as mistral_tokenizer_error:
+                        print(f"⚠️  Mistral tokenizer failed: {mistral_tokenizer_error}")
+                        print(f"🔄 Using GPT2 tokenizer for Mistral model...")
+                        # Use GPT2 tokenizer which is compatible with Mistral
+                        self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                            "gpt2",
+                            trust_remote_code=True,
+                            token=token,
+                            padding_side="left"
+                        )
+                else:
+                    try:
+                        self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                            model_name,
+                            trust_remote_code=True,
+                            token=token,
+                            use_fast=False  # Use slow tokenizer for better compatibility
+                        )
+                    except Exception as tokenizer_error:
+                        print(f"⚠️  Tokenizer loading failed: {tokenizer_error}")
+                        print(f"🔄 Trying with different tokenizer settings...")
+                        
+                        # Try with different settings
+                        try:
+                            self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                                model_name,
+                                trust_remote_code=True,
+                                token=token,
+                                use_fast=True,  # Try fast tokenizer
+                                padding_side="left"  # Add padding side
+                            )
+                        except Exception as second_error:
+                            print(f"❌ Second tokenizer attempt failed: {second_error}")
+                            # Try with a known working tokenizer
+                            print(f"🔄 Using fallback tokenizer for {model_name}")
+                            self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                                "microsoft/DialoGPT-small",  # Known working tokenizer
+                                trust_remote_code=True,
+                                token=token
+                            )
+                
+                # Ensure tokenizer is on the same device as the model
+                if not cuda_available:
+                    print(f"🖥️  Ensuring tokenizer is on CPU for {model_name}")
+                    # Tokenizers don't need device specification, but ensure no CUDA references
                 print(f"✅ Model downloaded and loaded successfully: {model_name}")
             else:
                 print(f"⚡ Using cached model: {model_name} (already loaded)")
@@ -212,19 +323,46 @@ class ModelService:
                     print(f"🔄 DOWNLOADING & LOADING fallback model: {fallback_model}")
                     # Use HuggingFace token for authentication if available and valid
                     token = settings.HUGGINGFACE_API_KEY if settings.HUGGINGFACE_API_KEY and settings.HUGGINGFACE_API_KEY != "your-huggingface-api-key-here" else None
-                    self.transformers_models[fallback_model] = AutoModelForCausalLM.from_pretrained(
-                        fallback_model,
-                        torch_dtype=torch.float32,  # PATCHED: Use float32 for CPU compatibility
-                        device_map="auto",
-                        trust_remote_code=True,
-                        low_cpu_mem_usage=True,
-                        token=token
-                    )
-                    self.tokenizers[fallback_model] = AutoTokenizer.from_pretrained(
-                        fallback_model,
-                        trust_remote_code=True,
-                        token=token
-                    )
+                    
+                    # Use CPU-aware settings for fallback model too
+                    if cuda_available:
+                        self.transformers_models[fallback_model] = AutoModelForCausalLM.from_pretrained(
+                            fallback_model,
+                            torch_dtype=torch.float32,
+                            device_map="auto",
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=True,
+                            token=token
+                        )
+                    else:
+                        self.transformers_models[fallback_model] = AutoModelForCausalLM.from_pretrained(
+                            fallback_model,
+                            torch_dtype=torch.float32,
+                            device_map="cpu",  # Force CPU
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=True,
+                            token=token
+                        )
+                    # Load fallback tokenizer with robust error handling
+                    try:
+                        self.tokenizers[fallback_model] = AutoTokenizer.from_pretrained(
+                            fallback_model,
+                            trust_remote_code=True,
+                            token=token,
+                            use_fast=False  # Use slow tokenizer for better compatibility
+                        )
+                    except Exception as tokenizer_error:
+                        print(f"⚠️  Fallback tokenizer loading failed: {tokenizer_error}")
+                        print(f"🔄 Using known working tokenizer...")
+                        self.tokenizers[fallback_model] = AutoTokenizer.from_pretrained(
+                            "microsoft/DialoGPT-small",
+                            trust_remote_code=True,
+                            token=token
+                        )
+                    
+                    # Ensure fallback tokenizer is also CPU-aware
+                    if not cuda_available:
+                        print(f"🖥️  Ensuring fallback tokenizer is on CPU for {fallback_model}")
                     print(f"✅ Fallback model downloaded and loaded: {fallback_model}")
                 else:
                     print(f"⚡ Using cached fallback model: {fallback_model}")
@@ -245,21 +383,95 @@ class ModelService:
             full_prompt = request.prompt
         
         # Tokenize
-        inputs = tokenizer(full_prompt, return_tensors="pt").to(model.device)
+        inputs = tokenizer(full_prompt, return_tensors="pt")
+        
+        # Ensure inputs are on the correct device
+        if cuda_available:
+            inputs = inputs.to(model.device)
+        else:
+            # For CPU, ensure inputs stay on CPU
+            print(f"🖥️  Keeping inputs on CPU for {model_name}")
+        
         input_tokens = inputs.input_ids.shape[1]
         
-        # Generate
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=min(request.max_tokens, 100),  # Limit to 100 tokens for DialoGPT
-                temperature=request.temperature,
-                top_p=request.top_p,
-                do_sample=True,
-                pad_token_id=tokenizer.eos_token_id,
-                eos_token_id=tokenizer.eos_token_id,
-                repetition_penalty=1.1
-            )
+        # Generate with timeout handling for CPU generation
+        try:
+            import signal
+            
+            def timeout_handler(signum, frame):
+                raise TimeoutError("Generation timed out")
+            
+            # Set timeout for CPU generation (5 minutes for large models)
+            timeout_seconds = 300 if "mistral" in model_name.lower() or "7b" in model_name.lower() else 60
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(timeout_seconds)
+            
+            with torch.no_grad():
+                # Use conservative token limits for CPU generation to avoid timeouts
+                if cuda_available:
+                    max_tokens = min(request.max_tokens, 512)  # Full limit for GPU
+                else:
+                    # Conservative limits for CPU to avoid timeouts
+                    if "mistral" in model_name.lower() or "7b" in model_name.lower():
+                        max_tokens = min(request.max_tokens, 50)  # Very conservative for large models on CPU
+                    else:
+                        max_tokens = min(request.max_tokens, 100)  # Conservative for smaller models on CPU
+                
+                print(f"🚀 Generating with max_new_tokens={max_tokens}, temperature={request.temperature}")
+                print(f"⏱️  Timeout set to {timeout_seconds} seconds for CPU generation...")
+                print(f"🔄 Generation in progress... (this may take a while on CPU)")
+                
+                outputs = model.generate(
+                    **inputs,
+                    max_new_tokens=max_tokens,
+                    temperature=request.temperature,
+                    top_p=request.top_p,
+                    do_sample=True,
+                    pad_token_id=tokenizer.eos_token_id,
+                    eos_token_id=tokenizer.eos_token_id,
+                    repetition_penalty=1.1
+                )
+                
+                # Cancel timeout
+                signal.alarm(0)
+                
+        except TimeoutError:
+            print(f"⏰ Generation timed out after {timeout_seconds} seconds")
+            # Return a timeout message
+            return {
+                "text": f"⏰ Generation timed out after {timeout_seconds} seconds. This model is quite large and may take a while on CPU. Consider using a smaller model like 'microsoft/DialoGPT-small' for faster responses.",
+                "model_name": model_name,
+                "tokens_used": 0,
+                "input_tokens": input_tokens,
+                "output_tokens": 0,
+                "finish_reason": "timeout"
+            }
+        except Exception as gen_error:
+            print(f"❌ Generation error: {gen_error}")
+            # Try with more conservative settings
+            print(f"🔄 Retrying with conservative settings...")
+            try:
+                with torch.no_grad():
+                    outputs = model.generate(
+                        **inputs,
+                        max_new_tokens=50,  # Very conservative
+                        temperature=0.7,
+                        top_p=0.9,
+                        do_sample=True,
+                        pad_token_id=tokenizer.eos_token_id,
+                        eos_token_id=tokenizer.eos_token_id,
+                        repetition_penalty=1.0
+                    )
+            except Exception as retry_error:
+                print(f"❌ Retry also failed: {retry_error}")
+                return {
+                    "text": f"❌ Generation failed: {str(retry_error)}. This model may be too large for CPU generation. Try a smaller model.",
+                    "model_name": model_name,
+                    "tokens_used": 0,
+                    "input_tokens": input_tokens,
+                    "output_tokens": 0,
+                    "finish_reason": "error"
+                }
         
         # Decode
         generated_text = tokenizer.decode(outputs[0][input_tokens:], skip_special_tokens=True)
@@ -459,6 +671,9 @@ Alternative models that don't require authentication:
         tasks = []
         
         for model_name in models:
+            # Determine the correct provider based on model name
+            provider = self._determine_provider(model_name)
+            
             request = PromptRequest(
                 prompt=prompt,
                 system_prompt=parameters.get("system_prompt"),
@@ -466,7 +681,7 @@ Alternative models that don't require authentication:
                 max_tokens=parameters.get("max_tokens", 1024),
                 top_p=parameters.get("top_p", 0.9),
                 model_name=model_name,
-                provider=ModelProvider.VLLM.value
+                provider=provider
             )
             tasks.append(self.generate_response(request))
         
@@ -542,29 +757,41 @@ Alternative models that don't require authentication:
             print(f"❌ Error offloading model {model_name}: {e}")
             return False
     
+    def _determine_provider(self, model_name: str) -> str:
+        """Determine the provider for a given model name"""
+        # Hosted models
+        if model_name.startswith('gpt-'):
+            return ModelProvider.OPENAI.value
+        elif model_name.startswith('claude-'):
+            return ModelProvider.ANTHROPIC.value
+        elif model_name.startswith('gemini-'):
+            return ModelProvider.GOOGLE.value
+        
+        # Local models - default to VLLM for most models
+        return ModelProvider.VLLM.value
+
     def get_available_models(self) -> List[str]:
-        """Get list of available models"""
-        # CPU-friendly models ordered by size (open models first)
+        """Get list of available models (Top 3 from each family)"""
         return [
-            # Open models for testing and development (no authentication required) - Top 3
-            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM, open access
-            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM, open access  
-            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM, open access
+            # Microsoft DialoGPT models (Top 3) - No authentication required
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM - Best for testing
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM - Good balance
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM - Best performance
             
-            # Mistral/Mixtral models (6 total - all require authentication) - Keep all as requested
-            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM, gated
-            "mistralai/Mistral-7B-v0.3",               # Base model v3, ~14GB RAM, gated
-            "mistralai/Mistral-7B-Instruct-v0.1",      # Instruction-tuned, ~14GB RAM, gated
-            "mistralai/Mistral-7B-Instruct-v0.2",      # Instruction-tuned v2, ~14GB RAM, gated
-            "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned v3, ~14GB RAM, gated
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # High performance, ~32GB RAM, gated
+            # Mistral AI models (Top 6) - Require authentication
+            "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM, instruction tuned, great balance
+            "mistralai/Mistral-7B-Instruct-v0.3",      # ~14GB RAM, latest instruction tuned
+            "mistralai/Mistral-7B-v0.1",               # ~14GB RAM, base model
+            "mistralai/Mistral-7B-v0.3",               # ~14GB RAM, latest base model
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, high performance, best capability
+            "mistralai/Mixtral-8x7B-Instruct-v0.1-GGUF", # ~32GB RAM, CPU optimized version
             
-            # Google Gemma models (all require authentication) - Top 3 most useful
+            # Google Gemma models (Top 3) - Require authentication
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
             "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
             "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
             
-            # Meta Llama models (official, require authentication) - Top 3 most useful
+            # Meta Llama models (Top 3) - Require authentication
             "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
             "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
             "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance

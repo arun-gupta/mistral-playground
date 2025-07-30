@@ -4,6 +4,12 @@
  * Get the model family/category from model name
  */
 export const getModelFamily = (modelName: string): string => {
+  // Hosted models
+  if (modelName.startsWith('gpt-')) return 'openai'
+  if (modelName.startsWith('claude-')) return 'anthropic'
+  if (modelName.startsWith('gemini-')) return 'google'
+  
+  // Local models
   if (modelName.includes('Mistral-7B') || modelName.includes('Mixtral')) return 'mistral'
   if (modelName.includes('Llama-3') || modelName.includes('Meta-Llama-3') || modelName.includes('Llama-2') || modelName.includes('Llama-4')) return 'llama'
   if (modelName.includes('gemma')) return 'gemma'
@@ -16,6 +22,7 @@ export const getModelFamily = (modelName: string): string => {
  */
 export const getModelSize = (modelName: string): number => {
   if (modelName.includes('70B') || modelName.includes('Mixtral-8x7B')) return 70
+  if (modelName.includes('27B')) return 27
   if (modelName.includes('17B')) return 17
   if (modelName.includes('14B')) return 14
   if (modelName.includes('13B')) return 13
@@ -32,11 +39,21 @@ export const getModelSize = (modelName: string): number => {
  */
 export const isRecommended = (modelName: string): boolean => {
   const recommended = [
+    // Local models - good for testing and development
     'microsoft/DialoGPT-small', // Testing - open model, very small
     'microsoft/DialoGPT-medium', // Testing - open model, medium size
     'microsoft/DialoGPT-large', // Testing - open model, large size
     'meta-llama/Meta-Llama-3-8B-Instruct', // Official Meta Llama (requires auth)
-    'meta-llama/Llama-3.1-8B-Instruct' // Official Meta Llama (requires auth)
+    'google/gemma-7b-it', // Good balance for testing and production
+    'mistralai/Mistral-7B-Instruct-v0.2', // Great balance for local use
+    'mistralai/Mistral-7B-Instruct-v0.3', // Latest Mistral instruction model
+    'mistralai/Mixtral-8x7B-Instruct-v0.1-GGUF', // CPU optimized high performance
+    
+    // Hosted models - best for production use
+    'gpt-4o-mini', // Best value hosted model (fast, cheap)
+    'gpt-3.5-turbo', // Most reliable hosted model
+    'claude-3-5-haiku-20241022', // Best value Anthropic model
+    'gemini-1.5-flash' // Best value Google model
   ]
   return recommended.includes(modelName)
 }
@@ -46,22 +63,21 @@ export const isRecommended = (modelName: string): boolean => {
  */
 export const isGatedModel = (modelName: string): boolean => {
   const gatedModels = [
-    // Official Meta Llama models (require authentication) - Top 3 most useful
+    // Mistral AI models (require authentication) - Top 6
+    'mistralai/Mistral-7B-Instruct-v0.2',      // Instruction tuned, great balance
+    'mistralai/Mistral-7B-Instruct-v0.3',      // Latest instruction tuned
+    'mistralai/Mistral-7B-v0.1',               // Base model
+    'mistralai/Mistral-7B-v0.3',               // Latest base model
+    'mistralai/Mixtral-8x7B-Instruct-v0.1',    // High performance, best capability
+    'mistralai/Mixtral-8x7B-Instruct-v0.1-GGUF', // CPU optimized high performance
+    // Official Meta Llama models (require authentication) - Top 3
     'meta-llama/Llama-3.2-1B',                 // Very small, base model, great for testing
     'meta-llama/Meta-Llama-3-8B-Instruct',     // Medium size, instruction-tuned, good balance
     'meta-llama/Llama-3.3-70B-Instruct',       // Very large, instruction-tuned, maximum performance
-    // Google Gemma models (all require authentication) - Top 3 most useful
+    // Google Gemma models (all require authentication) - Top 3
     'google/gemma-2b-it',                    // Small, instruction-tuned, great for testing
     'google/gemma-7b-it',                    // Medium, instruction-tuned, good balance
     'google/gemma-3-27b-it',                 // Large model for high performance
-    // Mistral models that are now gated (including base models) - Keep all as requested
-    'mistralai/Mistral-7B-v0.1',               // Base model, now gated
-    'mistralai/Mistral-7B-v0.2',               // Base model v2, now gated
-    'mistralai/Mistral-7B-Instruct-v0.1',      // Instruction-tuned, gated
-    'mistralai/Mistral-7B-Instruct-v0.2',      // Instruction-tuned, gated
-    'mistralai/Mistral-7B-Instruct-v0.3',      // Instruction-tuned, gated
-    'mistralai/Mistral-7B-Instruct-v0.4',      // Instruction-tuned, gated
-    'mistralai/Mistral-7B-Instruct-v0.5'       // Instruction-tuned, gated
   ]
   return gatedModels.includes(modelName)
 }
@@ -91,6 +107,23 @@ export const isSmallModel = (modelName: string): boolean => {
   const size = getModelSize(modelName)
   // Small models: 2B parameters or less, or DialoGPT models
   return size <= 2 || modelName.includes('DialoGPT')
+}
+
+/**
+ * Check if model is hosted (cloud-based)
+ */
+export const isHostedModel = (modelName: string): boolean => {
+  return modelName.startsWith('gpt-') || modelName.startsWith('claude-') || modelName.startsWith('gemini-')
+}
+
+/**
+ * Get the provider for a hosted model
+ */
+export const getHostedModelProvider = (modelName: string): string => {
+  if (modelName.startsWith('gpt-')) return 'openai'
+  if (modelName.startsWith('claude-')) return 'anthropic'
+  if (modelName.startsWith('gemini-')) return 'google'
+  return 'unknown'
 }
 
 /**
@@ -166,17 +199,17 @@ export const getActiveFilterCount = (filters: {
   showDownloadedOnly?: boolean
   showLoadedOnly?: boolean
   showRecommendedOnly?: boolean
-  showCPUOnly?: boolean
   showNoAuthRequired?: boolean
   showSmallModelsOnly?: boolean
+  showHostedOnly?: boolean
 }): number => {
   let count = 0
   if (filters.showDownloadedOnly) count++
   if (filters.showLoadedOnly) count++
   if (filters.showRecommendedOnly) count++
-  if (filters.showCPUOnly) count++
   if (filters.showNoAuthRequired) count++
   if (filters.showSmallModelsOnly) count++
+  if (filters.showHostedOnly) count++
   return count
 }
 
@@ -185,6 +218,9 @@ export const getActiveFilterCount = (filters: {
  */
 export const getModelFamilyDisplayName = (family: string): string => {
   const displayNames: Record<string, string> = {
+    'openai': 'OpenAI',
+    'anthropic': 'Anthropic',
+    'google': 'Google Gemini',
     'mistral': 'Mistral AI',
     'llama': 'Meta Llama',
     'gemma': 'Google Gemma',

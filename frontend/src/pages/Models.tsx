@@ -30,6 +30,11 @@ interface ModelStatus {
   size_on_disk?: string
   last_used?: string
   load_time?: number
+  is_hosted?: boolean
+  cost_per_1k_tokens?: {
+    input: number
+    output: number
+  }
 }
 
 interface ModelDownloadResponse {
@@ -64,12 +69,51 @@ const Models = () => {
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
 
-  const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
+
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const [maxModelSize, setMaxModelSize] = useState(2)  // Slider for maximum model size (in billions of parameters)
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
+  const [hostedModels, setHostedModels] = useState<Record<string, string[]>>({})
+  const [apiKeys, setApiKeys] = useState({
+    openai: '',
+    anthropic: '',
+    google: '',
+    huggingface: ''
+  })
+  const [showHostedOnly, setShowHostedOnly] = useState(false)
   const { toast } = useToast()
+
+  // Save API key function
+  const saveApiKey = (provider: string, key: string) => {
+    const storageKey = provider === 'huggingface' ? 'huggingface_token' : `${provider}_api_key`
+    localStorage.setItem(storageKey, key)
+    setApiKeys(prev => ({ ...prev, [provider]: key }))
+    
+    toast({
+      title: "API Key Saved",
+      description: `${provider === 'huggingface' ? 'HuggingFace Token' : provider.toUpperCase()} has been saved locally.`,
+      variant: "default"
+    })
+  }
+
+  // Hosted models metadata (Top 3 from each provider)
+  const hostedModelMetadata: Record<string, any> = {
+    // OpenAI Models (Top 3)
+    'gpt-4o-mini': { provider: 'openai', cost_per_1k_tokens: { input: 0.15, output: 0.60 } },
+    'gpt-3.5-turbo': { provider: 'openai', cost_per_1k_tokens: { input: 0.50, output: 1.50 } },
+    'gpt-4o': { provider: 'openai', cost_per_1k_tokens: { input: 2.50, output: 10.00 } },
+    
+    // Anthropic Models (Top 3)
+    'claude-3-5-haiku-20241022': { provider: 'anthropic', cost_per_1k_tokens: { input: 0.25, output: 1.25 } },
+    'claude-3-5-sonnet-20241022': { provider: 'anthropic', cost_per_1k_tokens: { input: 3.00, output: 15.00 } },
+    'claude-3-opus-20240229': { provider: 'anthropic', cost_per_1k_tokens: { input: 15.00, output: 75.00 } },
+    
+    // Google Gemini Models (Top 3)
+    'gemini-1.5-flash': { provider: 'google', cost_per_1k_tokens: { input: 0.075, output: 0.30 } },
+    'gemini-1.0-pro': { provider: 'google', cost_per_1k_tokens: { input: 1.50, output: 4.50 } },
+    'gemini-1.5-pro': { provider: 'google', cost_per_1k_tokens: { input: 3.50, output: 10.50 } }
+  }
 
   // Model categorization and filtering logic
 
@@ -99,19 +143,23 @@ const Models = () => {
 
 
 
-    // Apply CPU compatibility filter (show models that don't require GPU)
-    if (showCPUOnly) {
-      filteredModels = filteredModels.filter(model => !isGPURequired(model.name))
-    }
-
     // Apply no authentication required filter
     if (showNoAuthRequired) {
       filteredModels = filteredModels.filter(model => !isGatedModel(model.name))
     }
 
-    // Apply size filter using slider
+    // Apply hosted only filter
+    if (showHostedOnly) {
+      filteredModels = filteredModels.filter(model => model.is_hosted)
+    }
+
+    // Apply size filter using slider (exclude hosted models from size filtering)
     if (maxModelSize < 70) { // Only apply filter if not showing all models
-      filteredModels = filteredModels.filter(model => isModelSizeWithinThreshold(model.name, maxModelSize))
+      filteredModels = filteredModels.filter(model => {
+        // Skip size filtering for hosted models
+        if (model.is_hosted) return true
+        return isModelSizeWithinThreshold(model.name, maxModelSize)
+      })
     }
 
 
@@ -145,6 +193,30 @@ const Models = () => {
     })
   }
 
+  // Fetch hosted models
+  const fetchHostedModels = async () => {
+    try {
+      const response = await fetch('/api/v1/models/hosted')
+      if (response.ok) {
+        const data = await response.json()
+        setHostedModels(data.providers)
+      }
+    } catch (error) {
+      console.error('Error fetching hosted models:', error)
+    }
+  }
+
+  // Load API keys from localStorage
+  const loadApiKeys = () => {
+    const storedKeys = {
+      openai: localStorage.getItem('openai_api_key') || '',
+      anthropic: localStorage.getItem('anthropic_api_key') || '',
+      google: localStorage.getItem('google_api_key') || '',
+      huggingface: localStorage.getItem('huggingface_token') || ''
+    }
+    setApiKeys(storedKeys)
+  }
+
   // Fetch available models
   const fetchModels = async () => {
     try {
@@ -159,7 +231,29 @@ const Models = () => {
       if (response.ok) {
         const data = await response.json()
         console.log('🔍 Models data:', data)
-        setModels(data)
+        
+        // Add hosted models to the data
+        const allModels = [...data]
+        
+        // Add hosted models from each provider
+        Object.entries(hostedModels).forEach(([provider, modelNames]) => {
+          modelNames.forEach(modelName => {
+            const metadata = hostedModelMetadata[modelName]
+            if (metadata) {
+              allModels.push({
+                name: modelName,
+                provider: metadata.provider,
+                is_loaded: false,
+                is_downloading: false,
+                download_progress: 0,
+                is_hosted: true,
+                cost_per_1k_tokens: metadata.cost_per_1k_tokens
+              })
+            }
+          })
+        })
+        
+        setModels(allModels)
         
         // Clear downloading state for models that are already loaded or downloaded
         setDownloadingModels(prev => {
@@ -710,7 +804,12 @@ const Models = () => {
   }
 
   useEffect(() => {
-    fetchModels()
+    const initializeData = async () => {
+      await fetchHostedModels()
+      await fetchModels()
+      loadApiKeys()
+    }
+    initializeData()
   }, [])
 
   useEffect(() => {
@@ -720,6 +819,13 @@ const Models = () => {
     setDeletingModels(new Set())
     setDownloadProgress({})
   }, [])
+
+  // Refetch models when hosted models are updated
+  useEffect(() => {
+    if (Object.keys(hostedModels).length > 0) {
+      fetchModels()
+    }
+  }, [hostedModels])
 
   if (loading) {
     return (
@@ -767,15 +873,15 @@ const Models = () => {
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-orange-600">
-              {models.filter(m => m.download_progress === 100 || m.size_on_disk).length}
+              {models.filter(m => m.is_hosted || m.download_progress === 100 || m.size_on_disk).length}
             </div>
-            <div className="text-xs text-muted-foreground">Downloaded</div>
+            <div className="text-xs text-muted-foreground">Ready</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-green-600">
-              {models.filter(m => m.is_loaded).length}
+              {models.filter(m => m.is_hosted || m.is_loaded).length}
             </div>
-            <div className="text-xs text-muted-foreground">Loaded</div>
+            <div className="text-xs text-muted-foreground">Available</div>
           </div>
         </div>
       </div>
@@ -812,8 +918,8 @@ const Models = () => {
                 setShowDownloadedOnly(false)
                 setShowLoadedOnly(false)
                 setShowRecommendedOnly(false)
-                setShowCPUOnly(false)
                 setShowNoAuthRequired(false)
+                setShowHostedOnly(false)
                 setMaxModelSize(2) // Reset to default small models threshold
               }}
               className="text-xs px-2 py-1 h-6"
@@ -821,9 +927,9 @@ const Models = () => {
                 showDownloadedOnly,
                 showLoadedOnly,
                 showRecommendedOnly,
-                showCPUOnly,
                 showNoAuthRequired,
-                showSmallModelsOnly: maxModelSize < 70
+                showSmallModelsOnly: maxModelSize < 70,
+                showHostedOnly
               }) === 0}
             >
               Clear All
@@ -835,7 +941,6 @@ const Models = () => {
                 setShowDownloadedOnly(false)
                 setShowLoadedOnly(false)
                 setShowRecommendedOnly(true)
-                setShowCPUOnly(false)
                 setShowNoAuthRequired(true)
                 setShowSmallModelsOnly(false)
               }}
@@ -847,22 +952,59 @@ const Models = () => {
         </div>
                 
                 <div className="flex items-center space-x-4">
-                  {/* CPU Compatible */}
+
+                  {/* No Auth Required */}
                   <div className="flex items-center space-x-2">
                     <button
                       type="button"
-                      onClick={() => setShowCPUOnly(!showCPUOnly)}
+                      onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
                       className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
+                        showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
                         className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showCPUOnly ? 'translate-x-4' : 'translate-x-1'
+                          showNoAuthRequired ? 'translate-x-4' : 'translate-x-1'
                         }`}
                       />
                     </button>
-                    <span className="text-xs font-medium text-gray-700">CPU</span>
+                    <span className="text-xs font-medium text-gray-700">No Auth</span>
+                  </div>
+
+                  {/* Hosted */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowHostedOnly(!showHostedOnly)}
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                        showHostedOnly ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showHostedOnly ? 'translate-x-4' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-gray-700">☁️ Hosted</span>
+                  </div>
+
+                  {/* Recommended */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                          showRecommendedOnly ? 'translate-x-4' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-medium text-gray-700">Recommended</span>
                   </div>
 
                   {/* Model Size Slider */}
@@ -886,43 +1028,6 @@ const Models = () => {
                       </span>
                     </div>
                   </div>
-
-                  {/* No Auth Required */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showNoAuthRequired ? 'translate-x-4' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">No Auth</span>
-                  </div>
-
-                  {/* Recommended */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          showRecommendedOnly ? 'translate-x-4' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">Recommended</span>
-                  </div>
-
 
                 </div>
               </div>
@@ -1050,17 +1155,13 @@ const Models = () => {
                                 ⭐ Recommended
                               </Badge>
                             )}
-                            {isGPURequired(model.name) ? (
+                            {isGPURequired(model.name) && (
                               <Badge 
                                 variant="default" 
                                 className="bg-red-100 text-red-800 border-red-200 text-xs cursor-help"
                                 title="This model requires GPU for reasonable performance"
                               >
                                 🚀 GPU Required
-                              </Badge>
-                            ) : (
-                              <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs">
-                                💻 CPU Compatible
                               </Badge>
                             )}
                             {isGatedModel(model.name) && (
@@ -1108,14 +1209,31 @@ const Models = () => {
                             <span className="text-muted-foreground">Size:</span>
                             <span className="font-medium">{getModelSizeCategory(model.name)}</span>
                           </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Disk Space:</span>
-                            <span className="font-medium">{getDiskSpaceRequirement(model.name)}</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Type:</span>
-                            <span className="font-medium">{getModelVariant(model.name)}</span>
-                          </div>
+                          {model.is_hosted ? (
+                            <>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Cost (1k tokens):</span>
+                                <span className="font-medium">
+                                  ${model.cost_per_1k_tokens?.input.toFixed(3)} input / ${model.cost_per_1k_tokens?.output.toFixed(3)} output
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Type:</span>
+                                <span className="font-medium">☁️ Hosted</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Disk Space:</span>
+                                <span className="font-medium">{getDiskSpaceRequirement(model.name)}</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Type:</span>
+                                <span className="font-medium">{getModelVariant(model.name)}</span>
+                              </div>
+                            </>
+                          )}
                           <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground">Provider:</span>
                             <span className="font-medium">{model.provider}</span>
@@ -1206,25 +1324,58 @@ const Models = () => {
                           ) : (
                             <Button 
                               onClick={() => {
-                                if (isGatedModel(model.name)) {
-                                  // Open HuggingFace access request page
-                                  window.open(`https://huggingface.co/${model.name}`, '_blank')
+                                if (model.is_hosted) {
+                                  // Show toast and navigate to comparison page where hosted models can be used
+                                  toast({
+                                    title: "Hosted Model Available",
+                                    description: `Navigate to Comparison page to use ${model.name} with other models.`,
+                                    variant: "default"
+                                  })
+                                  setTimeout(() => {
+                                    window.location.href = `/comparison`
+                                  }, 1500)
+                                } else if (isGatedModel(model.name)) {
+                                  // Check if HuggingFace token is configured
+                                  const hfToken = localStorage.getItem('huggingface_token')
+                                  if (hfToken) {
+                                    // Token exists, try to download the model
+                                    downloadAndLoadModel(model.name)
+                                  } else {
+                                    // No token, open HuggingFace access request page
+                                    toast({
+                                      title: "HuggingFace Token Required",
+                                      description: "Please configure your HuggingFace token in the API Keys page first.",
+                                      variant: "default"
+                                    })
+                                    setTimeout(() => {
+                                      window.open(`https://huggingface.co/${model.name}`, '_blank')
+                                    }, 1500)
+                                  }
                                 } else {
                                   downloadAndLoadModel(model.name)
                                 }
                               }}
                               size="sm"
                               className={`w-full text-xs ${
-                                isGatedModel(model.name) 
-                                  ? 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 cursor-pointer' 
+                                model.is_hosted
+                                  ? 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100 cursor-pointer'
+                                  : isGatedModel(model.name) 
+                                  ? (localStorage.getItem('huggingface_token') 
+                                    ? 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 cursor-pointer'
+                                    : 'bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100 cursor-pointer')
                                   : 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100'
                               }`}
                               disabled={downloadingModels.has(model.name) || loadingModels.has(model.name)}
                             >
                               <span className="mr-1">
-                                {isGatedModel(model.name) ? '🔒' : '📥'}
+                                {model.is_hosted ? '☁️' : isGatedModel(model.name) ? (localStorage.getItem('huggingface_token') ? '📥' : '🔒') : '📥'}
                               </span>
-                              {isGatedModel(model.name) ? 'Request Access' : 'Download & Load'}
+                              {model.is_hosted 
+                                ? `Compare Models ($${model.cost_per_1k_tokens?.input.toFixed(3)}/1k)` 
+                                : isGatedModel(model.name) 
+                                ? (localStorage.getItem('huggingface_token') ? 'Download & Load' : 'Request Access')
+                                : 'Download & Load'
+                              }
                             </Button>
                           )}
                         </div>
@@ -1380,6 +1531,80 @@ const Models = () => {
             </div>
           </div>
           
+          {/* API Key Configuration Section */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h4 className="font-medium mb-3 text-blue-800">🔑 API Key Configuration</h4>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Hosted Model API Keys */}
+                <div>
+                  <h5 className="font-medium mb-2 text-blue-700">☁️ Hosted Models</h5>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-xs font-medium text-blue-700 mb-1">OpenAI API Key</label>
+                      <input
+                        type="password"
+                        placeholder="sk-..."
+                        value={apiKeys.openai}
+                        onChange={(e) => saveApiKey('openai', e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-blue-700 mb-1">Anthropic API Key</label>
+                      <input
+                        type="password"
+                        placeholder="sk-ant-..."
+                        value={apiKeys.anthropic}
+                        onChange={(e) => saveApiKey('anthropic', e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-blue-700 mb-1">Google API Key</label>
+                      <input
+                        type="password"
+                        placeholder="AIza..."
+                        value={apiKeys.google}
+                        onChange={(e) => saveApiKey('google', e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* HuggingFace Token */}
+                <div>
+                  <h5 className="font-medium mb-2 text-blue-700">🔒 Gated Models</h5>
+                  <div>
+                    <label className="block text-xs font-medium text-blue-700 mb-1">HuggingFace Token</label>
+                    <input
+                      type="password"
+                      placeholder="hf_..."
+                      value={apiKeys.huggingface}
+                      onChange={(e) => saveApiKey('huggingface', e.target.value)}
+                      className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-blue-600 mt-1">
+                      Required for Mistral, Llama, and Gemma models
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-xs text-blue-700 space-y-1">
+                <p><strong>How to get your HuggingFace token:</strong></p>
+                <ol className="list-decimal list-inside space-y-1 ml-4">
+                  <li>Visit <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">HuggingFace Settings</a></li>
+                  <li>Click "New token" and give it a name</li>
+                  <li>Select "Read" permissions</li>
+                  <li>Copy the token (starts with "hf_")</li>
+                  <li>Paste it in the field above</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
           {/* Gated Models Section */}
           <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
             <h4 className="font-medium mb-3 text-red-800">🔒 Gated Models (Require Authentication)</h4>

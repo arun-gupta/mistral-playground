@@ -8,6 +8,7 @@ from backend.app.models.requests import PromptRequest, ComparisonRequest, ModelD
 from backend.app.models.responses import ModelResponse, ComparisonResponse, ModelInfo, ModelDownloadResponse, ModelStatus
 from backend.app.services.model_service import model_service
 from backend.app.services.download_service import download_service
+from backend.app.services.hosted_model_service import hosted_model_service
 from .dashboard import record_performance_data, record_comparison_data
 
 router = APIRouter()
@@ -247,25 +248,17 @@ async def get_available_models():
     # Define fallback models once to avoid duplication
     def get_fallback_models():
         return [
-            # Open models for testing and development (no authentication required) - Top 3
-            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
-            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
-            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            # Microsoft DialoGPT models (Top 3) - No authentication required
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM - Best for testing
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM - Good balance
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM - Best performance
             
-            # Mistral/Mixtral models (6 total - all require authentication) - Keep all as requested
-            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM, gated
-            "mistralai/Mistral-7B-v0.3",               # Base model v3, ~14GB RAM, gated
-            "mistralai/Mistral-7B-Instruct-v0.1",      # Instruction-tuned, ~14GB RAM, gated
-            "mistralai/Mistral-7B-Instruct-v0.2",      # Instruction-tuned v2, ~14GB RAM, gated
-            "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned v3, ~14GB RAM, gated
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # High performance, ~32GB RAM, gated
-            
-            # Meta Llama models (official, require authentication) - Top 3 most useful
+            # Meta Llama models (Top 3) - Require authentication
             "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
             "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
             "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
             
-            # Google Gemma models (all require authentication) - Top 3 most useful
+            # Google Gemma models (Top 3) - Require authentication
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
             "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
             "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
@@ -346,6 +339,8 @@ async def get_available_models():
                 load_time=None
             ))
         
+
+        
         return model_statuses
         
     except ImportError as e:
@@ -372,6 +367,19 @@ async def get_model_list():
             "mistralai/Mistral-7B-Instruct-v0.2",
             "meta-llama/Meta-Llama-3-8B-Instruct"
         ]
+
+@router.get("/hosted", response_model=dict)
+async def get_hosted_models():
+    """Get list of available hosted models by provider"""
+    try:
+        hosted_models = hosted_model_service.get_available_models()
+        return {
+            "providers": hosted_models,
+            "total_models": sum(len(models) for models in hosted_models.values())
+        }
+    except Exception as e:
+        print(f"❌ Error getting hosted models: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/info", response_model=List[ModelInfo])
 async def get_model_info():

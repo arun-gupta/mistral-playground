@@ -6,6 +6,9 @@ class ModelProvider(str, Enum):
     VLLM = "vllm"
     HUGGINGFACE = "huggingface"
     OLLAMA = "ollama"
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    GOOGLE = "google"
 
 class PromptRequest(BaseModel):
     model_config = ConfigDict(protected_namespaces=())

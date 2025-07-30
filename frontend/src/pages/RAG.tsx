@@ -61,7 +61,21 @@ const RAG = () => {
   const [showContext, setShowContext] = useState(false)
   const [modelStatuses, setModelStatuses] = useState<Array<{name: string, is_loaded: boolean}>>([])
   const [availableModels, setAvailableModels] = useState<Array<{name: string, provider: string, description: string}>>([])
+  const [hostedModels, setHostedModels] = useState<Record<string, string[]>>({})
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Fetch hosted models
+  const fetchHostedModels = async () => {
+    try {
+      const response = await fetch('/api/v1/models/hosted')
+      if (response.ok) {
+        const data = await response.json()
+        setHostedModels(data.providers)
+      }
+    } catch (error) {
+      console.error('Error fetching hosted models:', error)
+    }
+  }
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [showCollectionDetails, setShowCollectionDetails] = useState(false)
   const [collectionDescription, setCollectionDescription] = useState('')
@@ -85,33 +99,76 @@ const RAG = () => {
         const modelList = await listResponse.json()
         const statusData = await statusResponse.json()
         
-        // Filter to only Mistral & Mixtral models for RAG
+        // Filter to only Mistral/Mixtral models
         const mistralModels = modelList.filter((model: string) => 
           model.includes('Mistral') || model.includes('Mixtral')
         )
         
         // Create model objects with descriptions
         const modelObjects = mistralModels.map((modelName: string) => {
-          const isRecommended = modelName.includes('Mistral-7B-Instruct-v0.2') || 
-                               modelName.includes('Mixtral-8x7B-Instruct-v0.1-GGUF')
-          
           let description = ''
-          if (modelName.includes('GGUF')) {
-            description = 'CPU optimized (4-8GB RAM)'
-          } else if (modelName.includes('Mixtral')) {
-            description = 'High performance (~32GB RAM, GPU recommended)'
-          } else {
-            description = 'Full model (~14GB RAM)'
-          }
+          let provider = 'huggingface'
           
-          if (isRecommended) {
-            description += ' ⭐ Recommended'
+          // Determine provider and description based on model name
+          if (modelName.startsWith('gpt-')) {
+            provider = 'openai'
+            if (modelName.includes('4o')) {
+              description = 'Latest GPT-4 model (fast, capable)'
+            } else if (modelName.includes('3.5')) {
+              description = 'Reliable GPT-3.5 model (cost-effective)'
+            } else {
+              description = 'OpenAI model'
+            }
+          } else if (modelName.startsWith('claude-')) {
+            provider = 'anthropic'
+            if (modelName.includes('opus')) {
+              description = 'Most capable Claude model'
+            } else if (modelName.includes('sonnet')) {
+              description = 'Balanced Claude model'
+            } else if (modelName.includes('haiku')) {
+              description = 'Fast Claude model (cost-effective)'
+            } else {
+              description = 'Anthropic model'
+            }
+          } else if (modelName.startsWith('gemini-')) {
+            provider = 'google'
+            if (modelName.includes('1.5-pro')) {
+              description = 'Most capable Gemini model'
+            } else if (modelName.includes('1.5-flash')) {
+              description = 'Fast Gemini model (cost-effective)'
+            } else if (modelName.includes('1.0-pro')) {
+              description = 'Reliable Gemini model'
+            } else {
+              description = 'Google Gemini model'
+            }
+          } else if (modelName.includes('GGUF')) {
+            description = 'CPU optimized (4-8GB RAM)'
+          } else if (modelName.includes('Mixtral-8x7B')) {
+            if (modelName.includes('GGUF')) {
+              description = 'CPU optimized high performance (32GB RAM)'
+            } else {
+              description = 'High performance (32GB RAM)'
+            }
+          } else if (modelName.includes('Mistral-7B')) {
+            if (modelName.includes('Instruct')) {
+              description = 'Instruction tuned (14GB RAM)'
+            } else {
+              description = 'Base model (14GB RAM)'
+            }
+          } else if (modelName.includes('DialoGPT')) {
+            description = 'Small model (1-3GB RAM)'
+          } else if (modelName.includes('gemma')) {
+            description = 'Google Gemma model'
+          } else if (modelName.includes('Llama')) {
+            description = 'Meta Llama model'
+          } else {
+            description = 'Standard model'
           }
           
           return {
             name: modelName,
-            provider: 'huggingface',
-            description
+            provider: provider,
+            description: description
           }
         })
         
@@ -128,7 +185,16 @@ const RAG = () => {
 
   // Check if selected model is loaded
   const isModelLoaded = (modelName: string) => {
+    // For local models, check if they're loaded
     return modelStatuses.find(model => model.name === modelName)?.is_loaded || false
+  }
+
+  // Get provider for a model
+  const getProviderForModel = (modelName: string) => {
+    if (modelName.startsWith('gpt-')) return 'openai'
+    if (modelName.startsWith('claude-')) return 'anthropic'
+    if (modelName.startsWith('gemini-')) return 'google'
+    return 'huggingface'
   }
 
   // Generate default collection name from file
@@ -142,9 +208,17 @@ const RAG = () => {
 
   // Initialize data on component mount
   useEffect(() => {
-    fetchCollections()
-    fetchModelStatuses()
+    const initializeData = async () => {
+      await fetchModelStatuses()
+      await fetchCollections()
+    }
+    initializeData()
   }, [])
+
+  // Update provider when selected model changes
+  useEffect(() => {
+    setSelectedProvider(getProviderForModel(selectedModel))
+  }, [selectedModel])
 
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -440,7 +514,7 @@ const RAG = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">RAG Mode</h1>
+        <h1 className="text-3xl font-bold">Mistral RAG</h1>
         <p className="text-muted-foreground">
           Upload documents and generate grounded answers using Retrieval-Augmented Generation
         </p>
@@ -828,7 +902,7 @@ const RAG = () => {
                     </option>
                   ))}
                 </select>
-                <div className="flex items-center gap-1 text-sm">
+                                <div className="flex items-center gap-1 text-sm">
                   {isModelLoaded(selectedModel) ? (
                     <span className="text-green-600">✅ Loaded</span>
                   ) : (

@@ -23,6 +23,20 @@ const Playground = () => {
   const [error, setError] = useState('')
   const [modelStatuses, setModelStatuses] = useState<Array<{name: string, is_loaded: boolean}>>([])
   const [availableModels, setAvailableModels] = useState<string[]>([])
+  const [hostedModels, setHostedModels] = useState<Record<string, string[]>>({})
+
+  // Fetch hosted models
+  const fetchHostedModels = async () => {
+    try {
+      const response = await fetch('/api/v1/models/hosted')
+      if (response.ok) {
+        const data = await response.json()
+        setHostedModels(data.providers)
+      }
+    } catch (error) {
+      console.error('Error fetching hosted models:', error)
+    }
+  }
 
   // Function to fetch model statuses and available models
   const fetchModelStatuses = async () => {
@@ -49,20 +63,13 @@ const Playground = () => {
         console.log('🔍 All available models:', modelList)
         console.log('🔍 Status data:', statusData)
         
-        // Filter to only Mistral & Mixtral models for Playground
+        // Filter to only Mistral/Mixtral models
         const mistralModels = modelList.filter((model: string) => 
           model.includes('Mistral') || model.includes('Mixtral')
         )
         
-        console.log('🔍 Filtered Mistral/Mixtral models:', mistralModels)
-        
-        // If no Mistral/Mixtral models found, show all models as fallback
-        if (mistralModels.length === 0) {
-          console.log('⚠️ No Mistral/Mixtral models found, showing all models as fallback')
-          setAvailableModels(modelList)
-        } else {
-          setAvailableModels(mistralModels)
-        }
+        console.log('🔍 Mistral/Mixtral models only:', mistralModels)
+        setAvailableModels(mistralModels)
         setModelStatuses(statusData.map((model: any) => ({
           name: model.name,
           is_loaded: model.is_loaded
@@ -73,11 +80,14 @@ const Playground = () => {
           statusStatus: statusResponse.status
         })
         
-        // Fallback to hardcoded models if API fails
+        // Fallback to hardcoded Mistral models if API fails
         const fallbackModels = [
           'mistralai/Mistral-7B-Instruct-v0.2',
-          'mistralai/Mistral-7B-Instruct-v0.1',
-          'mistralai/Mixtral-8x7B-Instruct-v0.1'
+          'mistralai/Mistral-7B-Instruct-v0.3',
+          'mistralai/Mistral-7B-v0.1',
+          'mistralai/Mistral-7B-v0.3',
+          'mistralai/Mixtral-8x7B-Instruct-v0.1',
+          'mistralai/Mixtral-8x7B-Instruct-v0.1-GGUF'
         ]
         console.log('🔄 Using fallback models:', fallbackModels)
         setAvailableModels(fallbackModels)
@@ -86,11 +96,14 @@ const Playground = () => {
     } catch (error) {
       console.error('❌ Could not fetch model statuses:', error)
       
-      // Fallback to hardcoded models on error
+      // Fallback to hardcoded Mistral models on error
       const fallbackModels = [
         'mistralai/Mistral-7B-Instruct-v0.2',
-        'mistralai/Mistral-7B-Instruct-v0.1',
-        'mistralai/Mixtral-8x7B-Instruct-v0.1'
+        'mistralai/Mistral-7B-Instruct-v0.3',
+        'mistralai/Mistral-7B-v0.1',
+        'mistralai/Mistral-7B-v0.3',
+        'mistralai/Mixtral-8x7B-Instruct-v0.1',
+        'mistralai/Mixtral-8x7B-Instruct-v0.1-GGUF'
       ]
       console.log('🔄 Using fallback models due to error:', fallbackModels)
       setAvailableModels(fallbackModels)
@@ -100,7 +113,7 @@ const Playground = () => {
 
   // Check mock mode status and fetch model statuses on component mount
   useEffect(() => {
-    const checkMockStatus = async () => {
+    const initializeData = async () => {
       try {
         const response = await fetch('/api/v1/models/mock-status')
         if (response.ok) {
@@ -110,10 +123,11 @@ const Playground = () => {
       } catch (error) {
         console.log('Could not check mock status:', error)
       }
+      
+      await fetchModelStatuses()
     }
 
-    checkMockStatus()
-    fetchModelStatuses()
+    initializeData()
   }, [])
 
   const toggleMockMode = async () => {
@@ -175,7 +189,10 @@ const Playground = () => {
 
     // Determine timeout based on model size
     const getTimeoutForModel = (modelName: string) => {
-      if (modelName.includes('Mistral-7B') || modelName.includes('GGUF')) {
+      // Hosted models are typically fast
+      if (modelName.startsWith('gpt-') || modelName.startsWith('claude-') || modelName.startsWith('gemini-')) {
+        return 30000 // 30 seconds for hosted models
+      } else if (modelName.includes('Mistral-7B') || modelName.includes('GGUF')) {
         return 300000 // 5 minutes for large models
       } else if (modelName.includes('DialoGPT-large')) {
         return 120000 // 2 minutes for medium models
@@ -190,9 +207,17 @@ const Playground = () => {
     try {
       console.log(`⏱️ Starting fetch request with ${timeoutMinutes} minute timeout...`)
       
-      // Only show timeout message if model is not already loaded
+      // Show appropriate loading message
       if (!isModelLoaded(selectedModel)) {
         setModelProgress(`Initializing model (timeout: ${timeoutMinutes} minutes)...`)
+        setModelStatus('loading')
+      } else {
+        // Model is loaded, show generation progress
+        const isLargeModel = selectedModel.includes('Mistral-7B') || selectedModel.includes('7B')
+        const message = isLargeModel 
+          ? `Generating response (may take 1-2 minutes on CPU)...`
+          : `Generating response...`
+        setModelProgress(message)
         setModelStatus('loading')
       }
       
@@ -248,9 +273,13 @@ const Playground = () => {
     } catch (error: any) { // Fixed TypeScript error here
       console.log('💥 Network error:', error)
       if (error.name === 'AbortError') {
-        setResponse(`Error: Request timed out after ${timeoutMinutes} minutes. Large models may take longer to download.`)
+        const isLargeModel = selectedModel.includes('Mistral-7B') || selectedModel.includes('7B') || selectedModel.includes('GGUF')
+        const message = isLargeModel 
+          ? `Error: Request timed out after ${timeoutMinutes} minutes. Large models like ${selectedModel} are very slow on CPU. Consider using a smaller model like 'microsoft/DialoGPT-small' for faster responses.`
+          : `Error: Request timed out after ${timeoutMinutes} minutes. Large models may take longer to download.`
+        setResponse(message)
         setModelStatus('error')
-        setModelError(`Request timed out after ${timeoutMinutes} minutes. Large models may take longer to download.`)
+        setModelError(message)
       } else {
         setResponse(`Error: Network error - ${error}`)
         setModelStatus('error')
@@ -305,6 +334,7 @@ const Playground = () => {
 
   // Helper function to check if a model is loaded
   const isModelLoaded = (modelName: string) => {
+    // For local models, check if they're loaded
     return modelStatuses.find(model => model.name === modelName)?.is_loaded || false
   }
 
@@ -313,10 +343,10 @@ const Playground = () => {
       <div>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Mistral Playground</h1>
-            <p className="text-muted-foreground">
-              Explore and experiment with Mistral's open models
-            </p>
+                    <h1 className="text-3xl font-bold">Mistral Playground</h1>
+        <p className="text-muted-foreground">
+          Explore and experiment with Mistral AI models
+        </p>
           </div>
           
           {/* Mock Mode Toggle */}
@@ -449,19 +479,98 @@ const Playground = () => {
                 ) : (
                   availableModels.map((modelName) => {
                     const isLoaded = isModelLoaded(modelName)
-                    const isRecommended = modelName.includes('Mistral-7B-Instruct-v0.2') || 
-                                         modelName.includes('Mixtral-8x7B-Instruct-v0.1-GGUF')
+                    const isRecommended = modelName === 'gpt-4o-mini' || 
+                                         modelName === 'gpt-3.5-turbo' ||
+                                         modelName === 'claude-3-5-haiku-20241022' ||
+                                         modelName === 'gemini-1.5-flash' ||
+                                         modelName === 'microsoft/DialoGPT-small' ||
+                                         modelName === 'google/gemma-7b-it' ||
+                                         modelName === 'mistralai/Mistral-7B-Instruct-v0.2' ||
+                                         modelName === 'mistralai/Mistral-7B-Instruct-v0.3' ||
+                                         modelName === 'mistralai/Mixtral-8x7B-Instruct-v0.1-GGUF'
                     
                     // Generate description based on model name
                     let description = ''
-                    if (modelName.includes('GGUF')) {
-                      description = 'CPU optimized (4-8GB RAM)'
-                    } else if (modelName.includes('Mixtral')) {
-                      description = 'High performance (~32GB RAM, GPU recommended)'
-                    } else if (modelName.includes('CodeMistral')) {
-                      description = 'Code generation (~14GB RAM, GPU recommended)'
+                    
+                    // Hosted models
+                    if (modelName.startsWith('gpt-')) {
+                      if (modelName.includes('4o')) {
+                        description = 'Latest GPT-4 model (fast, capable)'
+                      } else if (modelName.includes('3.5')) {
+                        description = 'Reliable GPT-3.5 model (cost-effective)'
+                      } else {
+                        description = 'OpenAI model'
+                      }
+                    } else if (modelName.startsWith('claude-')) {
+                      if (modelName.includes('opus')) {
+                        description = 'Most capable Claude model'
+                      } else if (modelName.includes('sonnet')) {
+                        description = 'Balanced Claude model'
+                      } else if (modelName.includes('haiku')) {
+                        description = 'Fast Claude model (cost-effective)'
+                      } else {
+                        description = 'Anthropic model'
+                      }
+                    } else if (modelName.startsWith('gemini-')) {
+                      if (modelName.includes('1.5-pro')) {
+                        description = 'Most capable Gemini model'
+                      } else if (modelName.includes('1.5-flash')) {
+                        description = 'Fast Gemini model (cost-effective)'
+                      } else if (modelName.includes('1.0-pro')) {
+                        description = 'Reliable Gemini model'
+                      } else {
+                        description = 'Google Gemini model'
+                      }
+                    }
+                    // Local models
+                    else if (modelName.includes('DialoGPT')) {
+                      if (modelName.includes('small')) {
+                        description = 'Small model (~500MB RAM)'
+                      } else if (modelName.includes('medium')) {
+                        description = 'Medium model (~1.5GB RAM)'
+                      } else if (modelName.includes('large')) {
+                        description = 'Large model (~3GB RAM)'
+                      } else {
+                        description = 'DialoGPT model'
+                      }
+                    } else if (modelName.includes('gemma')) {
+                      if (modelName.includes('2b')) {
+                        description = 'Small model (~4GB RAM)'
+                      } else if (modelName.includes('7b')) {
+                        description = 'Medium model (~14GB RAM)'
+                      } else if (modelName.includes('27b')) {
+                        description = 'Large model (~54GB RAM)'
+                      } else {
+                        description = 'Google Gemma model'
+                      }
+                    } else if (modelName.includes('Llama')) {
+                      if (modelName.includes('1B')) {
+                        description = 'Small model (~2GB RAM)'
+                      } else if (modelName.includes('8B')) {
+                        description = 'Medium model (~16GB RAM)'
+                      } else if (modelName.includes('70B')) {
+                        description = 'Large model (~140GB RAM)'
+                      } else {
+                        description = 'Meta Llama model'
+                      }
+                    } else if (modelName.includes('Mistral') || modelName.includes('Mixtral')) {
+                      if (modelName.includes('Mixtral-8x7B')) {
+                        if (modelName.includes('GGUF')) {
+                          description = 'CPU optimized high performance (~32GB RAM)'
+                        } else {
+                          description = 'High performance model (~32GB RAM)'
+                        }
+                      } else if (modelName.includes('Mistral-7B')) {
+                        if (modelName.includes('Instruct')) {
+                          description = 'Instruction tuned model (~14GB RAM)'
+                        } else {
+                          description = 'Base model (~14GB RAM)'
+                        }
+                      } else {
+                        description = 'Mistral AI model'
+                      }
                     } else {
-                      description = 'Full model (~14GB RAM)'
+                      description = 'Standard model'
                     }
                     
                     // Status indicator based on new three-state design

@@ -111,6 +111,7 @@ class ModelStatus(BaseModel):
     last_used: Optional[str] = Field(None, description="Last time model was used")
     load_time: Optional[float] = Field(None, description="Time taken to load model")
 
+
 class ModelDownloadResponse(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
     

@@ -12,7 +12,8 @@ import {
   isGPURequired,
   isSmallModel,
   getActiveFilterCount,
-  isModelSizeWithinThreshold
+  isModelSizeWithinThreshold,
+  isHostedModel
 } from '../utils/modelUtils'
 
 interface ModelComparison {
@@ -56,9 +57,9 @@ const Comparison = () => {
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)
-  const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const [maxModelSize, setMaxModelSize] = useState(2)  // Slider for maximum model size (in billions of parameters)
+  const [showHostedOnly, setShowHostedOnly] = useState(false)  // Toggle for hosted models only
 
   const { toast } = useToast()
 
@@ -70,13 +71,49 @@ const Comparison = () => {
 
   // Available models for comparison - will be populated from backend
   const [availableModels, setAvailableModels] = useState<string[]>([])
+  const [hostedModels, setHostedModels] = useState<Record<string, string[]>>({})
+
+  // Hosted models metadata (Top 3 from each provider)
+  const hostedModelMetadata: Record<string, any> = {
+    // OpenAI Models (Top 3)
+    'gpt-4o-mini': { provider: 'openai', cost_per_1k_tokens: { input: 0.15, output: 0.60 } },
+    'gpt-3.5-turbo': { provider: 'openai', cost_per_1k_tokens: { input: 0.50, output: 1.50 } },
+    'gpt-4o': { provider: 'openai', cost_per_1k_tokens: { input: 2.50, output: 10.00 } },
+    
+    // Anthropic Models (Top 3)
+    'claude-3-5-haiku-20241022': { provider: 'anthropic', cost_per_1k_tokens: { input: 0.25, output: 1.25 } },
+    'claude-3-5-sonnet-20241022': { provider: 'anthropic', cost_per_1k_tokens: { input: 3.00, output: 15.00 } },
+    'claude-3-opus-20240229': { provider: 'anthropic', cost_per_1k_tokens: { input: 15.00, output: 75.00 } },
+    
+    // Google Gemini Models (Top 3)
+    'gemini-1.5-flash': { provider: 'google', cost_per_1k_tokens: { input: 0.075, output: 0.30 } },
+    'gemini-1.0-pro': { provider: 'google', cost_per_1k_tokens: { input: 1.50, output: 4.50 } },
+    'gemini-1.5-pro': { provider: 'google', cost_per_1k_tokens: { input: 3.50, output: 10.50 } }
+  }
+
+  // Fetch hosted models
+  const fetchHostedModels = async () => {
+    try {
+      console.log('🔍 Fetching hosted models...')
+      const response = await fetch('/api/v1/models/hosted')
+      if (response.ok) {
+        const data = await response.json()
+        console.log('📡 Hosted models data:', data)
+        setHostedModels(data.providers)
+        return data.providers
+      }
+    } catch (error) {
+      console.error('Error fetching hosted models:', error)
+    }
+    return {}
+  }
 
 
 
 
 
   // Fetch model statuses and available models
-  const fetchModelStatuses = async () => {
+  const fetchModelStatuses = async (hostedModelsData?: Record<string, string[]>) => {
     try {
       // Fetch model list and statuses in parallel
       const [listResponse, statusResponse] = await Promise.all([
@@ -88,7 +125,23 @@ const Comparison = () => {
         const modelList = await listResponse.json()
         const statusData = await statusResponse.json()
         
-        setAvailableModels(modelList)
+        // Add hosted models to the model list
+        const allModels = [...modelList]
+        
+        // Use provided hosted models data or fall back to state
+        const modelsToAdd = hostedModelsData || hostedModels
+        
+        // Add hosted models from each provider
+        console.log('🔍 Current hostedModels data:', modelsToAdd)
+        Object.entries(modelsToAdd).forEach(([provider, modelNames]) => {
+          console.log(`📡 Adding ${provider} models:`, modelNames)
+          modelNames.forEach(modelName => {
+            allModels.push(modelName)
+          })
+        })
+        
+        console.log('🔍 Final allModels list:', allModels)
+        setAvailableModels(allModels)
         setModelStatuses(statusData)
       } else {
         console.error('Failed to fetch models')
@@ -131,19 +184,23 @@ const Comparison = () => {
       filtered = filtered.filter(modelName => isRecommended(modelName))
     }
 
-    // Apply CPU compatibility filter (show models that don't require GPU)
-    if (showCPUOnly) {
-      filtered = filtered.filter(modelName => !isGPURequired(modelName))
-    }
-
     // Apply no authentication required filter
     if (showNoAuthRequired) {
       filtered = filtered.filter(modelName => !isGatedModel(modelName))
     }
 
-    // Apply size filter using slider
+    // Apply hosted only filter
+    if (showHostedOnly) {
+      filtered = filtered.filter(modelName => isHostedModel(modelName))
+    }
+
+    // Apply size filter using slider (exclude hosted models from size filtering)
     if (maxModelSize < 70) { // Only apply filter if not showing all models
-      filtered = filtered.filter(modelName => isModelSizeWithinThreshold(modelName, maxModelSize))
+      filtered = filtered.filter(modelName => {
+        // Skip size filtering for hosted models
+        if (isHostedModel(modelName)) return true
+        return isModelSizeWithinThreshold(modelName, maxModelSize)
+      })
     }
 
     // Sort models by family first, then by size within each family (smallest first)
@@ -238,8 +295,22 @@ const Comparison = () => {
 
   // Load model statuses on mount
   useEffect(() => {
-    fetchModelStatuses()
+    const initializeData = async () => {
+      console.log('🚀 Initializing Comparison page data...')
+      const hostedData = await fetchHostedModels()
+      await fetchModelStatuses(hostedData)
+    }
+    initializeData()
   }, [])
+
+  // Refetch models when hosted models are updated
+  useEffect(() => {
+    console.log('🔄 hostedModels state changed:', hostedModels)
+    if (Object.keys(hostedModels).length > 0) {
+      console.log('🔄 Refetching models due to hosted models update')
+      fetchModelStatuses()
+    }
+  }, [hostedModels])
 
   return (
     <div className="space-y-4">
@@ -263,8 +334,8 @@ const Comparison = () => {
                 setShowDownloadedOnly(false)
                 setShowLoadedOnly(false)
                 setShowRecommendedOnly(false)
-                setShowCPUOnly(false)
                 setShowNoAuthRequired(false)
+                setShowHostedOnly(false)
                 setMaxModelSize(2) // Reset to default small models threshold
               }}
               className="text-xs px-2 py-1 h-6"
@@ -272,15 +343,15 @@ const Comparison = () => {
                 showDownloadedOnly,
                 showLoadedOnly,
                 showRecommendedOnly,
-                showCPUOnly,
                 showNoAuthRequired,
-                showSmallModelsOnly: maxModelSize < 70
+                showSmallModelsOnly: maxModelSize < 70,
+                showHostedOnly
               }) === 0}
             >
               Clear All
             </Button>
             <Button
-              onClick={fetchModelStatuses}
+              onClick={() => fetchModelStatuses()}
               variant="outline"
               size="sm"
               className="text-xs px-2 py-1 h-6"
@@ -290,45 +361,6 @@ const Comparison = () => {
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          {/* CPU Compatible */}
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={() => setShowCPUOnly(!showCPUOnly)}
-              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                  showCPUOnly ? 'translate-x-4' : 'translate-x-1'
-                }`}
-              />
-            </button>
-            <span className="text-xs font-medium text-gray-700">CPU</span>
-          </div>
-
-          {/* Model Size Slider */}
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-gray-700">Max Size:</span>
-            <div className="flex items-center space-x-1">
-              <input
-                type="range"
-                min="0.1"
-                max="70"
-                step="0.1"
-                value={maxModelSize}
-                onChange={(e) => setMaxModelSize(parseFloat(e.target.value))}
-                className="w-16 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(maxModelSize / 70) * 100}%, #e5e7eb ${(maxModelSize / 70) * 100}%, #e5e7eb 100%)`
-                }}
-              />
-              <span className="text-xs font-medium text-gray-700 min-w-[2rem]">
-                {maxModelSize === 70 ? 'All' : `${maxModelSize}B`}
-              </span>
-            </div>
-          </div>
 
           {/* No Auth Required */}
           <div className="flex items-center space-x-2">
@@ -364,6 +396,46 @@ const Comparison = () => {
               />
             </button>
             <span className="text-xs font-medium text-gray-700">Recommended</span>
+          </div>
+
+          {/* Hosted */}
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowHostedOnly(!showHostedOnly)}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
+                showHostedOnly ? 'bg-blue-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
+                  showHostedOnly ? 'translate-x-4' : 'translate-x-1'
+                }`}
+              />
+            </button>
+            <span className="text-xs font-medium text-gray-700">☁️ Hosted</span>
+          </div>
+
+          {/* Model Size Slider */}
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-gray-700">Max Size:</span>
+            <div className="flex items-center space-x-1">
+              <input
+                type="range"
+                min="0.1"
+                max="70"
+                step="0.1"
+                value={maxModelSize}
+                onChange={(e) => setMaxModelSize(parseFloat(e.target.value))}
+                className="w-16 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                style={{
+                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(maxModelSize / 70) * 100}%, #e5e7eb ${(maxModelSize / 70) * 100}%, #e5e7eb 100%)`
+                }}
+              />
+              <span className="text-xs font-medium text-gray-700 min-w-[2rem]">
+                {maxModelSize === 70 ? 'All' : `${maxModelSize}B`}
+              </span>
+            </div>
           </div>
 
 
@@ -425,17 +497,13 @@ const Comparison = () => {
                             ✅ Loaded
                           </Badge>
                         )}
-                        {isGPURequired(modelName) ? (
+                        {isGPURequired(modelName) && (
                           <Badge 
                             variant="default" 
                             className="bg-red-100 text-red-800 border-red-200 text-xs px-2 py-1 cursor-help"
                             title="This model requires GPU for reasonable performance"
                           >
                             🚀 GPU Required
-                          </Badge>
-                        ) : (
-                          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1">
-                            💻 CPU Compatible
                           </Badge>
                         )}
                         {isGatedModel(modelName) && (
