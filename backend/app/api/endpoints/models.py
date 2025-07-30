@@ -243,6 +243,74 @@ async def get_download_status(model_name: str):
 @router.get("/available", response_model=List[ModelStatus])
 async def get_available_models():
     """Get detailed status of all available models"""
+    
+    # Define fallback models once to avoid duplication
+    def get_fallback_models():
+        return [
+            # Tiny models (very CPU-friendly)
+            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
+            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
+            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
+            
+            # Full Mistral models (require more RAM) - Note: v0.1 and v0.2 are now gated
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM (still open)
+            
+            # Meta Llama models (official) - Top 6 most useful
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
+            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
+            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
+            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
+            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
+            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
+            
+            # Google Gemma models - Top 6 most useful
+            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
+            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
+            "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
+            "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
+            "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
+            "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
+            
+            # Mixtral models (high performance)
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
+            
+            # GPU-only models (for reference)
+            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
+        ]
+    
+    def create_model_statuses(model_names):
+        """Helper function to create ModelStatus objects from model names"""
+        # Get downloaded models from download service
+        downloaded_models_list = download_service.get_downloaded_models()
+        
+        model_statuses = []
+        for model_name in model_names:
+            # Check if model is downloaded to disk
+            is_downloaded = model_name in downloaded_models_list
+            
+            # Check if model is currently downloading
+            is_downloading = model_name in download_service.active_downloads
+            
+            # Get download progress if downloading
+            download_progress = None
+            if is_downloading and model_name in download_service.download_status:
+                download_progress = download_service.download_status[model_name]["progress"]
+            elif is_downloaded:
+                download_progress = 100.0
+            
+            model_statuses.append(ModelStatus(
+                name=model_name,
+                provider="huggingface",
+                is_loaded=False,
+                is_downloading=is_downloading,
+                download_progress=download_progress,
+                size_on_disk="2.5GB" if is_downloaded else None,
+                last_used=None,
+                load_time=None
+            ))
+        
+        return model_statuses
+    
     try:
         from backend.app.services.model_service import model_service
         
@@ -253,9 +321,6 @@ async def get_available_models():
             list(model_service.ct_models.keys())
         )
         
-        # Get downloaded models from download service
-        downloaded_models_list = download_service.get_downloaded_models()
-        
         # Get available models from the service
         available_models = model_service.get_available_models()
         
@@ -265,7 +330,7 @@ async def get_available_models():
             is_loaded = model_name in loaded_models
             
             # Check if model is downloaded to disk
-            is_downloaded = model_name in downloaded_models_list
+            is_downloaded = model_name in download_service.get_downloaded_models()
             
             # Check if model is currently downloading
             is_downloading = model_name in download_service.active_downloads
@@ -293,132 +358,12 @@ async def get_available_models():
     except ImportError as e:
         print(f"❌ Import error in get_available_models: {e}")
         # Return basic model statuses if model service can't be imported
-        fallback_models = [
-            # Tiny models (very CPU-friendly)
-            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
-            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
-            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
-            
-            # Full Mistral models (require more RAM) - Note: v0.1 and v0.2 are now gated
-            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM (still open)
-            
-            # Meta Llama models (official) - Top 6 most useful
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
-            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
-            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
-            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
-            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
-            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
-            
-                # Google Gemma models - Top 6 most useful
-    "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
-    "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
-    "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
-    "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
-    "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
-    "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
-            
-            # Mixtral models (high performance)
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
-            
-            # GPU-only models (for reference)
-            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
-        ]
-        
-        # Get downloaded models from download service
-        downloaded_models_list = download_service.get_downloaded_models()
-        
-        model_statuses = []
-        for model_name in fallback_models:
-            # Check if model is downloaded to disk
-            is_downloaded = model_name in downloaded_models_list
-            
-            # Check if model is currently downloading
-            is_downloading = model_name in download_service.active_downloads
-            
-            # Get download progress if downloading
-            download_progress = None
-            if is_downloading and model_name in download_service.download_status:
-                download_progress = download_service.download_status[model_name]["progress"]
-            elif is_downloaded:
-                download_progress = 100.0
-            
-            model_statuses.append(ModelStatus(
-                name=model_name,
-                provider="huggingface",
-                is_loaded=False,
-                is_downloading=is_downloading,
-                download_progress=download_progress,
-                size_on_disk="2.5GB" if is_downloaded else None,
-                last_used=None,
-                load_time=None
-            ))
-        
-        return model_statuses
+        return create_model_statuses(get_fallback_models())
         
     except Exception as e:
         print(f"❌ Error in get_available_models: {e}")
         # Return basic model statuses on any other error
-        fallback_models = [
-            # Tiny models (very CPU-friendly)
-            "microsoft/DialoGPT-small",      # 117M parameters, ~500MB RAM
-            "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
-            "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
-            
-            # Full Mistral models (require more RAM) - Note: v0.1 and v0.2 are now gated
-            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM (still open)
-            
-            # Meta Llama models (official) - Top 6 most useful
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct, good balance
-            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct, good balance
-            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct, high performance
-            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
-            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
-            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
-            
-            # Google Gemma models
-            "google/gemma-2b",                          # ~4GB RAM, small model
-            "google/gemma-7b",                          # ~14GB RAM, medium model
-            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
-            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
-            
-            # Mixtral models (high performance)
-            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
-            
-            # GPU-only models (for reference)
-            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
-        ]
-        
-        # Get downloaded models from download service
-        downloaded_models_list = download_service.get_downloaded_models()
-        
-        model_statuses = []
-        for model_name in fallback_models:
-            # Check if model is downloaded to disk
-            is_downloaded = model_name in downloaded_models_list
-            
-            # Check if model is currently downloading
-            is_downloading = model_name in download_service.active_downloads
-            
-            # Get download progress if downloading
-            download_progress = None
-            if is_downloading and model_name in download_service.download_status:
-                download_progress = download_service.download_status[model_name]["progress"]
-            elif is_downloaded:
-                download_progress = 100.0
-            
-            model_statuses.append(ModelStatus(
-                name=model_name,
-                provider="huggingface",
-                is_loaded=False,
-                is_downloading=is_downloading,
-                download_progress=download_progress,
-                size_on_disk="2.5GB" if is_downloaded else None,
-                last_used=None,
-                load_time=None
-            ))
-        
-        return model_statuses
+        return create_model_statuses(get_fallback_models())
 
 @router.get("/list", response_model=List[str])
 async def get_model_list():
