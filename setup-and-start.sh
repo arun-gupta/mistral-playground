@@ -62,6 +62,9 @@ API_HOST=0.0.0.0
 API_PORT=8000
 CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
 
+# Optional: Hugging Face API
+HUGGINGFACE_API_KEY=your-huggingface-api-key-here
+
 # Security
 SECRET_KEY=your-secret-key-here
 ALGORITHM=HS256
@@ -77,6 +80,14 @@ EOF
     echo "⚠️  You may want to customize it later"
 else
     echo "✅ .env file already exists"
+    # Check if HUGGINGFACE_API_KEY is missing and add it if needed
+    if ! grep -q "^HUGGINGFACE_API_KEY=" .env; then
+        echo "📝 Adding missing HUGGINGFACE_API_KEY to existing .env file..."
+        echo "" >> .env
+        echo "# Optional: Hugging Face API" >> .env
+        echo "HUGGINGFACE_API_KEY=your-huggingface-api-key-here" >> .env
+        echo "✅ Added HUGGINGFACE_API_KEY to .env file"
+    fi
 fi
 
 echo ""
