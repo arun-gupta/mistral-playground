@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 import json
+import os
 
 class Settings(BaseSettings):
     # Model Configuration
@@ -48,4 +49,9 @@ class Settings(BaseSettings):
                 self.CORS_ORIGINS = [self.CORS_ORIGINS]
 
 # Create settings instance
-settings = Settings() 
+settings = Settings()
+
+# Debug: Print settings after creation
+print(f"🔍 DEBUG: Settings created - HUGGINGFACE_API_KEY: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
+print(f"🔍 DEBUG: Current working directory: {os.getcwd()}")
+print(f"🔍 DEBUG: .env file exists: {os.path.exists('.env')}") 

@@ -165,6 +165,11 @@ class DownloadService:
         try:
             print(f"🔄 Starting actual download for {model_name}")
             
+            # Debug: Check settings at the start
+            from backend.app.core.config import settings
+            print(f"🔍 DEBUG: Settings loaded - HUGGINGFACE_API_KEY exists: {settings.HUGGINGFACE_API_KEY is not None}")
+            print(f"🔍 DEBUG: Environment variable HUGGINGFACE_API_KEY: {os.environ.get('HUGGINGFACE_API_KEY', 'NOT_SET')[:10] if os.environ.get('HUGGINGFACE_API_KEY') else 'NOT_SET'}...")
+            
             # Check if this is a gated model that requires authentication
             gated_models = [
                 # Official Meta Llama models (require authentication)
@@ -192,8 +197,11 @@ class DownloadService:
             
             # Check if this is a gated model and if we have authentication
             if model_name in gated_models:
+                print(f"🔍 DEBUG: Model {model_name} is in gated_models list")
                 # Check if we have HuggingFace API key for authentication
                 from backend.app.core.config import settings
+                print(f"🔍 DEBUG: HUGGINGFACE_API_KEY exists: {settings.HUGGINGFACE_API_KEY is not None}")
+                print(f"🔍 DEBUG: HUGGINGFACE_API_KEY value: {settings.HUGGINGFACE_API_KEY[:10] if settings.HUGGINGFACE_API_KEY else 'None'}...")
                 if not settings.HUGGINGFACE_API_KEY:
                     error_msg = f"""
 ❌ Gated Model Access Required
