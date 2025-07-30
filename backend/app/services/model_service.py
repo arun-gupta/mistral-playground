@@ -182,16 +182,20 @@ class ModelService:
             if model_name not in self.transformers_models:
                 print(f"🔄 DOWNLOADING & LOADING model: {model_name} (first time)")
                 print(f"   This may take several minutes for large models...")
+                # Use HuggingFace token for authentication if available
+                token = settings.HUGGINGFACE_API_KEY
                 self.transformers_models[model_name] = AutoModelForCausalLM.from_pretrained(
                     model_name,
                     torch_dtype=torch.float32,  # PATCHED: Use float32 for CPU compatibility
                     device_map="auto",
                     trust_remote_code=True,
-                    low_cpu_mem_usage=True
+                    low_cpu_mem_usage=True,
+                    token=token
                 )
                 self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
                     model_name,
-                    trust_remote_code=True
+                    trust_remote_code=True,
+                    token=token
                 )
                 print(f"✅ Model downloaded and loaded successfully: {model_name}")
             else:
@@ -206,16 +210,20 @@ class ModelService:
             try:
                 if fallback_model not in self.transformers_models:
                     print(f"🔄 DOWNLOADING & LOADING fallback model: {fallback_model}")
+                    # Use HuggingFace token for authentication if available
+                    token = settings.HUGGINGFACE_API_KEY
                     self.transformers_models[fallback_model] = AutoModelForCausalLM.from_pretrained(
                         fallback_model,
                         torch_dtype=torch.float32,  # PATCHED: Use float32 for CPU compatibility
                         device_map="auto",
                         trust_remote_code=True,
-                        low_cpu_mem_usage=True
+                        low_cpu_mem_usage=True,
+                        token=token
                     )
                     self.tokenizers[fallback_model] = AutoTokenizer.from_pretrained(
                         fallback_model,
-                        trust_remote_code=True
+                        trust_remote_code=True,
+                        token=token
                     )
                     print(f"✅ Fallback model downloaded and loaded: {fallback_model}")
                 else:
@@ -326,10 +334,13 @@ Alternative models that don't require authentication:
                     raise Exception(f"Gated model access required. Visit https://huggingface.co/{model_name} to request access.")
                 
                 # Load GGUF model with ctransformers
+                # Use HuggingFace token for authentication if available
+                token = settings.HUGGINGFACE_API_KEY
                 self.ct_models[model_name] = CTModelForCausalLM.from_pretrained(
                     model_name,
                     model_type="mistral",  # or "llama" depending on the model
                     gpu_layers=0,  # CPU only for now
+                    token=token,
                     # Don't specify lib on Apple Silicon - let it auto-detect
                 )
                 print(f"✅ GGUF model downloaded and loaded successfully: {model_name}")
