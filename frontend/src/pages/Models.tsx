@@ -116,17 +116,13 @@ const Models = () => {
       'meta-llama/Llama-3.2-1B',
       'meta-llama/Llama-3.3-70B-Instruct',
       'meta-llama/Llama-4-Scout-17B-16E-Instruct',
-      // Google Gemma models (all require authentication)
-      'google/gemma-2b-it',
-      'google/gemma-2b',
-      'google/gemma-7b-it',
-      'google/gemma-7b',
-      'google/gemma-3n-E4B-it',
-      'google/gemma-3n-E4B-it-litert-preview',
-      'google/gemma-3n-E2B-it-litert-preview',
-      'google/gemma-3-4b-it',
-      'google/gemma-3n-E2B-it',
-      'google/gemma-3-27b-it'
+      // Google Gemma models (all require authentication) - Top 6 most useful
+      'google/gemma-2b-it',                    // Small, instruction-tuned, great for testing
+      'google/gemma-7b-it',                    // Medium, instruction-tuned, good balance
+      'google/gemma-3n-E2B-it',                // Latest Gemma 3, small, instruction-tuned
+      'google/gemma-3n-E4B-it',                // Latest Gemma 3, medium, instruction-tuned
+      'google/gemma-3-4b-it',                  // Latest Gemma 3, 4B variant
+      'google/gemma-3-27b-it'                  // Large model for high performance
     ]
     return gatedModels.includes(modelName)
   }

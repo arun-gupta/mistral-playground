@@ -315,17 +315,13 @@ async def get_available_models():
             "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct
             "meta-llama/Llama-4-Scout-17B-16E-Instruct", # ~34GB RAM, instruct
             
-            # Google Gemma models
-            "google/gemma-2b",                          # ~4GB RAM, small model
-            "google/gemma-7b",                          # ~14GB RAM, medium model
-            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
-            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
-            "google/gemma-3n-E4B-it",                   # ~8GB RAM, instruction tuned
-            "google/gemma-3n-E4B-it-litert-preview",   # ~8GB RAM, instruction tuned
-            "google/gemma-3n-E2B-it-litert-preview",   # ~4GB RAM, instruction tuned
-            "google/gemma-3-4b-it",                     # ~8GB RAM, instruction tuned
-            "google/gemma-3n-E2B-it",                   # ~4GB RAM, instruction tuned
-            "google/gemma-3-27b-it",                    # ~54GB RAM, instruction tuned
+                # Google Gemma models - Top 6 most useful
+    "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
+    "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
+    "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
+    "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
+    "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
+    "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
             
             # Mixtral models (high performance)
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended

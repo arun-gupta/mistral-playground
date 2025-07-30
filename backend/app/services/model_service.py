@@ -561,17 +561,13 @@ Alternative models that don't require authentication:
             "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
             "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM
             
-            # Google Gemma models (open)
-            "google/gemma-2b",                          # ~4GB RAM, small model
-            "google/gemma-7b",                          # ~14GB RAM, medium model
-            "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
-            "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
-            "google/gemma-3n-E4B-it",                   # ~8GB RAM, instruction tuned
-            "google/gemma-3n-E4B-it-litert-preview",   # ~8GB RAM, instruction tuned
-            "google/gemma-3n-E2B-it-litert-preview",   # ~4GB RAM, instruction tuned
-            "google/gemma-3-4b-it",                     # ~8GB RAM, instruction tuned
-            "google/gemma-3n-E2B-it",                   # ~4GB RAM, instruction tuned
-            "google/gemma-3-27b-it",                    # ~54GB RAM, instruction tuned
+                # Google Gemma models (open) - Top 6 most useful
+    "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
+    "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
+    "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
+    "google/gemma-3n-E4B-it",                   # ~8GB RAM, latest Gemma 3, instruction tuned
+    "google/gemma-3-4b-it",                     # ~8GB RAM, latest Gemma 3, 4B variant
+    "google/gemma-3-27b-it",                    # ~54GB RAM, large model for high performance
             
             # Meta Llama models (official, require authentication)
             "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
