@@ -213,6 +213,11 @@ class DownloadService:
                 # Try to get the API key from settings first, then environment, then manual loading
                 api_key = settings.HUGGINGFACE_API_KEY or os.environ.get('HUGGINGFACE_API_KEY')
                 
+                # Only use the API key if it's valid (not placeholder)
+                if api_key and api_key == "your-huggingface-api-key-here":
+                    api_key = None
+                    print(f"🔍 DEBUG: Ignoring placeholder API key")
+                
                 # If still no API key, try to load it manually from .env file
                 if not api_key:
                     try:

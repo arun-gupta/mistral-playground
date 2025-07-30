@@ -75,7 +75,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 LOG_LEVEL=INFO
 
 # Development/Testing
-MOCK_MODE=False
+MOCK_MODE=True
 EOF
     echo "   ✅ .env file created"
 else
