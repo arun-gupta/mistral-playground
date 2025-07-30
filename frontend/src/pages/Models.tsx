@@ -75,27 +75,8 @@ const Models = () => {
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
   const [hostedModels, setHostedModels] = useState<Record<string, string[]>>({})
-  const [apiKeys, setApiKeys] = useState({
-    openai: '',
-    anthropic: '',
-    google: '',
-    huggingface: ''
-  })
   const [showHostedOnly, setShowHostedOnly] = useState(false)
   const { toast } = useToast()
-
-  // Save API key function
-  const saveApiKey = (provider: string, key: string) => {
-    const storageKey = provider === 'huggingface' ? 'huggingface_token' : `${provider}_api_key`
-    localStorage.setItem(storageKey, key)
-    setApiKeys(prev => ({ ...prev, [provider]: key }))
-    
-    toast({
-      title: "API Key Saved",
-      description: `${provider === 'huggingface' ? 'HuggingFace Token' : provider.toUpperCase()} has been saved locally.`,
-      variant: "default"
-    })
-  }
 
   // Hosted models metadata (Top 3 from each provider)
   const hostedModelMetadata: Record<string, any> = {
@@ -206,16 +187,7 @@ const Models = () => {
     }
   }
 
-  // Load API keys from localStorage
-  const loadApiKeys = () => {
-    const storedKeys = {
-      openai: localStorage.getItem('openai_api_key') || '',
-      anthropic: localStorage.getItem('anthropic_api_key') || '',
-      google: localStorage.getItem('google_api_key') || '',
-      huggingface: localStorage.getItem('huggingface_token') || ''
-    }
-    setApiKeys(storedKeys)
-  }
+
 
   // Fetch available models
   const fetchModels = async () => {
@@ -807,7 +779,6 @@ const Models = () => {
     const initializeData = async () => {
       await fetchHostedModels()
       await fetchModels()
-      loadApiKeys()
     }
     initializeData()
   }, [])
@@ -1532,79 +1503,7 @@ const Models = () => {
             </div>
           </div>
           
-          {/* API Key Configuration Section */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h4 className="font-medium mb-3 text-blue-800">🔑 API Key Configuration</h4>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Hosted Model API Keys */}
-                <div>
-                  <h5 className="font-medium mb-2 text-blue-700">☁️ Hosted Models</h5>
-                  <div className="space-y-2">
-                    <div>
-                      <label className="block text-xs font-medium text-blue-700 mb-1">OpenAI API Key</label>
-                      <input
-                        type="password"
-                        placeholder="sk-..."
-                        value={apiKeys.openai}
-                        onChange={(e) => saveApiKey('openai', e.target.value)}
-                        className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-blue-700 mb-1">Anthropic API Key</label>
-                      <input
-                        type="password"
-                        placeholder="sk-ant-..."
-                        value={apiKeys.anthropic}
-                        onChange={(e) => saveApiKey('anthropic', e.target.value)}
-                        className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-blue-700 mb-1">Google API Key</label>
-                      <input
-                        type="password"
-                        placeholder="AIza..."
-                        value={apiKeys.google}
-                        onChange={(e) => saveApiKey('google', e.target.value)}
-                        className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* HuggingFace Token */}
-                <div>
-                  <h5 className="font-medium mb-2 text-blue-700">🔒 Gated Models</h5>
-                  <div>
-                    <label className="block text-xs font-medium text-blue-700 mb-1">HuggingFace Token</label>
-                    <input
-                      type="password"
-                      placeholder="hf_..."
-                      value={apiKeys.huggingface}
-                      onChange={(e) => saveApiKey('huggingface', e.target.value)}
-                      className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-blue-600 mt-1">
-                      Required for Mistral, Llama, and Gemma models
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-xs text-blue-700 space-y-1">
-                <p><strong>How to get your HuggingFace token:</strong></p>
-                <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Visit <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">HuggingFace Settings</a></li>
-                  <li>Click "New token" and give it a name</li>
-                  <li>Select "Read" permissions</li>
-                  <li>Copy the token (starts with "hf_")</li>
-                  <li>Paste it in the field above</li>
-                </ol>
-              </div>
-            </div>
-          </div>
+
 
           {/* Gated Models Section */}
           <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
