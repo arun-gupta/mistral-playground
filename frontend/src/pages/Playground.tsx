@@ -69,7 +69,7 @@ const Playground = () => {
         )
         
         console.log('🔍 Mistral/Mixtral models only:', mistralModels)
-        setAvailableModels(mistralModels)
+          setAvailableModels(mistralModels)
         setModelStatuses(statusData.map((model: any) => ({
           name: model.name,
           is_loaded: model.is_loaded
@@ -334,7 +334,12 @@ const Playground = () => {
 
   // Helper function to check if a model is loaded
   const isModelLoaded = (modelName: string) => {
-    // For local models, check if they're loaded
+    // Mistral models are hosted models and should always be considered ready
+    if (modelName.includes('Mistral') || modelName.includes('Mixtral')) {
+      return true
+    }
+    
+    // For other local models, check if they're loaded
     return modelStatuses.find(model => model.name === modelName)?.is_loaded || false
   }
 
@@ -343,10 +348,10 @@ const Playground = () => {
       <div>
         <div className="flex items-center justify-between">
           <div>
-                    <h1 className="text-3xl font-bold">Mistral Playground</h1>
-        <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold">Mistral Playground</h1>
+            <p className="text-muted-foreground">
           Explore and experiment with Mistral AI models
-        </p>
+            </p>
           </div>
           
           {/* Mock Mode Toggle */}
@@ -555,7 +560,7 @@ const Playground = () => {
                       }
                     } else if (modelName.includes('Mistral') || modelName.includes('Mixtral')) {
                       if (modelName.includes('Mixtral-8x7B')) {
-                        if (modelName.includes('GGUF')) {
+                    if (modelName.includes('GGUF')) {
                           description = 'CPU optimized high performance (~32GB RAM)'
                         } else {
                           description = 'High performance model (~32GB RAM)'
@@ -649,7 +654,20 @@ const Playground = () => {
                 </div>
               </div>
               
-              {selectedModel.includes('Mistral-7B') && !isModelLoaded(selectedModel) && (
+              {/* Show success message for Mistral models since they are always ready */}
+              {selectedModel.includes('Mistral') && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-800">
+                    <span className="font-medium">✅ Model Ready:</span> Mistral models are always ready to use.
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    You can start generating responses immediately. The model will be downloaded and loaded automatically when needed.
+                  </p>
+                </div>
+              )}
+              
+              {/* Show warning only for non-Mistral models that are not loaded */}
+              {!selectedModel.includes('Mistral') && !isModelLoaded(selectedModel) && (
                 <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
                   <p className="text-sm text-amber-800">
                     <span className="font-medium">⚠️ Model Not Ready:</span> This model needs to be downloaded and loaded before use.
@@ -671,7 +689,8 @@ const Playground = () => {
                 </div>
               )}
               
-              {selectedModel.includes('Mistral-7B') && isModelLoaded(selectedModel) && (
+              {/* Show success message for non-Mistral models that are loaded */}
+              {!selectedModel.includes('Mistral') && isModelLoaded(selectedModel) && (
                 <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-800">
                     <span className="font-medium">✅ Model Ready:</span> This model is loaded in memory and ready to use.
