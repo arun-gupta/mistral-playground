@@ -586,49 +586,10 @@ const Models = () => {
           description: `Started downloading ${modelName}. This may take several minutes.`,
         })
         
-        // Wait for download to complete by polling
-        await new Promise<void>((resolve, reject) => {
-          const checkDownloadComplete = async () => {
-            try {
-              const statusResponse = await fetch(`/api/v1/models/download-status/${encodeURIComponent(modelName)}`)
-              if (statusResponse.ok) {
-                const statusResult = await statusResponse.json()
-                console.log(`📊 Download status for ${modelName}:`, statusResult)
-                
-                if (statusResult.status === 'completed') {
-                  console.log(`✅ Download completed for ${modelName}`)
-                  setDownloadingModels(prev => {
-                    const newSet = new Set(prev)
-                    newSet.delete(modelName)
-                    return newSet
-                  })
-                  resolve()
-                } else if (statusResult.status === 'failed') {
-                  reject(new Error(`Download failed: ${statusResult.message}`))
-                } else {
-                  // Still downloading, check again in 2 seconds
-                  setTimeout(checkDownloadComplete, 2000)
-                }
-              } else {
-                reject(new Error(`Failed to check download status: ${statusResponse.status}`))
-              }
-            } catch (error) {
-              reject(error)
-            }
-          }
-          
-          // Start checking download status
-          setTimeout(checkDownloadComplete, 2000)
-        })
-        
-        toast({
-          title: "Download Complete",
-          description: `Model ${modelName} has been downloaded successfully!`,
-        })
-        
-        // Step 2: Now start loading
-        console.log(`⚡ Starting load for ${modelName} after download completion`)
-        setLoadingModels(prev => new Set(prev).add(modelName))
+        // Don't wait here - let the polling handle the completion
+        // The pollDownloadProgress function will handle the completion and start loading
+        return
+      }
         
         const loadResponse = await fetch('/api/v1/models/generate', {
           method: 'POST',
@@ -762,6 +723,59 @@ const Models = () => {
               description: `Model ${modelName} has been downloaded successfully!`,
             })
             fetchModels()
+            
+            // Automatically start loading the model after download completion
+            console.log(`⚡ Auto-loading ${modelName} after download completion`)
+            setLoadingModels(prev => new Set(prev).add(modelName))
+            
+            try {
+              const loadResponse = await fetch('/api/v1/models/generate', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  prompt: "Hello, this is a test to load the model.",
+                  model_name: modelName,
+                  provider: 'huggingface',
+                  temperature: 0.7,
+                  max_tokens: 10,
+                  top_p: 0.9
+                }),
+              })
+
+              if (!loadResponse.ok) {
+                throw new Error(`Load request failed: ${loadResponse.status}`)
+              }
+
+              const loadResult = await loadResponse.json()
+              console.log(`✅ Load result for ${modelName}:`, loadResult)
+              
+              setLoadingModels(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(modelName)
+                return newSet
+              })
+              
+              toast({
+                title: "Model Ready",
+                description: `Model ${modelName} has been loaded and is ready to use!`,
+              })
+              
+              fetchModels()
+            } catch (error) {
+              console.error(`Error auto-loading model ${modelName}:`, error)
+              setLoadingModels(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(modelName)
+                return newSet
+              })
+              toast({
+                title: "Load Failed",
+                description: `Failed to load ${modelName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                variant: "destructive"
+              })
+            }
           } else if (data.status === 'failed') {
             clearInterval(pollInterval)
             setDownloadingModels(prev => {
