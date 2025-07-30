@@ -352,9 +352,9 @@ Alternative models that don't require authentication:
             # Check if it's a gated model error
             if "401" in str(e) or "gated" in str(e).lower():
                 print(f"🔒 This is a gated model that requires authentication.")
-                print(f"💡 Try using an open model like 'TheBloke/Mistral-7B-Instruct-v0.2-GGUF' instead.")
+                print(f"💡 Try using an open model like 'mistralai/Mistral-7B-Instruct-v0.2' instead.")
                 print(f"💡 Or use 'microsoft/DialoGPT-small' for testing.")
-                print(f"💡 For Llama models, try 'TheBloke/Meta-Llama-3-8B-Instruct-GGUF' (CPU optimized).")
+                print(f"💡 For Llama models, try 'meta-llama/Meta-Llama-3-8B-Instruct' (requires authentication).")
                 raise Exception(f"Gated model access required for {model_name}. Use an open model instead.")
             
             # Fallback to a smaller model
@@ -556,10 +556,6 @@ Alternative models that don't require authentication:
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM
             
-            # Quantized Mistral models (CPU-optimized, open)
-            "TheBloke/Mistral-7B-Instruct-v0.1-GGUF",  # 4-8GB RAM
-            "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",  # 4-8GB RAM (Recommended)
-            
             # Full Mistral models (require more RAM, open)
             "mistralai/Mistral-7B-Instruct-v0.1",      # ~14GB RAM
             "mistralai/Mistral-7B-Instruct-v0.2",      # ~14GB RAM
@@ -570,21 +566,26 @@ Alternative models that don't require authentication:
             "google/gemma-7b",                          # ~14GB RAM, medium model
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned
             "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned
+            "google/gemma-3n-E4B-it",                   # ~8GB RAM, instruction tuned
+            "google/gemma-3n-E4B-it-litert-preview",   # ~8GB RAM, instruction tuned
+            "google/gemma-3n-E2B-it-litert-preview",   # ~4GB RAM, instruction tuned
+            "google/gemma-3-4b-it",                     # ~8GB RAM, instruction tuned
+            "google/gemma-3n-E2B-it",                   # ~4GB RAM, instruction tuned
+            "google/gemma-3-27b-it",                    # ~54GB RAM, instruction tuned
             
-            # Legacy Llama 2 models (open)
-            "TheBloke/Llama-2-13B-Chat-GGUF",          # 8-12GB RAM, CPU optimized
-            
-            # Gated Llama 3 models (require authentication)
-            # Note: These require accepting license terms on Hugging Face
-            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct (GATED)
-            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base (GATED)
-            "TheBloke/Meta-Llama-3-8B-Instruct-GGUF",  # Quantized instruct (GATED)
-            "TheBloke/Meta-Llama-3-10B-Instruct-GGUF", # ~6-10GB RAM, light option (GATED)
-            "TheBloke/Meta-Llama-3-14B-Instruct-GGUF", # ~8-12GB RAM, best balance (GATED)
+            # Meta Llama models (official, require authentication)
+            "meta-llama/Meta-Llama-3-8B-Instruct",     # ~16GB RAM, instruct
+            "meta-llama/Meta-Llama-3-8B",              # ~16GB RAM, base
+            "meta-llama/Meta-Llama-3-14B-Instruct",    # ~28GB RAM, instruct
+            "meta-llama/Meta-Llama-3-14B",             # ~28GB RAM, base
+            "meta-llama/Llama-3.1-8B-Instruct",        # ~16GB RAM, instruct
+            "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct
+            "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base
+            "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct
+            "meta-llama/Llama-4-Scout-17B-16E-Instruct", # ~34GB RAM, instruct
             
             # Mixtral models (high performance)
             "mistralai/Mixtral-8x7B-Instruct-v0.1",    # ~32GB RAM, GPU recommended
-            "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF", # 16-24GB RAM, CPU optimized
             
             # GPU-only models (for reference)
             "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended

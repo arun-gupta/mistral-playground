@@ -269,9 +269,9 @@ To access this model:
 4. Set up your Hugging Face token in the environment
 
 Alternative models that don't require authentication:
-• TheBloke/Mistral-7B-Instruct-v0.2-GGUF (Recommended)
+• mistralai/Mistral-7B-Instruct-v0.2 (Recommended)
 • microsoft/DialoGPT-small (For testing)
-• TheBloke/Mistral-7B-Instruct-v0.1-GGUF (Alternative)
+• mistralai/Mistral-7B-Instruct-v0.1 (Alternative)
 """
                     print(error_msg)
                     
