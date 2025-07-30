@@ -45,7 +45,7 @@ const Models = () => {
   const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({})
   const [sortBy, setSortBy] = useState<SortOption>('size')
   const [filterBy, setFilterBy] = useState<FilterOption>('all')
-  const [showAdvanced, setShowAdvanced] = useState(true)  // Changed from false to true
+
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)  // New toggle for downloaded models
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)  // New toggle for loaded models
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)  // Toggle for recommended models
@@ -77,18 +77,7 @@ const Models = () => {
     return 0
   }
 
-  const isKeyVariant = (modelName: string): boolean => {
-    // Show only Instruct and GGUF variants by default
-    const isInstruct = modelName.includes('Instruct') || modelName.includes('chat')
-    const isGGUF = modelName.includes('GGUF')
-    const isBase = modelName.includes('Base') || (!isInstruct && !isGGUF)
-    
-    // For small models (DialoGPT), show all variants
-    if (modelName.includes('DialoGPT')) return true
-    
-    // For larger models, show only Instruct and GGUF variants
-    return isInstruct || isGGUF
-  }
+
 
   const isRecommended = (modelName: string): boolean => {
     // Recommended models for different use cases (excluding gated models)
@@ -220,10 +209,7 @@ const Models = () => {
       filteredModels = filteredModels.filter(model => isSmallModel(model.name))
     }
 
-    // Apply advanced variants filter
-    if (!showAdvanced) {
-      filteredModels = filteredModels.filter(model => isKeyVariant(model.name))
-    }
+
 
     // Sort models
     filteredModels.sort((a, b) => {
@@ -1067,28 +1053,7 @@ const Models = () => {
                 </select>
               </div>
 
-              {/* Advanced Variants Toggle */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Advanced Variants</label>
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                      showAdvanced ? 'bg-green-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        showAdvanced ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-sm text-gray-600">
-                    {showAdvanced ? 'Show All' : 'Hide Advanced'}
-                  </span>
-                </div>
-              </div>
+
 
               {/* Test API Button */}
               <div>
