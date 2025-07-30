@@ -564,7 +564,15 @@ Alternative models that don't require authentication:
             "microsoft/DialoGPT-medium",     # 345M parameters, ~1.5GB RAM, open access  
             "microsoft/DialoGPT-large",      # 774M parameters, ~3GB RAM, open access
             
-            # Google Gemma models (open) - Top 6 most useful
+            # Mistral/Mixtral models (6 total - all require authentication)
+            "mistralai/Mistral-7B-v0.1",               # Base model, ~14GB RAM, gated
+            "mistralai/Mistral-7B-v0.3",               # Base model v3, ~14GB RAM, gated
+            "mistralai/Mistral-7B-Instruct-v0.1",      # Instruction-tuned, ~14GB RAM, gated
+            "mistralai/Mistral-7B-Instruct-v0.2",      # Instruction-tuned v2, ~14GB RAM, gated
+            "mistralai/Mistral-7B-Instruct-v0.3",      # Instruction-tuned v3, ~14GB RAM, gated
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",    # High performance, ~32GB RAM, gated
+            
+            # Google Gemma models (all require authentication) - Top 6 most useful
             "google/gemma-2b-it",                       # ~4GB RAM, instruction tuned, great for testing
             "google/gemma-7b-it",                       # ~14GB RAM, instruction tuned, good balance
             "google/gemma-3n-E2B-it",                   # ~4GB RAM, latest Gemma 3, instruction tuned
@@ -579,9 +587,6 @@ Alternative models that don't require authentication:
             "meta-llama/Llama-3.2-3B-Instruct",        # ~6GB RAM, instruct, great for testing
             "meta-llama/Llama-3.2-1B",                 # ~2GB RAM, base, great for testing
             "meta-llama/Llama-3.3-70B-Instruct",       # ~140GB RAM, instruct, maximum performance
-            
-            # GPU-only models (for reference)
-            "mistralai/CodeMistral-7B-Instruct-v0.1",  # ~14GB RAM, GPU recommended
         ]
 
 # Global model service instance
