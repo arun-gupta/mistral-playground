@@ -66,7 +66,6 @@ const Models = () => {
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
   const [showSmallModelsOnly, setShowSmallModelsOnly] = useState(false)  // Toggle for small models only
-  const [sortBySizeDescending, setSortBySizeDescending] = useState(false)  // Toggle for size sorting (false = smallest first, true = largest first)
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
   const { toast } = useToast()
@@ -124,15 +123,9 @@ const Models = () => {
       groups[family].push(model)
     })
 
-    // Sort models within each family by size (controlled by toggle)
+    // Sort models within each family by size (smallest first)
     Object.keys(groups).forEach(family => {
-      groups[family].sort((a, b) => {
-        if (sortBySizeDescending) {
-          return getModelSize(b.name) - getModelSize(a.name) // Largest first
-        } else {
-          return getModelSize(a.name) - getModelSize(b.name) // Smallest first
-        }
-      })
+      groups[family].sort((a, b) => getModelSize(a.name) - getModelSize(b.name))
     })
 
     // Convert to ModelGroup array
@@ -821,7 +814,6 @@ const Models = () => {
                 setShowCPUOnly(false)
                 setShowNoAuthRequired(false)
                 setShowSmallModelsOnly(false)
-                setSortBySizeDescending(false) // Reset to smallest first
               }}
               className="text-xs px-2 py-1 h-6"
               disabled={getActiveFilterCount({
@@ -831,7 +823,7 @@ const Models = () => {
                 showCPUOnly,
                 showNoAuthRequired,
                 showSmallModelsOnly
-              }) === 0 && !sortBySizeDescending}
+              }) === 0}
             >
               Clear All
             </Button>
@@ -926,25 +918,7 @@ const Models = () => {
                     <span className="text-xs font-medium text-gray-700">Recommended</span>
                   </div>
 
-                  {/* Size Sorting */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setSortBySizeDescending(!sortBySizeDescending)}
-                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none ${
-                        sortBySizeDescending ? 'bg-indigo-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-2 w-2 transform rounded-full bg-white transition-transform ${
-                          sortBySizeDescending ? 'translate-x-4' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-gray-700">
-                      {sortBySizeDescending ? 'Largest First' : 'Smallest First'}
-                    </span>
-                  </div>
+
                 </div>
               </div>
 
