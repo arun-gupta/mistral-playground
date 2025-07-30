@@ -507,6 +507,46 @@ Alternative models that don't require authentication:
         
         return valid_responses
     
+    async def offload_model(self, model_name: str) -> bool:
+        """Offload a model from memory (unload it)"""
+        print(f"🔄 Offloading model from memory: {model_name}")
+        
+        try:
+            # Remove from vLLM models
+            if model_name in self.vllm_models:
+                print(f"   Removing vLLM model: {model_name}")
+                del self.vllm_models[model_name]
+            
+            # Remove from transformers models
+            if model_name in self.transformers_models:
+                print(f"   Removing transformers model: {model_name}")
+                del self.transformers_models[model_name]
+            
+            # Remove from tokenizers
+            if model_name in self.tokenizers:
+                print(f"   Removing tokenizer: {model_name}")
+                del self.tokenizers[model_name]
+            
+            # Remove from ctransformers models
+            if model_name in self.ct_models:
+                print(f"   Removing ctransformers model: {model_name}")
+                del self.ct_models[model_name]
+            
+            # Force garbage collection to free memory
+            import gc
+            gc.collect()
+            
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                print(f"   Cleared CUDA cache")
+            
+            print(f"✅ Successfully offloaded model: {model_name}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error offloading model {model_name}: {e}")
+            return False
+    
     def get_available_models(self) -> List[str]:
         """Get list of available models"""
         # CPU-friendly models ordered by size (open models first)

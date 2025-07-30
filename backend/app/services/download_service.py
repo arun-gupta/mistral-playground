@@ -370,5 +370,40 @@ Alternative models that don't require authentication:
             print(f"❌ Error getting downloaded models: {e}")
             return []
 
+    def delete_model(self, model_name: str) -> bool:
+        """Delete a model from disk"""
+        try:
+            print(f"🗑️ Deleting model from disk: {model_name}")
+            
+            # Get the model directory
+            model_dir = self.downloads_dir / model_name.replace("/", "_")
+            
+            if not model_dir.exists():
+                print(f"   Model directory not found: {model_dir}")
+                return False
+            
+            # Remove the entire model directory
+            import shutil
+            shutil.rmtree(model_dir)
+            
+            # Remove from download status if present
+            if model_name in self.download_status:
+                del self.download_status[model_name]
+            
+            # Remove from active downloads if present
+            if model_name in self.active_downloads:
+                # Cancel the download task if it's running
+                task = self.active_downloads[model_name]
+                if not task.done():
+                    task.cancel()
+                del self.active_downloads[model_name]
+            
+            print(f"✅ Successfully deleted model: {model_name}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error deleting model {model_name}: {e}")
+            return False
+
 # Global download service instance
 download_service = DownloadService() 

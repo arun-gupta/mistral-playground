@@ -506,4 +506,52 @@ async def get_model_info():
                 license="MIT",
                 description="Small conversational model for testing"
             )
-        ] 
+        ]
+
+@router.post("/offload", response_model=dict)
+async def offload_model(request: dict):
+    """Offload a model from memory (unload it)"""
+    try:
+        model_name = request.get("model_name")
+        if not model_name:
+            raise HTTPException(status_code=400, detail="model_name is required")
+        
+        print(f"🔄 Offloading model: {model_name}")
+        
+        # Call model service to offload the model
+        result = await model_service.offload_model(model_name)
+        
+        return {
+            "status": "success",
+            "message": f"Model {model_name} has been offloaded from memory",
+            "model_name": model_name,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"❌ Error offloading model: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/delete", response_model=dict)
+async def delete_model(request: dict):
+    """Delete a model from disk"""
+    try:
+        model_name = request.get("model_name")
+        if not model_name:
+            raise HTTPException(status_code=400, detail="model_name is required")
+        
+        print(f"🗑️ Deleting model from disk: {model_name}")
+        
+        # Call download service to delete the model
+        result = download_service.delete_model(model_name)
+        
+        return {
+            "status": "success",
+            "message": f"Model {model_name} has been deleted from disk",
+            "model_name": model_name,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"❌ Error deleting model: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) 

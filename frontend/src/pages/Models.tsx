@@ -52,6 +52,8 @@ const Models = () => {
   const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)  // Toggle for GPU recommended models
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
+  const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
+  const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
   const { toast } = useToast()
 
   // Model categorization and filtering logic
@@ -853,6 +855,95 @@ const Models = () => {
     return size >= 7 // 7B parameters or larger
   }
 
+  // Offload model from memory (unload)
+  const offloadModel = async (modelName: string) => {
+    if (!confirm(`Are you sure you want to offload ${modelName} from memory? This will free up RAM but you'll need to reload it to use it again.`)) {
+      return
+    }
+
+    setOffloadingModels(prev => new Set(prev).add(modelName))
+
+    try {
+      const response = await fetch('/api/v1/models/offload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model_name: modelName })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Offload request failed: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Offload result:', result)
+
+      toast({
+        title: "Model Offloaded",
+        description: `${modelName} has been unloaded from memory and RAM has been freed.`,
+      })
+
+      fetchModels()
+    } catch (error) {
+      console.error('Error offloading model:', error)
+      toast({
+        title: "Offload Failed",
+        description: `Failed to offload ${modelName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      })
+    } finally {
+      setOffloadingModels(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(modelName)
+        return newSet
+      })
+    }
+  }
+
+  // Delete model from disk
+  const deleteModel = async (modelName: string) => {
+    const diskSpace = getDiskSpaceRequirement(modelName)
+    if (!confirm(`Are you sure you want to delete ${modelName} from disk? This will free up ${diskSpace} of disk space but you'll need to download it again to use it. This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingModels(prev => new Set(prev).add(modelName))
+
+    try {
+      const response = await fetch('/api/v1/models/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model_name: modelName })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Delete request failed: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Delete result:', result)
+
+      toast({
+        title: "Model Deleted",
+        description: `${modelName} has been deleted from disk, freeing up ${diskSpace} of space.`,
+      })
+
+      fetchModels()
+    } catch (error) {
+      console.error('Error deleting model:', error)
+      toast({
+        title: "Delete Failed",
+        description: `Failed to delete ${modelName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      })
+    } finally {
+      setDeletingModels(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(modelName)
+        return newSet
+      })
+    }
+  }
+
   useEffect(() => {
     fetchModels()
   }, [])
@@ -860,6 +951,8 @@ const Models = () => {
   useEffect(() => {
     setDownloadingModels(new Set())
     setLoadingModels(new Set())
+    setOffloadingModels(new Set())
+    setDeletingModels(new Set())
     setDownloadProgress({})
   }, [])
 
@@ -1459,6 +1552,57 @@ const Models = () => {
                           )}
                         </div>
 
+                        {/* Management Buttons for Downloaded/Loaded Models */}
+                        {(model.is_loaded || model.download_progress === 100 || model.size_on_disk) && (
+                          <div className="pt-2 space-y-1">
+                            {/* Offload Button (for loaded models) */}
+                            {model.is_loaded && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="w-full bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100 text-xs"
+                                onClick={() => offloadModel(model.name)}
+                                disabled={offloadingModels.has(model.name) || deletingModels.has(model.name)}
+                              >
+                                {offloadingModels.has(model.name) ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600 mr-1"></div>
+                                    Offloading...
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="mr-1">🔄</span>
+                                    Offload from Memory
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            
+                            {/* Delete Button (for downloaded models) */}
+                            {(model.download_progress === 100 || model.size_on_disk) && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="w-full bg-red-50 border-red-200 text-red-800 hover:bg-red-100 text-xs"
+                                onClick={() => deleteModel(model.name)}
+                                disabled={offloadingModels.has(model.name) || deletingModels.has(model.name)}
+                              >
+                                {deletingModels.has(model.name) ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600 mr-1"></div>
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="mr-1">🗑️</span>
+                                    Delete from Disk
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        )}
+
                         {/* Download Time Estimate */}
                         {!model.is_loaded && !isDownloading && (
                           <div className="space-y-1">
@@ -1544,6 +1688,15 @@ const Models = () => {
                 <li>• Meta Llama 3 8B: ~16GB disk space</li>
                 <li>• Loaded models use RAM, not disk space</li>
                 <li>• ⚠️ Check available disk space before downloading large models</li>
+              </ul>
+              <h4 className="font-medium mb-2 mt-4">🔄 Model Management</h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• <strong>Offload:</strong> Free RAM by unloading models from memory</li>
+                <li>• <strong>Delete:</strong> Remove models from disk to save storage space</li>
+                <li>• Perfect for constrained environments (Codespaces, limited RAM/disk)</li>
+                <li>• Offloaded models can be reloaded quickly</li>
+                <li>• Deleted models need to be downloaded again</li>
+                <li>• Use these features to manage resource usage efficiently</li>
               </ul>
             </div>
           </div>
