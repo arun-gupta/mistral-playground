@@ -844,15 +844,15 @@ const Models = () => {
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-orange-600">
-              {models.filter(m => !m.is_hosted && (m.download_progress === 100 || m.size_on_disk)).length}
+              {models.filter(m => !m.is_hosted && m.size_on_disk && m.size_on_disk !== '').length}
             </div>
-            <div className="text-xs text-muted-foreground">Ready</div>
+            <div className="text-xs text-muted-foreground">Downloaded</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-green-600">
               {models.filter(m => m.is_hosted || m.is_loaded).length}
             </div>
-            <div className="text-xs text-muted-foreground">Available</div>
+            <div className="text-xs text-muted-foreground">Ready to Use</div>
           </div>
         </div>
       </div>
