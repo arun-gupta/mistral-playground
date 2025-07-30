@@ -835,6 +835,24 @@ const Models = () => {
     return 'Standard'
   }
 
+  // Get disk space requirement for model
+  const getDiskSpaceRequirement = (modelName: string) => {
+    const size = getModelSize(modelName)
+    if (size >= 70) return '~140GB'
+    if (size >= 14) return '~28GB'
+    if (size >= 10) return '~20GB'
+    if (size >= 7) return '~14GB'
+    if (size >= 2) return '~4GB'
+    if (size >= 0.5) return '~1GB'
+    return '~500MB'
+  }
+
+  // Check if model requires significant disk space
+  const isLargeModel = (modelName: string) => {
+    const size = getModelSize(modelName)
+    return size >= 7 // 7B parameters or larger
+  }
+
   useEffect(() => {
     fetchModels()
   }, [])
@@ -1334,6 +1352,10 @@ const Models = () => {
                             <span className="font-medium">{getModelSizeCategory(model.name)}</span>
                           </div>
                           <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Disk Space:</span>
+                            <span className="font-medium">{getDiskSpaceRequirement(model.name)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground">Type:</span>
                             <span className="font-medium">{getModelVariant(model.name)}</span>
                           </div>
@@ -1342,6 +1364,20 @@ const Models = () => {
                             <span className="font-medium">{model.provider}</span>
                           </div>
                         </div>
+
+                        {/* Disk Space Warning for Large Models */}
+                        {isLargeModel(model.name) && !model.is_loaded && !downloadingModels.has(model.name) && (
+                          <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <div className="flex items-start space-x-2">
+                              <span className="text-yellow-600 text-sm">⚠️</span>
+                              <div className="text-xs text-yellow-800">
+                                <div className="font-medium">Large Model Warning</div>
+                                <div>Requires {getDiskSpaceRequirement(model.name)} of disk space</div>
+                                <div className="text-yellow-600 mt-1">Ensure sufficient storage before downloading</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Download Progress */}
                         {downloadingModels.has(model.name) && (
@@ -1425,9 +1461,16 @@ const Models = () => {
 
                         {/* Download Time Estimate */}
                         {!model.is_loaded && !isDownloading && (
-                          <p className="text-xs text-muted-foreground text-center">
-                            ⏱️ {getEstimatedDownloadTime(model.name)}
-                          </p>
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground text-center">
+                              ⏱️ {getEstimatedDownloadTime(model.name)}
+                            </p>
+                            {isLargeModel(model.name) && (
+                              <p className="text-xs text-yellow-600 text-center">
+                                💾 {getDiskSpaceRequirement(model.name)} disk space
+                              </p>
+                            )}
+                          </div>
                         )}
 
 
@@ -1494,10 +1537,13 @@ const Models = () => {
               </ul>
               <h4 className="font-medium mb-2 mt-4">💾 Storage & Performance</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Small models: ~500MB each</li>
-                <li>• Large models: ~14GB each</li>
-                <li>• GGUF models: ~4-8GB (CPU optimized)</li>
+                <li>• Small models (DialoGPT): ~500MB each</li>
+                <li>• Medium models (2B): ~4GB each</li>
+                <li>• Large models (7B): ~14GB each</li>
+                <li>• Very large models (14B+): ~28GB+ each</li>
+                <li>• Meta Llama 3 8B: ~16GB disk space</li>
                 <li>• Loaded models use RAM, not disk space</li>
+                <li>• ⚠️ Check available disk space before downloading large models</li>
               </ul>
             </div>
           </div>
