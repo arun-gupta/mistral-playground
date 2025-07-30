@@ -46,11 +46,9 @@ const Comparison = () => {
   const [showLoadedOnly, setShowLoadedOnly] = useState(false)
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)
-  const [showGPURecommendedOnly, setShowGPURecommendedOnly] = useState(false)
   const [showCPUOnly, setShowCPUOnly] = useState(false)  // Toggle for CPU-compatible models
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
-  const [filterBy, setFilterBy] = useState<'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended'>('all')
-  const [sortBy, setSortBy] = useState<'size' | 'name' | 'status'>('size')
+  const [showSmallModelsOnly, setShowSmallModelsOnly] = useState(false)  // Toggle for small models only
 
   const { toast } = useToast()
 
@@ -126,40 +124,29 @@ const Comparison = () => {
     return recommended.includes(modelName)
   }
 
-  // Check if model is GPU recommended
-  const isGPURecommended = (modelName: string) => {
-    const gpuRecommended = [
-      'mistralai/Mixtral-8x7B-Instruct-v0.1', // Full Mixtral (~70B effective, ~32GB RAM)
-      'mistralai/CodeMistral-7B-Instruct-v0.1', // CodeMistral (~14GB RAM, specialized)
-      'meta-llama/Meta-Llama-3-14B-Instruct', // Large Llama model (~28GB RAM)
-      'meta-llama/Llama-3.3-70B-Instruct' // Very large Llama model (~140GB RAM)
+
+
+  // Check if model requires GPU (simplified binary logic)
+  const isGPURequired = (modelName: string): boolean => {
+    // Only very large models actually require GPU
+    const gpuRequired = [
+      'mistralai/Mixtral-8x7B-Instruct-v0.1', // ~70B effective parameters
+      'meta-llama/Llama-3.3-70B-Instruct',    // 70B parameters
+      'google/gemma-3-27b-it'                 // 27B parameters but very large
     ]
-    return gpuRecommended.includes(modelName)
+    
+    // Models with >20B parameters generally need GPU
+    const modelSize = getModelSize(modelName)
+    if (modelSize > 20) return true
+    
+    return gpuRequired.includes(modelName)
   }
 
-  // Check if model works well on CPU
-  const isCPUCompatible = (modelName: string): boolean => {
-    // Models that work well on CPU (smaller models, etc.)
-    const cpuCompatible = [
-      // Small models that work well on CPU
-      'microsoft/DialoGPT-small',
-      'microsoft/DialoGPT-medium',
-      'microsoft/DialoGPT-large',
-      
-      // Small Mistral variants
-      'mistralai/Mistral-7B-Instruct-v0.2',
-      'mistralai/Mistral-7B-v0.1',
-      
-      // Small Llama variants (official Meta models)
-      'meta-llama/Meta-Llama-3-8B-Instruct',
-      'meta-llama/Meta-Llama-3-8B',
-      'meta-llama/Llama-3.1-8B-Instruct'
-    ]
-    
-    // Include small models (2B and under) that are not gated
-    if (getModelSize(modelName) <= 2 && !isGatedModel(modelName)) return true
-    
-    return cpuCompatible.includes(modelName)
+  // Check if model is small (suitable for quick testing and constrained environments)
+  const isSmallModel = (modelName: string) => {
+    const size = getModelSize(modelName)
+    // Small models: 2B parameters or less, or DialoGPT models
+    return size <= 2 || modelName.includes('DialoGPT')
   }
 
   // Check if model requires authentication (gated)
@@ -185,20 +172,7 @@ const Comparison = () => {
 
   // Get filtered available models based on toggle state
   const getFilteredAvailableModels = () => {
-    let filtered = availableModels
-
-    // Apply family filter
-    if (filterBy !== 'all') {
-      filtered = filtered.filter(modelName => {
-        const family = getModelFamily(modelName)
-        if (filterBy === 'recommended') {
-          return isRecommended(modelName)
-        }
-        return family === filterBy
-      })
-    }
-
-
+    let filtered = [...availableModels]
 
     // Apply downloaded filter
     if (showDownloadedOnly) {
@@ -222,14 +196,9 @@ const Comparison = () => {
       filtered = filtered.filter(modelName => isRecommended(modelName))
     }
 
-    // Apply GPU recommended filter
-    if (showGPURecommendedOnly) {
-      filtered = filtered.filter(modelName => isGPURecommended(modelName))
-    }
-
-    // Apply CPU compatibility filter
+    // Apply CPU compatibility filter (show models that don't require GPU)
     if (showCPUOnly) {
-      filtered = filtered.filter(modelName => isCPUCompatible(modelName))
+      filtered = filtered.filter(modelName => !isGPURequired(modelName))
     }
 
     // Apply no authentication required filter
@@ -237,23 +206,13 @@ const Comparison = () => {
       filtered = filtered.filter(modelName => !isGatedModel(modelName))
     }
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'size':
-          return getModelSize(b) - getModelSize(a) // Largest first
-        case 'name':
-          return a.localeCompare(b)
-        case 'status':
-          const aLoaded = isModelLoaded(a)
-          const bLoaded = isModelLoaded(b)
-          if (aLoaded && !bLoaded) return -1
-          if (!aLoaded && bLoaded) return 1
-          return a.localeCompare(b)
-        default:
-          return 0
-      }
-    })
+    // Apply small models filter
+    if (showSmallModelsOnly) {
+      filtered = filtered.filter(modelName => isSmallModel(modelName))
+    }
+
+    // Sort models by size (largest first) for consistent display
+    filtered.sort((a, b) => getModelSize(b) - getModelSize(a))
 
     return filtered
   }
@@ -358,109 +317,96 @@ const Comparison = () => {
         <CardContent>
           <div className="space-y-4">
             {/* Unified Controls Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Family Filter */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Filter by Family</label>
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value as 'all' | 'mistral' | 'llama' | 'gemma' | 'mixtral' | 'dialogpt' | 'recommended')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Families</option>
-                  <option value="mistral">Mistral & Mixtral</option>
-                  <option value="llama">Meta Llama 3</option>
-                  <option value="gemma">Google Gemma</option>
-                  <option value="dialogpt">Microsoft DialoGPT</option>
-                  <option value="recommended">Recommended Only</option>
-                </select>
-              </div>
+            {/* Quick Filters Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-700">Quick Filters</h3>
+                  <Button
+                    onClick={fetchModelStatuses}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs px-3 py-1 h-8"
+                  >
+                    🔄 Refresh
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {/* CPU Compatible */}
+                  <div className="flex items-center space-x-2 p-2 bg-green-50 border border-green-200 rounded">
+                    <button
+                      type="button"
+                      onClick={() => setShowCPUOnly(!showCPUOnly)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${
+                        showCPUOnly ? 'bg-green-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          showCPUOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-green-800">CPU</span>
+                  </div>
 
-              {/* Sort Options */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Sort by</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'size' | 'name' | 'status')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="size">Size (Largest First)</option>
-                  <option value="name">Name (A-Z)</option>
-                  <option value="status">Status (Loaded First)</option>
-                </select>
-              </div>
+                  {/* Small Models */}
+                  <div className="flex items-center space-x-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                    <button
+                      type="button"
+                      onClick={() => setShowSmallModelsOnly(!showSmallModelsOnly)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                        showSmallModelsOnly ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          showSmallModelsOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-blue-800">Small</span>
+                  </div>
 
+                  {/* No Auth Required */}
+                  <div className="flex items-center space-x-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                    <button
+                      type="button"
+                      onClick={() => setShowNoAuthRequired(!showNoAuthRequired)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 ${
+                        showNoAuthRequired ? 'bg-yellow-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          showNoAuthRequired ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-yellow-800">No Auth</span>
+                  </div>
 
-
-              {/* Refresh Models Button */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Model Management</label>
-                <Button
-                  onClick={fetchModelStatuses}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  🔄 Refresh Models
-                </Button>
+                  {/* Recommended */}
+                  <div className="flex items-center space-x-2 p-2 bg-purple-50 border border-purple-200 rounded">
+                    <button
+                      type="button"
+                      onClick={() => setShowRecommendedOnly(!showRecommendedOnly)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 ${
+                        showRecommendedOnly ? 'bg-purple-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          showRecommendedOnly ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-purple-800">Recommended</span>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Model Filters Section */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Model Filters</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Downloaded Models Toggle */}
-                <div className="flex items-center justify-between p-3 bg-teal-50 border border-teal-200 rounded-md">
-                  <div>
-                    <span className="text-sm font-medium text-teal-800">Downloaded Models Only</span>
-                    <p className="text-xs text-teal-600 mt-1">Show models already downloaded</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowDownloadedOnly(!showDownloadedOnly)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
-                        showDownloadedOnly ? 'bg-teal-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          showDownloadedOnly ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-teal-800">
-                      {showDownloadedOnly ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Loaded Models Toggle */}
-                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
-                  <div>
-                    <span className="text-sm font-medium text-blue-800">Loaded Models Only</span>
-                    <p className="text-xs text-blue-600 mt-1">Show models ready to use</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowLoadedOnly(!showLoadedOnly)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        showLoadedOnly ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          showLoadedOnly ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                    <span className="text-xs font-medium text-blue-800">
-                      {showLoadedOnly ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
 
                 {/* Recommended Models Toggle */}
                 <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-md">
@@ -601,18 +547,17 @@ const Comparison = () => {
                             ✅ Loaded
                           </Badge>
                         )}
-                        {isCPUCompatible(modelName) && (
-                          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1">
-                            💻 CPU
-                          </Badge>
-                        )}
-                        {isGPURecommended(modelName) && (
+                        {isGPURequired(modelName) ? (
                           <Badge 
                             variant="default" 
-                            className="bg-orange-100 text-orange-800 border-orange-200 text-xs px-2 py-1 cursor-help"
-                            title="This model will be very slow on CPU. Consider GPU setup for better performance."
+                            className="bg-red-100 text-red-800 border-red-200 text-xs px-2 py-1 cursor-help"
+                            title="This model requires GPU for reasonable performance"
                           >
-                            🚀 GPU
+                            🚀 GPU Required
+                          </Badge>
+                        ) : (
+                          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1">
+                            💻 CPU Compatible
                           </Badge>
                         )}
                         {isGatedModel(modelName) && (
