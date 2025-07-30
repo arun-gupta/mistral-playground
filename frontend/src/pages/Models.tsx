@@ -591,41 +591,6 @@ const Models = () => {
         // Don't wait here - let the polling handle the completion
         // The pollDownloadProgress function will handle the completion and start loading
         return
-      }
-        
-        const loadResponse = await fetch('/api/v1/models/generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: "Hello, this is a test to load the model.",
-            model_name: modelName,
-            provider: 'huggingface',
-            temperature: 0.7,
-            max_tokens: 10,
-            top_p: 0.9
-          }),
-        })
-
-        if (!loadResponse.ok) {
-          throw new Error(`Load request failed: ${loadResponse.status}`)
-        }
-
-        const loadResult = await loadResponse.json()
-        console.log(`⚡ Load response for ${modelName}:`, loadResult)
-
-        setLoadingModels(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(modelName)
-          return newSet
-        })
-        
-        toast({
-          title: "Model Loaded",
-          description: `Model ${modelName} has been loaded into memory and is ready to use!`,
-        })
-        
       } else if (downloadResult.status === 'completed') {
         // Download was already completed, go straight to loading
         setDownloadingModels(prev => {
