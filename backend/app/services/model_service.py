@@ -200,6 +200,10 @@ class ModelService:
                 print(f"   This may take several minutes for large models...")
                 # Use HuggingFace token for authentication if available and valid
                 token = settings.HUGGINGFACE_API_KEY if settings.HUGGINGFACE_API_KEY and settings.HUGGINGFACE_API_KEY != "your-huggingface-api-key-here" else None
+                print(f"🔑 Token being used: {token[:10] if token else 'None'}...")
+                print(f"🔑 Token length: {len(token) if token else 0}")
+                print(f"🔑 Token valid format: {token.startswith('hf_') if token else False}")
+                
                 # Check if CUDA is available
                 cuda_available = torch.cuda.is_available()
                 print(f"🔍 CUDA available: {cuda_available}")
@@ -254,25 +258,73 @@ class ModelService:
                 # Special handling for Mistral models that have tokenizer issues
                 if "mistral" in model_name.lower():
                     print(f"🔧 Loading Mistral tokenizer with special settings...")
-                    try:
-                        self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
-                            model_name,
-                            trust_remote_code=True,
-                            token=token,
-                            use_fast=False,  # Use slow tokenizer for Mistral
-                            padding_side="left",
-                            model_max_length=4096  # Set explicit max length
-                        )
-                    except Exception as mistral_tokenizer_error:
-                        print(f"⚠️  Mistral tokenizer failed: {mistral_tokenizer_error}")
-                        print(f"🔄 Using GPT2 tokenizer for Mistral model...")
-                        # Use GPT2 tokenizer which is compatible with Mistral
-                        self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
-                            "gpt2",
-                            trust_remote_code=True,
-                            token=token,
-                            padding_side="left"
-                        )
+                    tokenizer_loaded = False
+                    
+                    # Try multiple tokenizer configurations
+                    tokenizer_configs = [
+                        {
+                            "name": "Mistral with slow tokenizer",
+                            "kwargs": {
+                                "trust_remote_code": True,
+                                "token": token,
+                                "use_fast": False,
+                                "padding_side": "left",
+                                "model_max_length": 4096
+                            }
+                        },
+                        {
+                            "name": "Mistral with fast tokenizer",
+                            "kwargs": {
+                                "trust_remote_code": True,
+                                "token": token,
+                                "use_fast": True,
+                                "padding_side": "left"
+                            }
+                        },
+                        {
+                            "name": "Mistral with minimal settings",
+                            "kwargs": {
+                                "trust_remote_code": True,
+                                "token": token,
+                                "use_fast": False
+                            }
+                        }
+                    ]
+                    
+                    for config in tokenizer_configs:
+                        if tokenizer_loaded:
+                            break
+                        try:
+                            print(f"🔄 Trying {config['name']}...")
+                            self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                                model_name,
+                                **config["kwargs"]
+                            )
+                            print(f"✅ {config['name']} successful!")
+                            tokenizer_loaded = True
+                        except Exception as e:
+                            print(f"⚠️  {config['name']} failed: {str(e)[:100]}...")
+                    
+                    # If all Mistral tokenizer attempts fail, use GPT2 tokenizer
+                    if not tokenizer_loaded:
+                        print(f"🔄 All Mistral tokenizer attempts failed, using GPT2 tokenizer...")
+                        try:
+                            self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                                "gpt2",
+                                trust_remote_code=True,
+                                token=token,
+                                padding_side="left"
+                            )
+                            print("✅ GPT2 tokenizer loaded successfully")
+                        except Exception as gpt2_error:
+                            print(f"❌ GPT2 tokenizer also failed: {gpt2_error}")
+                            # Final fallback to DialoGPT tokenizer
+                            print(f"🔄 Using DialoGPT tokenizer as final fallback...")
+                            self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
+                                "microsoft/DialoGPT-small",
+                                trust_remote_code=True,
+                                token=token
+                            )
                 else:
                     try:
                         self.tokenizers[model_name] = AutoTokenizer.from_pretrained(
