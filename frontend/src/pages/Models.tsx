@@ -72,7 +72,7 @@ const Models = () => {
 
 
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
-  const [maxModelSize, setMaxModelSize] = useState(2)  // Slider for maximum model size (in billions of parameters)
+  const [maxModelSize, setMaxModelSize] = useState(10)  // Slider for maximum model size (in billions of parameters) - increased to show Mistral 7B models
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
   const [testingModels, setTestingModels] = useState<Set<string>>(new Set())  // Models being tested
@@ -961,7 +961,7 @@ const Models = () => {
                 setShowRecommendedOnly(false)
                 setShowNoAuthRequired(false)
                 setShowHostedOnly(false)
-                setMaxModelSize(2) // Reset to default small models threshold
+                setMaxModelSize(10) // Reset to default threshold to show Mistral models
               }}
               className="text-xs px-2 py-1 h-6"
               disabled={getActiveFilterCount({
@@ -1069,7 +1069,7 @@ const Models = () => {
 
                   {/* Model Size Slider */}
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium text-gray-700">Max Size:</span>
+                    <span className="text-xs font-medium text-gray-700">Max Parameters:</span>
                     <div className="flex items-center space-x-1">
                       <input
                         type="range"
