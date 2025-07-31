@@ -73,7 +73,7 @@ const Models = () => {
 
 
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
-  const [maxModelSize, setMaxModelSize] = useState(10)  // Slider for maximum model size (in billions of parameters) - increased to show Mistral 7B models
+  const [maxModelSize, setMaxModelSize] = useState(8)  // Slider for maximum model size (in billions of parameters) - set to show Mistral 7B models
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
   const [testingModels, setTestingModels] = useState<Set<string>>(new Set())  // Models being tested
@@ -973,7 +973,7 @@ const Models = () => {
         maxModelSize={maxModelSize}
         setMaxModelSize={setMaxModelSize}
         showQuickStartButton={true}
-        defaultMaxModelSize={10}
+        defaultMaxModelSize={8}
         showSizeLegend={true}
       />
 
