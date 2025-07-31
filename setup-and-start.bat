@@ -3,11 +3,11 @@ setlocal enabledelayedexpansion
 
 REM Mistral Playground & Model Explorer - Development Startup Script for Windows
 
-echo 🚀 Starting Mistral Playground & Model Explorer in development mode...
+echo 🚀 Starting Mistral Playground ^& Model Explorer in development mode...
 echo 📋 System Information:
-python --version 2>nul && echo    - Python: %python_version% || echo    - Python: Not found
-node --version 2>nul && echo    - Node.js: %node_version% || echo    - Node.js: Not found
-npm --version 2>nul && echo    - npm: %npm_version% || echo    - npm: Not found
+python --version 2>nul && echo    - Python: Found || echo    - Python: Not found
+node --version 2>nul && echo    - Node.js: Found || echo    - Node.js: Not found
+npm --version 2>nul && echo    - npm: Found || echo    - npm: Not found
 echo.
 
 REM Check if Python is installed
