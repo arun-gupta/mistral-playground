@@ -5,9 +5,9 @@ REM Mistral Playground & Model Explorer - Development Startup Script for Windows
 
 echo 🚀 Starting Mistral Playground ^& Model Explorer in development mode...
 echo 📋 System Information:
-python --version 2>nul && echo    - Python: Found || echo    - Python: Not found
-node --version 2>nul && echo    - Node.js: Found || echo    - Node.js: Not found
-npm --version 2>nul && echo    - npm: Found || echo    - npm: Not found
+python --version >nul 2>&1 && echo    - Python: Found || echo    - Python: Not found
+node --version >nul 2>&1 && echo    - Node.js: Found || echo    - Node.js: Not found
+npm --version >nul 2>&1 && echo    - npm: Found || echo    - npm: Not found
 echo.
 
 REM Check if Python is installed
