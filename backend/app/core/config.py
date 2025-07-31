@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"  # Will look in current directory and parent directories
         case_sensitive = True
+        extra = "ignore"  # Ignore extra fields from environment
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
