@@ -59,7 +59,7 @@ const Comparison = () => {
   const [showDownloadedOnly, setShowDownloadedOnly] = useState(false)
   const [showRecommendedOnly, setShowRecommendedOnly] = useState(false)
   const [showNoAuthRequired, setShowNoAuthRequired] = useState(false)  // Toggle for models that don't require authentication
-  const [maxModelSize, setMaxModelSize] = useState(2)  // Slider for maximum model size (in billions of parameters)
+  const [maxModelSize, setMaxModelSize] = useState(10)  // Slider for maximum model size (in billions of parameters)
   const [showHostedOnly, setShowHostedOnly] = useState(false)  // Toggle for hosted models only
 
   const { toast } = useToast()
@@ -340,7 +340,7 @@ const Comparison = () => {
         setMaxModelSize={setMaxModelSize}
         showRefreshButton={true}
         onRefresh={() => fetchModelStatuses()}
-        defaultMaxModelSize={2}
+        defaultMaxModelSize={10}
         showSizeLegend={true}
       />
             
