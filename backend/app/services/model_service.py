@@ -170,17 +170,7 @@ class ModelService:
         """Generate response using Hugging Face Transformers"""
         model_name = request.model_name or settings.MODEL_NAME
         
-        # Check if mock mode is enabled
-        if settings.MOCK_MODE:
-            print(f"🎭 MOCK MODE: Returning mock response for {model_name}")
-            return {
-                "text": f"🎭 MOCK RESPONSE from {model_name}\n\nYour prompt: '{request.prompt}'\n\nThis is a mock response for testing. Set MOCK_MODE=false in your .env file to use real models.\n\nParameters used:\n- Temperature: {request.temperature}\n- Max tokens: {request.max_tokens}\n- Top P: {request.top_p}\n- System prompt: {request.system_prompt or 'None'}",
-                "model_name": model_name,
-                "tokens_used": 50,
-                "input_tokens": 10,
-                "output_tokens": 40,
-                "finish_reason": "stop"
-            }
+
         
         # Check if this is a GGUF model
         if self._is_gguf_model(model_name):
@@ -679,17 +669,7 @@ Alternative models that don't require authentication:
         """Generate response using Ollama"""
         model_name = request.model_name or settings.MODEL_NAME
         
-        # Check if mock mode is enabled
-        if settings.MOCK_MODE:
-            print(f"🎭 MOCK MODE: Returning mock response for {model_name}")
-            return {
-                "text": f"🎭 MOCK RESPONSE from {model_name} (Ollama)\n\nYour prompt: '{request.prompt}'\n\nThis is a mock response for testing. Set MOCK_MODE=false in your .env file to use real models.\n\nParameters used:\n- Temperature: {request.temperature}\n- Max tokens: {request.max_tokens}\n- Top P: {request.top_p}\n- System prompt: {request.system_prompt or 'None'}",
-                "model_name": model_name,
-                "tokens_used": 50,
-                "input_tokens": 10,
-                "output_tokens": 40,
-                "finish_reason": "stop"
-            }
+
         
         # Prepare request payload
         payload = {

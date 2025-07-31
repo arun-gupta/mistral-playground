@@ -34,8 +34,7 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
     
-    # Development/Testing
-    MOCK_MODE: bool = False  # Set to True to use mock responses instead of real models
+
     
     # Telemetry/Privacy
     DISABLE_TELEMETRY: bool = True  # Disable all telemetry collection

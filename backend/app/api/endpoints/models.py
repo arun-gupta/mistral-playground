@@ -106,14 +106,7 @@ async def download_test():
             "error": str(e)
         }
 
-@router.get("/mock-status", response_model=dict)
-async def get_mock_status():
-    """Get the current mock mode status"""
-    from backend.app.core.config import settings
-    return {
-        "mock_mode": settings.MOCK_MODE,
-        "message": "Mock mode is enabled" if settings.MOCK_MODE else "Mock mode is disabled - using real models"
-    }
+
 
 @router.get("/model-status", response_model=dict)
 async def get_model_status():
@@ -136,44 +129,9 @@ async def get_model_status():
         "status": "ready" if len(all_loaded) > 0 else "no_models_loaded"
     }
 
-@router.post("/toggle-mock", response_model=dict)
-async def toggle_mock_mode(request: dict):
-    """Toggle mock mode on/off"""
-    try:
-        new_mode = request.get("mock_mode", False)
-        
-        # Update the environment variable
-        os.environ["MOCK_MODE"] = str(new_mode).lower()
-        
-        # Reload settings to pick up the change
-        from backend.app.core.config import settings
-        settings.MOCK_MODE = new_mode
-        
-        print(f"🎭 Mock mode {'enabled' if new_mode else 'disabled'}")
-        
-        return {
-            "success": True,
-            "mock_mode": new_mode,
-            "message": f"Mock mode {'enabled' if new_mode else 'disabled'} successfully"
-        }
-    except Exception as e:
-        print(f"❌ Error toggling mock mode: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/mock-generate", response_model=ModelResponse)
-async def mock_generate():
-    """Mock generate endpoint that doesn't use model service"""
-    print("🎭 Mock generate endpoint called")
-    return ModelResponse(
-        text="🎉 SUCCESS! This is a MOCK response. The API flow is working perfectly!",
-        model_name="mock-model",
-        provider="mock",
-        tokens_used=25,
-        input_tokens=5,
-        output_tokens=20,
-        latency_ms=100,
-        finish_reason="stop"
-    )
+
+
 
 @router.post("/download", response_model=ModelDownloadResponse)
 async def download_model(request: ModelDownloadRequest):
