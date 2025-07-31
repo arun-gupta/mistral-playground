@@ -113,7 +113,12 @@ const Models = () => {
 
     // Apply ready to use filter
     if (showReadyToUseOnly) {
-      filteredModels = filteredModels.filter(model => model.is_hosted || testedReadyModels.has(model.name))
+      filteredModels = filteredModels.filter(model => {
+        // Hosted models are always ready
+        if (model.is_hosted) return true
+        // Local models must be both loaded AND tested
+        return model.is_loaded && testedReadyModels.has(model.name)
+      })
     }
 
     // Apply downloaded filter
@@ -919,7 +924,7 @@ const Models = () => {
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-green-600">
-              {models.filter(m => m.is_hosted || testedReadyModels.has(m.name)).length}
+              {models.filter(m => m.is_hosted || (m.is_loaded && testedReadyModels.has(m.name))).length}
             </div>
             <div className="text-xs text-muted-foreground">Ready to Use</div>
           </div>
