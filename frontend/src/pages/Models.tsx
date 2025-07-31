@@ -120,6 +120,11 @@ const Models = () => {
         return model.is_loaded && testedReadyModels.has(model.name)
       })
     }
+    
+    // DEBUG: Log the filtered models to see what's happening
+    console.log('🔍 Filtered models after Ready to Use filter:', filteredModels.map(m => m.name))
+    console.log('🔍 ShowReadyToUseOnly:', showReadyToUseOnly)
+    console.log('🔍 TestedReadyModels:', Array.from(testedReadyModels))
 
     // Apply downloaded filter
     if (showDownloadedOnly) {
