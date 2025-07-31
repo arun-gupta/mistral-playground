@@ -341,7 +341,7 @@ const Comparison = () => {
         showRefreshButton={true}
         onRefresh={() => fetchModelStatuses()}
         defaultMaxModelSize={2}
-        showSizeLegend={false}
+        showSizeLegend={true}
       />
             
           
