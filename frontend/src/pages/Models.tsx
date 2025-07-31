@@ -75,6 +75,8 @@ const Models = () => {
   const [maxModelSize, setMaxModelSize] = useState(2)  // Slider for maximum model size (in billions of parameters)
   const [offloadingModels, setOffloadingModels] = useState<Set<string>>(new Set())  // Models being offloaded
   const [deletingModels, setDeletingModels] = useState<Set<string>>(new Set())  // Models being deleted
+  const [testingModels, setTestingModels] = useState<Set<string>>(new Set())  // Models being tested
+  const [testedReadyModels, setTestedReadyModels] = useState<Set<string>>(new Set())  // Models confirmed ready after test
   const [hostedModels, setHostedModels] = useState<Record<string, string[]>>({})
   const [showHostedOnly, setShowHostedOnly] = useState(false)
   const { toast } = useToast()
@@ -111,7 +113,7 @@ const Models = () => {
 
     // Apply ready to use filter
     if (showReadyToUseOnly) {
-      filteredModels = filteredModels.filter(model => model.is_hosted || model.is_loaded)
+      filteredModels = filteredModels.filter(model => model.is_hosted || testedReadyModels.has(model.name))
     }
 
     // Apply downloaded filter
@@ -781,6 +783,67 @@ const Models = () => {
     }
   }
 
+  // Test model generation to confirm it's ready
+  const testModelGeneration = async (modelName: string) => {
+    if (testingModels.has(modelName)) return
+
+    setTestingModels(prev => new Set(prev).add(modelName))
+    
+    try {
+      const response = await fetch('/api/v1/models/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_name: modelName,
+          prompt: "Test", // Very short test prompt
+          max_tokens: 5,  // Very short response
+          temperature: 0.7,
+          top_p: 0.9
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.text && !result.text.includes('error') && !result.text.includes('timeout')) {
+          // Test successful - mark as ready
+          setTestedReadyModels(prev => new Set(prev).add(modelName))
+          toast({
+            title: "Model Test Successful",
+            description: `${modelName} is ready to use!`,
+            variant: "default"
+          })
+        } else {
+          // Test failed
+          toast({
+            title: "Model Test Failed",
+            description: `${modelName} failed the generation test. It may be too slow or have issues.`,
+            variant: "destructive"
+          })
+        }
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Test Failed",
+          description: errorData.detail || "Failed to test model generation",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error('Error testing model:', error)
+      toast({
+        title: "Test Failed",
+        description: "Network error while testing model",
+        variant: "destructive"
+      })
+    } finally {
+      setTestingModels(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(modelName)
+        return newSet
+      })
+    }
+  }
+
   useEffect(() => {
     const initializeData = async () => {
       await fetchHostedModels()
@@ -856,7 +919,7 @@ const Models = () => {
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-green-600">
-              {models.filter(m => m.is_hosted || m.is_loaded).length}
+              {models.filter(m => m.is_hosted || testedReadyModels.has(m.name)).length}
             </div>
             <div className="text-xs text-muted-foreground">Ready to Use</div>
           </div>
@@ -1277,18 +1340,35 @@ const Models = () => {
                         {/* Action Button */}
                         <div className="pt-1">
                           {model.is_loaded ? (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="w-full bg-green-50 border-green-200 text-green-800 hover:bg-green-100 text-xs" 
-                              onClick={() => {
-                                // Navigate to playground with this model pre-selected
-                                window.location.href = `/playground?model=${encodeURIComponent(model.name)}`
-                              }}
-                            >
-                              <span className="mr-1">✅</span>
-                              Use Now
-                            </Button>
+                            testedReadyModels.has(model.name) ? (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="w-full bg-green-50 border-green-200 text-green-800 hover:bg-green-100 text-xs" 
+                                onClick={() => {
+                                  // Navigate to playground with this model pre-selected
+                                  window.location.href = `/playground?model=${encodeURIComponent(model.name)}`
+                                }}
+                              >
+                                <span className="mr-1">✅</span>
+                                Use Now
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="w-full bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100 text-xs" 
+                                onClick={() => testModelGeneration(model.name)}
+                                disabled={testingModels.has(model.name)}
+                              >
+                                {testingModels.has(model.name) ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600 mr-1"></div>
+                                ) : (
+                                  <span className="mr-1">🧪</span>
+                                )}
+                                {testingModels.has(model.name) ? 'Testing...' : 'Test Generation'}
+                              </Button>
+                            )
                           ) : downloadingModels.has(model.name) ? (
                             <Button 
                               variant="outline" 
@@ -1494,7 +1574,14 @@ const Models = () => {
                     <span className="mr-1">✅</span>
                     Ready
                   </Badge>
-                  <span className="text-sm text-muted-foreground">Loaded in memory, click "Use Now"</span>
+                  <span className="text-sm text-muted-foreground">Tested and ready to use</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">
+                    <span className="mr-1">🧪</span>
+                    Loaded
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">In memory, click "Test Generation" to verify</span>
                 </div>
               </div>
             </div>
