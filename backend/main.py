@@ -11,8 +11,8 @@ import uvicorn
 import os
 from dotenv import load_dotenv
 
-from app.core.config import settings
-from app.api.routes import api_router
+from backend.app.core.config import settings
+from backend.app.api.routes import api_router
 
 # Monkey patch telemetry to prevent errors
 import sys
