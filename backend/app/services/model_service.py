@@ -194,6 +194,10 @@ class ModelService:
                 request.model_name = fallback_model
                 return await self._generate_huggingface(request)
         
+        # Check if CUDA is available (moved to top level)
+        cuda_available = torch.cuda.is_available()
+        print(f"🔍 CUDA available: {cuda_available}")
+        
         try:
             if model_name not in self.transformers_models:
                 print(f"🔄 DOWNLOADING & LOADING model: {model_name} (first time)")
@@ -206,10 +210,6 @@ class ModelService:
                 print(f"🔑 Token being used: {token[:10] if token else 'None'}...")
                 print(f"🔑 Token length: {len(token) if token else 0}")
                 print(f"🔑 Token valid format: {token.startswith('hf_') if token else False}")
-                
-                # Check if CUDA is available
-                cuda_available = torch.cuda.is_available()
-                print(f"🔍 CUDA available: {cuda_available}")
                 
                 # For large models like Mistral, use more memory-efficient settings
                 if "mistral" in model_name.lower() or "7b" in model_name.lower():
